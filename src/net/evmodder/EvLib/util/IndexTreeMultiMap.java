@@ -1587,7 +1587,7 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 		Collection<Collection<X>> vs = null;
 		try{
 			Field transientField = getClass().getDeclaredField("values");
-			System.out.print("Access?: " + transientField.isAccessible());
+			System.out.print("Access?: " + transientField.canAccess(this));
 			transientField.setAccessible(true);
 			vs = (Collection<Collection<X>>) transientField.get(this);
 			if(vs == null) {
@@ -1646,8 +1646,7 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 *             {@inheritDoc}
 	 * @since 1.6
 	 */
-	public NavigableMap<K, Collection<X>> subMap(
-K fromKey, boolean fromInclusive, K toKey, boolean toInclusive){
+	public NavigableMap<K, Collection<X>> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive){
 		return new AscendingSubMap<>(this, false, fromKey, fromInclusive, false, toKey, toInclusive);
 	}
 
@@ -3648,6 +3647,7 @@ K fromKey, boolean fromInclusive, K toKey, boolean toInclusive){
 					Spliterator.ORDERED;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override public Comparator<Map.Entry<K, Collection<X>>> getComparator(){
 			// Adapt or create a key-based comparator
 			if(tree.comparator != null) {
@@ -3655,7 +3655,6 @@ K fromKey, boolean fromInclusive, K toKey, boolean toInclusive){
 			}
 			else{
 				return (Comparator<Map.Entry<K, Collection<X>>> & Serializable)(e1, e2) -> {
-					@SuppressWarnings("unchecked")
 					Comparable<? super K> k1 = (Comparable<? super K>)e1.getKey();
 					return k1.compareTo(e2.getKey());
 				};

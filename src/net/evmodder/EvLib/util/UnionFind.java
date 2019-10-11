@@ -48,7 +48,7 @@ public class UnionFind<T>{
 
 	public boolean sameSet(T u, T v){
 		//u and v are both not in any set
-		if(u == null || find(u) == null) return v == null || find(v) == null;
+		if(u == null || find(u) == null) return false;//v == null || find(v) == null;
 		else return find(u).equals(find(v));
 	}
 }

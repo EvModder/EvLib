@@ -18,7 +18,6 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Nameable;
@@ -35,20 +34,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import net.evmodder.EvLib.ReflectionUtils;
-import net.evmodder.EvLib.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.ReflectionUtils.RefField;
-import net.evmodder.EvLib.ReflectionUtils.RefMethod;
-import com.onarandombox.MultiverseCore.MultiverseCore;
 
-public class EvUtils{// version = X1.0
-	public static float getBlockStrength(Material block){
-		RefClass classBlock = ReflectionUtils.getRefClass("{nms}.Block");
-		RefMethod methodGetByName = classBlock.getMethod("getByName");
-		RefField field = classBlock.getField("strength");
-		return (Float) field.of( methodGetByName.of(null).call(block.name()) ).get();
-	}
-
+public class EvUtils{// version = 1.1
 	public static String getNormalizedName(EntityType entity){
 		//TODO: improve this algorithm / test for errors
 		switch(entity){
@@ -94,6 +81,14 @@ public class EvUtils{// version = X1.0
 			catch(NumberFormatException ex){}
 		}
 		return null;
+	}
+	public static Location getLocationFromString(World w, String s){
+		String[] data = s.split(",");
+		try{return new Location(w,
+				Double.parseDouble(data[data.length-3]),
+				Double.parseDouble(data[data.length-2]),
+				Double.parseDouble(data[data.length-1]));}
+		catch(ArrayIndexOutOfBoundsException | NumberFormatException ex){return null;}
 	}
 
 	public static Collection<Advancement> getVanillaAdvancements(Player p){
@@ -323,44 +318,41 @@ public class EvUtils{// version = X1.0
 		}
 	}
 
-	static String MAIN_WORLD = Bukkit.getWorlds().get(0).getName();//[0] is the default world
-	public static GameMode getWorldGameMode(World world){
-		MultiverseCore mv = (MultiverseCore) Bukkit.getPluginManager().getPlugin("Multiverse-Core");
-		if(mv != null && mv.isEnabled()) return mv.getMVWorldManager().getMVWorld(world).getGameMode();
-		else if(world.getName().contains(MAIN_WORLD)) return Bukkit.getDefaultGameMode();
-		else return null;
-	}
-
-	public static boolean pickIsAtLeast(Material pickType, Material needPick){//+
+	private static byte pickaxeNumber(Material pickType){
 		switch(pickType){
 			case DIAMOND_PICKAXE:
-				return true;
+				return 4;
 			case IRON_PICKAXE:
-				return needPick != Material.DIAMOND_PICKAXE;
+				return 3;
 			case STONE_PICKAXE:
-				return needPick != Material.DIAMOND_PICKAXE && needPick != Material.IRON_PICKAXE;
-			case GOLDEN_PICKAXE:
+				return 2;
 			case WOODEN_PICKAXE:
+			case GOLDEN_PICKAXE:
+				return 1;
 			default:
-				return needPick != Material.DIAMOND_PICKAXE && needPick != Material.IRON_PICKAXE
-					&& needPick != Material.STONE_PICKAXE;
-				
+				return 0;
+		}
+	}
+	public static boolean pickIsAtLeast(Material pickType, Material needPick){//+
+		return pickaxeNumber(pickType) >= pickaxeNumber(needPick);
+	}
+	private static byte swordNumber(Material swordType){
+		switch(swordType){
+			case DIAMOND_SWORD:
+				return 4;
+			case IRON_SWORD:
+				return 3;
+			case STONE_SWORD:
+				return 2;
+			case GOLDEN_SWORD:
+			case WOODEN_SWORD:
+				return 1;
+			default:
+				return 0;
 		}
 	}
 	public static boolean swordIsAtLeast(Material swordType, Material needSword){//+
-		switch(swordType){
-			case DIAMOND_SWORD:
-				return true;
-			case IRON_SWORD:
-				return needSword != Material.DIAMOND_SWORD;
-			case STONE_SWORD:
-				return needSword != Material.IRON_SWORD && needSword != Material.DIAMOND_SWORD;
-			case GOLDEN_SWORD:
-			case WOODEN_SWORD:
-			default:
-				return needSword != Material.IRON_SWORD && needSword != Material.DIAMOND_SWORD
-					&& needSword != Material.STONE_SWORD;
-		}
+		return swordNumber(swordType) >= swordNumber(needSword);
 	}
 
 	public static List<Block> getBlockStructure(Block block0, Function<Block, Boolean> test, 

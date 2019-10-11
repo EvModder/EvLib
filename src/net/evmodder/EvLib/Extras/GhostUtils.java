@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.Extras;
+package net.evmodder.EvLib.extras;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -23,7 +23,7 @@ import org.bukkit.scoreboard.Team.Option;
 import org.bukkit.scoreboard.Team.OptionStatus;
 
 
-public class GhostFactory{
+public class GhostUtils{
 	private static final String VIEWER_TEAM_NAME = "CanSeeInvis";
 	private static final String GHOST_TEAM_NAME = "Ghosts";
 	private static final int INVIS_LVL = 1;//Used to be 15
@@ -45,7 +45,7 @@ public class GhostFactory{
 	 * @param plugin - the plugin creating the ghostfactory
 	 * @param ghostsVisibleToAll - true to have ghosts visible to all players on the server
 	 */
-	public GhostFactory(JavaPlugin pl){
+	public GhostUtils(JavaPlugin pl){
 		plugin = pl;
 		Scoreboard board = pl.getServer().getScoreboardManager().getMainScoreboard();
 		viewerTeam = board.getTeam(VIEWER_TEAM_NAME);

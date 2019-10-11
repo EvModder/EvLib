@@ -1,12 +1,11 @@
-package net.evmodder.EvLib;
+package net.evmodder.EvLib.extras;
 
-import net.evmodder.EvLib.RefNBTBase;
-import net.evmodder.EvLib.RefNBTTag;
-import net.evmodder.EvLib.RefNBTTagList;
-import net.evmodder.EvLib.ReflectionUtils;
-import net.evmodder.EvLib.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.ReflectionUtils.RefConstructor;
-import net.evmodder.EvLib.ReflectionUtils.RefMethod;
+import net.evmodder.EvLib.extras.RefNBTBase;
+import net.evmodder.EvLib.extras.RefNBTTag;
+import net.evmodder.EvLib.extras.RefNBTTagList;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefConstructor;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 
 public class RefNBTTagList implements RefNBTBase{
 	static final RefClass classNBTBase = ReflectionUtils.getRefClass("{nms}.NBTBase"); 

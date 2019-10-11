@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.ParticleEffects;
+package net.evmodder.EvLib.particles;
 
 import java.util.ArrayList;
 import java.util.List;

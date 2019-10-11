@@ -8,7 +8,7 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public abstract class CommandBase implements TabExecutor{
+public abstract class EvCommand implements TabExecutor{
 //	protected EvPlugin plugin;
 	final String commandName;
 	final PluginCommand command;
@@ -24,7 +24,7 @@ public abstract class CommandBase implements TabExecutor{
 //	@Override
 //	abstract public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args);
 
-	public CommandBase(JavaPlugin pl, boolean enabled){
+	public EvCommand(JavaPlugin pl, boolean enabled){
 //		plugin = p;
 		commandName = getClass().getSimpleName().substring(7).toLowerCase();
 		command = pl.getCommand(commandName);
@@ -32,7 +32,7 @@ public abstract class CommandBase implements TabExecutor{
 		else command.setExecutor(disabledCmdExecutor);
 	}
 
-	public CommandBase(JavaPlugin pl){
+	public EvCommand(JavaPlugin pl){
 		this(pl, true);
 	}
 

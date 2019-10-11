@@ -1,4 +1,4 @@
-package net.evmodder.EvLib;
+package net.evmodder.EvLib.hooks;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;

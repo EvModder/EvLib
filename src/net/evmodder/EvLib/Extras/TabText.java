@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.Extras;
+package net.evmodder.EvLib.extras;
 
 import java.util.Arrays;
 import java.util.HashMap;

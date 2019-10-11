@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.Extras;
+package net.evmodder.EvLib.extras;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,14 +10,11 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import com.earth2me.essentials.User;
-import net.ess3.api.IEssentials;
 
 public class CommandUtils {
 	//map<command name, String[]{permission, description}>
-	static Map<String, String[]> pluginCommands;
+	static Map<String, String[]> pluginCommands = null;
 	static void initFancyHelp(){
 		//load commands from all plugins
 		pluginCommands = new HashMap<String, String[]>();
@@ -25,27 +22,27 @@ public class CommandUtils {
 			if(plugin.getDescription().getCommands() == null) continue;
 			for(String cmdName : plugin.getDescription().getCommands().keySet()){
 				PluginCommand cmd = plugin.getServer().getPluginCommand(cmdName);
+				if(cmdName.endsWith("horse")){
+					continue;
+					//cmdName = "hm "+cmdName.substring(0, cmdName.length()-5);
+				}
 				if(cmd != null) pluginCommands.put(cmdName, new String[]{
 					(cmd.getPermission() != null ? cmd.getPermission() : plugin.getName().toLowerCase()+'.'+cmdName),
 					cmd.getDescription()
 				});
 			}
 		}
+		String[] hmCmd = pluginCommands.remove("horsemanager");
+		if(hmCmd != null) pluginCommands.put("hm", hmCmd);
 	}
 
 	static void runCommand(String command){Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);}
 
 	public static void showFancyHelp(CommandSender sender, int pageNum){
-		if(pluginCommands == null) initFancyHelp();
-		User user = null;
-		IEssentials essHook;
-		if(sender instanceof Player &&
-				(essHook = (IEssentials)sender.getServer().getPluginManager().getPlugin("Essentials")) != null)
-			user = essHook.getUser((Player)sender);
-
+		if (pluginCommands == null) initFancyHelp();
 		List<String> commandNames = new ArrayList<String>();
 		for(String cmdName : pluginCommands.keySet()){
-			if(user == null || user.isAuthorized(pluginCommands.get(cmdName)[0])) commandNames.add(cmdName);
+			if(sender.hasPermission(pluginCommands.get(cmdName)[0])) commandNames.add(cmdName);
 		}
 		Collections.sort(commandNames);
 

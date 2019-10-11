@@ -1,15 +1,43 @@
-package net.evmodder.EvLib.Extras;
+package net.evmodder.EvLib.extras;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-public class TextUtils {
+public class TextUtils{
+	static final char COLOR_SYMBOL = ChatColor.WHITE.toString().charAt(0);
+	static final char RESET = ChatColor.RESET.toString().charAt(0);
+	public static final char[] COLOR_CHARS = new char[]
+			{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+	public static final char[] FORMAT_CHARS = new char[]{'k', 'l', 'm', 'n', 'o'};
+	public static boolean isColor(char ch){
+		switch(ch){
+			case '0': case '1': case '2': case '3': case '4':
+			case '5': case '6': case '7': case '8': case '9':
+			case 'a': case 'b': case 'c': case 'd': case 'e':
+			case 'f': case 'r': return true;
+			default: return false;
+		}
+	}
+	public static boolean isFormat(char ch){
+		switch(ch){
+			case 'k': case 'l': case 'm': case 'n': case 'o': return true;
+			default: return false;
+		}
+	}
+	public static boolean isColorOrFormat(char ch){
+		switch(ch){
+			case '0': case '1': case '2': case '3': case '4':
+			case '5': case '6': case '7': case '8': case '9':
+			case 'a': case 'b': case 'c': case 'd': case 'e':
+			case 'k': case 'l': case 'm': case 'n': case 'o':
+			case 'f': case 'r': return true;
+		default: return false;
+		}
+	}
 /*	private static final RefClass classIChatBaseComponent = ReflectionUtils.getRefClass("{nms}.IChatBaseComponent");
 	private static final RefClass classChatSerializer = ReflectionUtils.getRefClass("{nms}.IChatBaseComponent$ChatSerializer");
 	private static final RefClass classPacketPlayOutChat = ReflectionUtils.getRefClass("{nms}.PacketPlayOutChat");
@@ -173,18 +201,58 @@ public class TextUtils {
 		}
 	}
 
-	public static final char colorSymbol = ChatColor.WHITE.toString().charAt(0);
-	static Character[] SET_VALUES = new Character[]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-										  'a', 'b', 'c', 'd', 'e', 'f', 'k', 'l', 'm', 'n', 'o', 'r'};
-	public static final Set<Character> colorChars = new HashSet<Character>(Arrays.asList(SET_VALUES));
 	public static String translateAlternateColorCodes(char altColorChar, String textToTranslate){
 		char[] msg = textToTranslate.toCharArray();
 		for(int i=1; i<msg.length; ++i){
-			if(msg[i-1] == altColorChar && colorChars.contains(msg[i]) && !isEscaped(msg, i-1)){
-				msg[i-1] = colorSymbol;
+			if(msg[i-1] == altColorChar && isColorOrFormat(msg[i]) && !isEscaped(msg, i-1)){
+				msg[i-1] = COLOR_SYMBOL;
+				++i;
 			}
 		}
 		return new String(msg);
+	}
+	public static String translateAlternateColorCodes(char altColorChar, String textToTranslate, String reset){
+		char[] msg = textToTranslate.toCharArray();
+		StringBuilder builder = new StringBuilder("");
+		for(int i=1; i<msg.length; ++i){
+			if(msg[i-1] == altColorChar && isColorOrFormat(msg[i]) && !isEscaped(msg, i-1)){
+				if(msg[i] == RESET){builder.append(RESET); continue;}
+				builder.append(COLOR_SYMBOL);
+				++i;
+			}
+			builder.append(msg[i-1]);
+		}
+		if(msg.length != 0) builder.append(msg[msg.length-1]);
+		return builder.toString();
+	}
+
+	public static ChatColor getCurrentColor(String str){
+		char[] msg = str.toCharArray();
+		for(int i=msg.length-1; i>0; --i){
+			if(msg[i-1] == COLOR_SYMBOL && isColor(msg[i])) return ChatColor.getByChar(msg[i]);
+		}
+		return null;
+	}
+	//Returns NULL if no format is present at end of string
+	public static ChatColor getCurrentFormat(String str){
+		char[] msg = str.toCharArray();
+		for(int i=msg.length-1; i>0; --i){
+			if(msg[i-1] == COLOR_SYMBOL && isColorOrFormat(msg[i])){
+				return isColor(msg[i]) ? null : ChatColor.getByChar(msg[i]);
+			}
+		}
+		return null;
+	}
+	public static String getCurrentColorAndFormat(String str){
+		char[] msg = str.toCharArray();
+		String result = "";
+		for(int i=msg.length-1; i>0; --i){
+			if(msg[i-1] == COLOR_SYMBOL){
+				if(isColor(msg[i])) return ChatColor.getByChar(msg[i]) + result;
+				if(isFormat(msg[i])){result = ChatColor.getByChar(msg[i]) + result; --i;}
+			}
+		}
+		return result;
 	}
 
 	public static boolean isEscaped(char[] str, int x){

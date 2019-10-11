@@ -1,12 +1,11 @@
-package net.evmodder.EvLib;
+package net.evmodder.EvLib.extras;
 
 import java.util.HashMap;
 import org.bukkit.inventory.ItemStack;
-import net.evmodder.EvLib.RefNBTTagList;
-import net.evmodder.EvLib.ReflectionUtils;
-import net.evmodder.EvLib.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.ReflectionUtils.RefConstructor;
-import net.evmodder.EvLib.ReflectionUtils.RefMethod;
+import net.evmodder.EvLib.extras.RefNBTTagList;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefConstructor;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 
 public class RefNBTTag implements RefNBTBase{// version = X1.0
 	static final RefClass classItemStack = ReflectionUtils.getRefClass("{nms}.ItemStack");

@@ -17,28 +17,35 @@ import com.google.common.io.Files;
 import net.evmodder.EvLib.EvUtils;
 
 public class FileIO{// version = X1.0
-	static String DIR = "./plugins/EvFolder/";
+	static final String EV_DIR = "./plugins/EvFolder/";
+	public static String DIR = EV_DIR;//TODO: remove public? (only user: EvLib/extras/WebUtils.java)
+	static boolean FORCE_CUSTOM_DIR = true;
+	public static String getEvFolder(){return EV_DIR;}
 
 	public static void moveDirectoryContents(File srcDir, File destDir){
 		if(srcDir.isDirectory()){
 			for(File file : srcDir.listFiles()){
-				try{Files.move(file, destDir);}
+				try{Files.move(file, new File(destDir.getPath()+"/"+file.getName()));}
 				catch(IOException e){e.printStackTrace();}
 			}
 			srcDir.delete();
 		}
 		else try{
-			Files.move(srcDir, destDir);
+			Files.move(srcDir, new File(destDir.getPath()+"/"+srcDir.getName()));
 		}
 		catch(IOException e){e.printStackTrace();}
 	}
 
 	static void verifyDir(JavaPlugin evPl){
-		String customDir = "./plugins/"+evPl.getName()+"/";
-		if(!new File(DIR).exists() && EvUtils.installedEvPlugins().size() < 2) DIR = customDir;//replace
-		else if(new File(customDir).exists()){//merge
-			Bukkit.getLogger().warning("Relocating data in "+customDir+", this might take a minute..");
-			moveDirectoryContents(new File(customDir), new File(DIR));
+		final String CUSTOM_DIR = "./plugins/"+evPl.getName()+"/";
+		if(!new File(EV_DIR).exists() && (FORCE_CUSTOM_DIR || EvUtils.installedEvPlugins().size() < 2)){
+			DIR = CUSTOM_DIR;
+		}
+		else if(new File(CUSTOM_DIR).exists()){//merge with EvFolder
+			Bukkit.getLogger().warning("Relocating data in "+CUSTOM_DIR+", this might take a minute..");
+			File evFolder = new File(EV_DIR);
+			if(!evFolder.exists()) evFolder.mkdir();
+			moveDirectoryContents(new File(CUSTOM_DIR), evFolder);
 		}
 	}
 
@@ -133,7 +140,11 @@ public class FileIO{// version = X1.0
 		catch(IOException e){return false;}
 	}
 
-	public static YamlConfiguration loadConfig(JavaPlugin pl, String configName, InputStream defaultConfig){
+	public static boolean deleteFile(String filename){
+		return new File(DIR+filename).delete();
+	}
+
+	public static YamlConfiguration loadConfig(JavaPlugin pl, String configName,InputStream defaultConfig){
 		if(!configName.endsWith(".yml")){
 			pl.getLogger().severe("Invalid config file!");
 			pl.getLogger().severe("Configuation files must end in .yml");

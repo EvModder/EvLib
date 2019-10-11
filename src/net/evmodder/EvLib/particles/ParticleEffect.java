@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.ParticleEffects;
+package net.evmodder.EvLib.particles;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -14,8 +14,8 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
-import net.evmodder.EvLib.ReflectionUtils;
-import net.evmodder.EvLib.ReflectionUtils.RefClass;
+import net.evmodder.EvLib.extras.ReflectionUtils;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 /**
  * <b>ParticleEffect_BROKEN Library</b>
  * <p>

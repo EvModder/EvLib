@@ -70,7 +70,7 @@ public abstract class SongPlayer{
 
 	protected void createThread(){
 		playerThread = new Thread(new Runnable(){
-			@SuppressWarnings("deprecation") @Override public void run(){
+			@Override public void run(){
 				while(!destroyed){
 					long startTime = System.currentTimeMillis();
 					synchronized(SongPlayer.this){
@@ -91,6 +91,7 @@ public abstract class SongPlayer{
 								}
 							}
 							for(String s : playerList){
+								@SuppressWarnings("deprecation")
 								Player p = Bukkit.getPlayerExact(s);
 								if(p == null) continue;
 								playTick(p, tick);

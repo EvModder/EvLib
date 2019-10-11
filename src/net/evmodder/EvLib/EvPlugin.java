@@ -15,21 +15,24 @@ public abstract class EvPlugin extends JavaPlugin{
 			getLogger().severe("Error while saving plugin configuration file!");
 		}
 	}
-	
-	@Override public final void onEnable(){
-//		getLogger().info("Loading " + getDescription().getFullName());
+	@Override public void reloadConfig(){
 		InputStream defaultConfig = getClass().getResourceAsStream("/config.yml");
 		if(defaultConfig != null){
 			FileIO.verifyDir(this);
 			config = FileIO.loadConfig(this, "config-"+getName()+".yml", defaultConfig);
 		}
+	}
+
+	@Override public final void onEnable(){
+//		getLogger().info("Loading " + getDescription().getFullName());
+		reloadConfig();
 		onEvEnable();
 	}
-	
+
 	@Override public final void onDisable(){
 		onEvDisable();
 	}
-	
+
 	public void onEvEnable(){}
 	public void onEvDisable(){}
 }

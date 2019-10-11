@@ -937,7 +937,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		Collection<V> vs = null;
 		try{
 			Field transientField = getClass().getDeclaredField("values");
-			System.out.print("Access?: " + transientField.isAccessible());
+			System.out.print("Access?: " + transientField.canAccess(this));
 			transientField.setAccessible(true);
 			vs = (Collection<V>) transientField.get(this);
 			if(vs == null) {
@@ -2936,6 +2936,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 					Spliterator.ORDERED;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override public Comparator<Map.Entry<K, V>> getComparator(){
 			// Adapt or create a key-based comparator
 			if(tree.comparator != null) {
@@ -2943,7 +2944,6 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			}
 			else{
 				return (Comparator<Map.Entry<K, V>> & Serializable)(e1, e2) -> {
-					@SuppressWarnings("unchecked")
 					Comparable<? super K> k1 = (Comparable<? super K>)e1.getKey();
 					return k1.compareTo(e2.getKey());
 				};

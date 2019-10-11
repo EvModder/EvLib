@@ -1,4 +1,4 @@
-package net.evmodder.EvLib;
+package net.evmodder.EvLib.extras;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
@@ -70,15 +70,16 @@ public class ReflectionUtils{// version = X1.0
 	 * @throws RuntimeException if no class found
 	 */
 	public static RefClass getRefClass(String... classes){
-		for(String className: classes) try{
-			className = className
+		String className = "";
+		for(String rawName: classes) try{
+			className = rawName
 					.replace("{cb}", preClassB)
 					.replace("{nms}", preClassM)
 					.replace("{nm}", "net.minecraft");
 			return getRefClass(Class.forName(className));
 		}
 		catch(ClassNotFoundException ignored){}
-		throw new RuntimeException("no class found");
+		throw new RuntimeException("no class found: " + className);
 	}
 
 	/**

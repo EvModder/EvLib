@@ -1,4 +1,4 @@
-package net.evmodder.EvLib;
+package net.evmodder.EvLib.hooks;
 
 import java.math.BigDecimal;
 import org.bukkit.Bukkit;
@@ -7,10 +7,7 @@ import org.bukkit.OfflinePlayer;
 import com.earth2me.essentials.api.NoLoanPermittedException;
 import com.earth2me.essentials.api.UserDoesNotExistException;
 
-public class EssEcoHook{
-	/*public static double getBalance(OfflinePlayer p) throws UserDoesNotExistException{
-		return net.ess3.api.Economy.getMoneyExact(p.getName()).doubleValue();
-	}*/
+public class EssEcoHook {
 	public static double getBalance(OfflinePlayer p){
 		try{return net.ess3.api.Economy.getMoneyExact(p.getName()).doubleValue();}
 		catch(UserDoesNotExistException e){return 0D;}

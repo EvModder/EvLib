@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.ParticleEffects;
+package net.evmodder.EvLib.particles;
 
 import org.bukkit.Location;
 import org.bukkit.util.Vector;

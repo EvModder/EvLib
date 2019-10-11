@@ -1,4 +1,4 @@
-package net.evmodder.EvLib;
+package net.evmodder.EvLib.extras;
 
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -71,8 +71,8 @@ public class TypeUtils{EntityType s;
 	}
 
 	public static boolean isSpawnEgg(Material mat){return eggToEntity.keySet().contains(mat);}
-	public static EntityType getSpawnedMob(Material mat){return eggToEntity.get(mat);}
-	public static Material getSpawnEgg(EntityType etype){return entityToEgg.get(etype);}
+	public static EntityType getSpawnedMob(Material spawnEggType){return eggToEntity.get(spawnEggType);}
+	public static Material getSpawnEgg(EntityType eType){return entityToEgg.get(eType);}
 
 	public static boolean isOre(Material mat){
 		switch(mat){
@@ -465,6 +465,95 @@ public class TypeUtils{EntityType s;
 				return true;
 			default:
 				return false;
+		}
+	}
+
+	public static boolean isPlanks(Material mat){
+		switch(mat){
+			case ACACIA_PLANKS:
+			case BIRCH_PLANKS:
+			case DARK_OAK_PLANKS:
+			case JUNGLE_PLANKS:
+			case OAK_PLANKS:
+			case SPRUCE_PLANKS:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	public static boolean isSword(Material mat){
+		switch(mat){
+			case DIAMOND_SWORD:
+			case IRON_SWORD:
+			case STONE_SWORD:
+			case GOLDEN_SWORD:
+			case WOODEN_SWORD:
+				return true;
+			default:
+				return false;
+		}
+	}
+	public static boolean isAxe(Material mat){
+		switch(mat){
+			case DIAMOND_AXE:
+			case IRON_AXE:
+			case STONE_AXE:
+			case GOLDEN_AXE:
+			case WOODEN_AXE:
+				return true;
+			default:
+				return false;
+		}
+	}
+	public static boolean isPickaxe(Material mat){
+		switch(mat){
+			case DIAMOND_PICKAXE:
+			case IRON_PICKAXE:
+			case STONE_PICKAXE:
+			case GOLDEN_PICKAXE:
+			case WOODEN_PICKAXE:
+				return true;
+			default:
+				return false;
+		}
+	}
+	public static boolean isShovel(Material mat){
+		switch(mat){
+			case DIAMOND_SHOVEL:
+			case IRON_SHOVEL:
+			case STONE_SHOVEL:
+			case GOLDEN_SHOVEL:
+			case WOODEN_SHOVEL:
+				return true;
+			default:
+				return false;
+		}
+	}
+	public static boolean isHow(Material mat){
+		switch(mat){
+			case DIAMOND_HOE:
+			case IRON_HOE:
+			case STONE_HOE:
+			case GOLDEN_HOE:
+			case WOODEN_HOE:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	enum ObtainableOptions{
+		SILK_SPAWNERS, SILK_INFESTED, MOB_EGGS, CMD_BLOCKS,
+		BEDROCK, END_PORTAL_FRAMES, BARRIERS, STRUCTURE_BLOCKS, PETRIFIED_SLABS,
+		ITEM_LORE, ITEM_NAME_COLOR, CONFLICTING_ENCHANTS, ABOVE_MAX_ENCHANTS, OVERSTACKED,
+		PLAYER_HEADS, TATTERED_BOOKS
+	};
+	public static boolean isObtainable(Material mat, ObtainableOptions... opts){
+		switch(mat){
+			//TODO: enumerate all unobtainables
+			default:
+				return true;
 		}
 	}
 
