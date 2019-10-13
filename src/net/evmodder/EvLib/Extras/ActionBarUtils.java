@@ -49,8 +49,8 @@ public class ActionBarUtils{
 						.getDeclaredMethod("sendPacket", classPacket.getRealClass());
 				sendPacketMethod.invoke(playerConn, packet);
 			}
-			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchFieldException
-					| SecurityException | NoSuchMethodException e){e.printStackTrace();}
+			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchFieldException | SecurityException | NoSuchMethodException e){e.printStackTrace();}
 		}
 	}
 

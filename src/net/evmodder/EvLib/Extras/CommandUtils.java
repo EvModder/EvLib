@@ -46,7 +46,7 @@ public class CommandUtils {
 		}
 		Collections.sort(commandNames);
 
-		int totalPages = (int)((commandNames.size()-2)/9) + 1;
+		int totalPages = (commandNames.size()-2)/9 + 1;
 		if(pageNum > totalPages) pageNum = totalPages;
 
 		//essentials-style help, minus the plugins.

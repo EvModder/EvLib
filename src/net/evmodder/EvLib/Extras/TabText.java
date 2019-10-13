@@ -10,15 +10,10 @@ import org.bukkit.ChatColor;
  * TabText: class to write column formatted text in minecraft chat area
  * 
  * - it splits each field and trims or fill with spaces to adjust tabs
- * 
- * general usage example:
- * 
- * - create a multiline string similar to csv format and create a TabText object with it
- * - use line feed "\n" (ascii 10) as line separator and grave accent "`" (ascii 96) as field separator
  * - you can use some format codes, see http://minecraft.gamepedia.com/Formatting_codes
  * - DO NOT USE LOWERCASE CODES OR BOLD FORMAT BECAUSE IT CAN BREAK SPACING
  * 
- * - // example
+ * - // example:
  * - multilineString  = "PLAYER------`RATE------`RANK------\n";
  * - multilineString += "§EJohn`10.01`1§R\n";
  * - multilineString += "Doe`-9.30`2";
@@ -32,7 +27,7 @@ import org.bukkit.ChatColor;
  * see each method javadoc for additional details 
  * 
  * @version 5
- * @author atesin#gmail,com
+ * @authors atesin#gmail,com evmodder#gmail,com
  * </pre>
  */
 public class TabText{//max chat width is 53*6 + 2 = 320
@@ -44,7 +39,6 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 	private static Map<Integer, String> charList = new HashMap<Integer, String>();
 
 	// CONSTRUCTOR METHOD
-
 	public TabText(String multilineString){
 		setText(multilineString);
 	}
@@ -88,8 +82,8 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 		}
 		return tt.getPage(0, mono, ChatColor.BLACK);
 	}
-	// SETTER METHODS
 
+	// SETTER METHODS
 	/** can reuse the object to save resources by calling this method */
 	public void setText(String multilineString){
 		lines = multilineString.split("\n", -1);
@@ -119,9 +113,8 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 	}
 
 	// REGULAR METHODS
-
 	/**
-	 *  append chars with its width to be checked too, default width = 6 so you may only use for width != 6 chars 
+	 *  append chars with its width to be checked too, default width = 6 so you may only use for width != 6 chars
 	 *  @param chars a string with the chars to be added (careful with unicode or ansi chars, do some tests before)
 	 *  @param charsWidth horizontal space in pixels each char occupies
 	 */
@@ -184,7 +177,6 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 	}
 
 	// PIXEL WIDTH CALCULATION METHODS
-
 	/**
 	 * returns character total width, considering format codes, internal use
 	 * @param ch the character to check

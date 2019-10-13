@@ -56,9 +56,7 @@ public class ReflectionUtils{// version = X1.0
 	/**
 	 * @return true if server has forge classes
 	 */
-	public static boolean isForge(){
-		return forge;
-	}
+	public static boolean isForge(){ return forge; }
 
 	/**
 	 * Get class for name.
@@ -87,9 +85,7 @@ public class ReflectionUtils{// version = X1.0
 	 * @param clazz class
 	 * @return RefClass based on passed class
 	 */
-	public static RefClass getRefClass(Class<?> clazz){
-		return new RefClass(clazz);
-	}
+	public static RefClass getRefClass(Class<?> clazz){ return new RefClass(clazz); }
 
 	/**
 	 * RefClass - utility to simplify work with reflections.
@@ -101,21 +97,15 @@ public class ReflectionUtils{// version = X1.0
 		 * get passed class
 		 * @return class
 		 */
-		public Class<?> getRealClass(){
-			return clazz;
-		}
-		private RefClass(Class<?> clazz){
-			this.clazz = clazz;
-		}
+		public Class<?> getRealClass(){ return clazz; }
+		private RefClass(Class<?> clazz){ this.clazz = clazz; }
 
 		/**
 		 * see {@link Class#isInstance(Object)}
 		 * @param object the object to check
 		 * @return true if object is an instance of this class
 		 */
-		public boolean isInstance(Object object){
-			return clazz.isInstance(object);
-		}
+		public boolean isInstance(Object object){ return clazz.isInstance(object); }
 
 		/**
 		 * get existing method by name and types
@@ -211,16 +201,6 @@ public class ReflectionUtils{// version = X1.0
 		/**
 		 * find method by return value
 		 * @param type type of returned value
-		 * @throws RuntimeException if method not found
-		 * @return RefMethod
-		 */
-		public RefMethod findMethodByReturnType(RefClass type){
-			return findMethodByReturnType(type.clazz);
-		}
-
-		/**
-		 * find method by return value
-		 * @param type type of returned value
 		 * @return RefMethod
 		 * @throws RuntimeException if method not found
 		 */
@@ -234,6 +214,14 @@ public class ReflectionUtils{// version = X1.0
 			}
 			throw new RuntimeException("no such method");
 		}
+
+		/**
+		 * find method by return value
+		 * @param type type of returned value
+		 * @throws RuntimeException if method not found
+		 * @return RefMethod
+		 */
+		public RefMethod findMethodByReturnType(RefClass type){ return findMethodByReturnType(type.clazz); }
 
 		/**
 		 * find constructor by number of arguments
@@ -273,16 +261,6 @@ public class ReflectionUtils{// version = X1.0
 		 * @return RefField
 		 * @throws RuntimeException if field not found
 		 */
-		public RefField findField(RefClass type){
-			return findField(type.clazz);
-		}
-
-		/**
-		 * find field by type
-		 * @param type field type
-		 * @return RefField
-		 * @throws RuntimeException if field not found
-		 */
 		public RefField findField(Class<?> type){
 			if(type==null) type = void.class;
 			List<Field> fields = new ArrayList<Field>();
@@ -293,6 +271,14 @@ public class ReflectionUtils{// version = X1.0
 			}
 			throw new RuntimeException("no such field");
 		}
+
+		/**
+		 * find field by type
+		 * @param type field type
+		 * @return RefField
+		 * @throws RuntimeException if field not found
+		 */
+		public RefField findField(RefClass type){ return findField(type.clazz); }
 	}
 
 	/**
@@ -304,21 +290,15 @@ public class ReflectionUtils{// version = X1.0
 		/**
 		 * @return passed method
 		 */
-		public Method getRealMethod(){
-			return method;
-		}
+		public Method getRealMethod(){ return method; }
 		/**
 		 * @return owner class of method
 		 */
-		public RefClass getRefClass(){
-			return new RefClass(method.getDeclaringClass());
-		}
+		public RefClass getRefClass(){ return new RefClass(method.getDeclaringClass()); }
 		/**
 		 * @return class of method return type
 		 */
-		public RefClass getReturnRefClass(){
-			return new RefClass(method.getReturnType());
-		}
+		public RefClass getReturnRefClass(){ return new RefClass(method.getReturnType()); }
 		private RefMethod (Method method){
 			this.method = method;
 			method.setAccessible(true);
@@ -328,9 +308,7 @@ public class ReflectionUtils{// version = X1.0
 		 * @param e object to which the method is applied
 		 * @return RefExecutor with method call(...)
 		 */
-		public RefExecutor of(Object e){
-			return new RefExecutor(e);
-		}
+		public RefExecutor of(Object e){ return new RefExecutor(e); }
 
 		/**
 		 * call static method
@@ -346,9 +324,7 @@ public class ReflectionUtils{// version = X1.0
 
 		public class RefExecutor{
 			Object e;
-			public RefExecutor(Object e){
-				this.e = e;
-			}
+			public RefExecutor(Object e){ this.e = e; }
 
 			/**
 			 * apply method for selected object
@@ -374,16 +350,12 @@ public class ReflectionUtils{// version = X1.0
 		/**
 		 * @return passed constructor
 		 */
-		public Constructor<?> getRealConstructor(){
-			return constructor;
-		}
+		public Constructor<?> getRealConstructor(){ return constructor; }
 
 		/**
 		 * @return owner class of method
 		 */
-		public RefClass getRefClass(){
-			return new RefClass(constructor.getDeclaringClass());
-		}
+		public RefClass getRefClass(){ return new RefClass(constructor.getDeclaringClass()); }
 		private RefConstructor (Constructor<?> constructor){
 			this.constructor = constructor;
 			constructor.setAccessible(true);
@@ -409,23 +381,17 @@ public class ReflectionUtils{// version = X1.0
 		/**
 		 * @return passed field
 		 */
-		public Field getRealField(){
-			return field;
-		}
+		public Field getRealField(){ return field; }
 
 		/**
 		 * @return owner class of field
 		 */
-		public RefClass getRefClass(){
-			return new RefClass(field.getDeclaringClass());
-		}
+		public RefClass getRefClass(){ return new RefClass(field.getDeclaringClass()); }
 
 		/**
 		 * @return type of field
 		 */
-		public RefClass getFieldRefClass(){
-			return new RefClass(field.getType());
-		}
+		public RefClass getFieldRefClass(){ return new RefClass(field.getType()); }
 		private RefField(Field field){
 			this.field = field;
 			field.setAccessible(true);
@@ -436,14 +402,10 @@ public class ReflectionUtils{// version = X1.0
 		 * @param e applied object
 		 * @return RefExecutor with getter and setter
 		 */
-		public RefExecutor of(Object e){
-			return new RefExecutor(e);
-		}
+		public RefExecutor of(Object e){ return new RefExecutor(e); }
 		public class RefExecutor{
 			Object e;
-			public RefExecutor(Object e){
-				this.e = e;
-			}
+			public RefExecutor(Object e){ this.e = e; }
 
 			/**
 			 * set field value for applied object

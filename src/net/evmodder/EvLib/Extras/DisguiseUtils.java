@@ -7,8 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import net.evmodder.EvLib.extras.ReflectionUtils.*;
 
-public class DisguiseUtils {
-
+public class DisguiseUtils{
 	private DisguiseType disguise;
 	private UUID player;
 	private RefClass entity;
