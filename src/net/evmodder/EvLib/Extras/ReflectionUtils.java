@@ -2,6 +2,7 @@ package net.evmodder.EvLib.extras;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
+import net.minecraft.server.v1_13_R2.EntityGhast;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -15,16 +16,20 @@ import java.util.List;
  * @version 1.0
  */
 public class ReflectionUtils{// version = X1.0
+	EntityGhast e;
 	/**  prefix of bukkit classes */
 	private static String preClassB = "org.bukkit.craftbukkit";
 	/** prefix of minecraft classes */
 	private static String preClassM = "net.minecraft.server";
 	/** boolean value, TRUE if server uses forge or MCPC+ */
 	private static boolean forge = false;
+	/** vX_XX_RX server version string (e.g.: v1_13_R2) */
+	private static String serverVersionString;
+	public static String getServerVersionString(){return serverVersionString;}
 
 	/** check server version and class names */
 	static{
-		if(Bukkit.getServer()!=null){
+		if(Bukkit.getServer() != null){
 			if(Bukkit.getVersion().contains("MCPC") || Bukkit.getVersion().contains("Forge")) forge = true;
 			Server server = Bukkit.getServer();
 			Class<?> bukkitServerClass = server.getClass();
@@ -49,6 +54,7 @@ public class ReflectionUtils{// version = X1.0
 			if(pas.length == 5){
 				String verM = pas[3];
 				preClassM += "."+verM;
+				serverVersionString = verM;
 			}
 		}
 	}
