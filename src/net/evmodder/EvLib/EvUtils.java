@@ -28,8 +28,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Container;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Panda;
-import org.bukkit.entity.Panda.Gene;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -215,7 +213,7 @@ public class EvUtils{// version = 1.1
 		return builder.toString();
 	}
 
-	public static Gene getPandaTrait(Panda panda){
+	/*public static Gene getPandaTrait(Panda panda){
 		if(panda.getMainGene() == panda.getHiddenGene()) return panda.getMainGene();
 		switch(panda.getMainGene()){
 			case BROWN:
@@ -223,6 +221,16 @@ public class EvUtils{// version = 1.1
 				return Gene.NORMAL;
 			default:
 				return panda.getMainGene();
+		}
+	}*/
+	public static String getPandaTrait(String mainGene, String hiddenGene){
+		if(mainGene.equals(hiddenGene)) return mainGene;
+		switch(mainGene){
+			case "BROWN":
+			case "WEAK":
+				return "NORMAL";
+			default:
+				return mainGene;
 		}
 	}
 
