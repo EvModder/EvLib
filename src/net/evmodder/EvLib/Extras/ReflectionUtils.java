@@ -2,7 +2,6 @@ package net.evmodder.EvLib.extras;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
-import net.minecraft.server.v1_13_R2.EntityGhast;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -16,7 +15,6 @@ import java.util.List;
  * @version 1.0
  */
 public class ReflectionUtils{// version = X1.0
-	EntityGhast e;
 	/**  prefix of bukkit classes */
 	private static String preClassB = "org.bukkit.craftbukkit";
 	/** prefix of minecraft classes */
