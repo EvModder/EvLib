@@ -15,10 +15,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -115,7 +113,7 @@ public class WebUtils {
 
 		// Setting up patterns
 		String authBeg = "{\"accessToken\":\"";
-		String authEnd = "\",\"clientToken\":\"";
+		String authEnd = "\",\"";
 
 		return getStringBetween(output, authBeg, authEnd);
 	}
@@ -150,8 +148,8 @@ public class WebUtils {
 		return newImg;
 	}
 
-	static void makeUpsideDownCopies(String[] heads, Map<String, String> newHeads,
-			String outfolder, String uuid, String token){
+	static TreeMap<String, String> makeUpsideDownCopies(String[] heads, String outfolder, String uuid, String token){
+		TreeMap<String, String> newHeads = new TreeMap<String, String>();
 		for(String line : heads){
 			int idx = line.indexOf(':');
 			if(idx > -1 && idx < line.length()-1){
@@ -177,15 +175,16 @@ public class WebUtils {
 					BufferedImage image = upsideDownHead(ImageIO.read(inImg));
 
 					ImageIO.write(image, "png", outfile);
-					System.out.println("2. Saved upside down: "+url+" ("+name+")");
+					System.out.println("2. Saved upside down img: "+url+" ("+name+")");
 
 					//===========================================================================================
 					try{Thread.sleep(8000);}catch(InterruptedException e1){e1.printStackTrace();}//8s
+					//https://api.mojang.com/user/profile/0e314b6029c74e35bef33c652c8fb467/skin
 					conn = (HttpURLConnection)new URL("https://api.mojang.com/user/profile/" + uuid + "/skin")
 							.openConnection();
 					conn.setRequestProperty("Authorization", "Bearer "+token);
 					conn.setRequestProperty("Content-Length", "6000");
-					String boundary = "someArbitraryText";
+					String boundary = "-----------------------------5754010136459630501171145765";//"someArbitraryText";
 					conn.setRequestProperty("Content-Type", "multipart/form-data; boundary="+boundary);
 					conn.setDoInput(true);
 					conn.setDoOutput(true);
@@ -247,24 +246,35 @@ public class WebUtils {
 				catch(IOException e){e.printStackTrace();}
 			}
 		}
+		return newHeads;
 	}
 
 	static void runGrumm(){
-		String token = authenticateMojang("mc.alternatecraft@gmail.com", "getskinz!");
-		String uuid = "cf49ab9298164c7fa698f84514dd7f74";
+		String token = authenticateMojang("nateleake@nateleake.com", "whys0pa1nful");
+		String uuid = "0e314b6029c74e35bef33c652c8fb467";
 		System.out.println("token = "+token);
 
-		TreeMap<String, String> newHeads = new TreeMap<String, String>();
-		ArrayList<String> heads = new ArrayList<String>();
-		String[] targetHeads = new String[]{"CREEPER"};
-		for(String headData : FileIO.loadFile("head-list.txt", "").split("\n")){
-			for(String target : targetHeads) if(headData.startsWith(target) && !headData.contains("GRUMM"))
-				heads.add(headData);
+		String[] targetHeads = new String[]{
+				"BEE:", "BEE|ANGRY:", "BEE|POLLINATED:", "BEE|POLLINATED|ANGRY:",
+				"CAT|TUXEDO:",
+				"GHAST|SCREAMING:"
+		};
+		String[] headsData = FileIO.loadFile("head-textures.txt", "").split("\n");
+		String[] headsToFlip = new String[targetHeads.length];
+		for(int i=0; i<targetHeads.length; ++i){
+			for(String headData : headsData){
+				if(headData.startsWith(targetHeads[i]) && !headData.contains("|GRUMM:")){
+					headsToFlip[i] = headData;
+					break;
+				}
+			}
+			if(headsToFlip[i] == null) System.out.println("Could not find target head: "+targetHeads[i]);
 		}
-		System.out.println(StringUtils.join(heads, "\n"));
+
+		System.out.println(StringUtils.join(headsToFlip, "\n"));
 		System.out.println("Beginning conversion...");
-		System.out.println("Approximate duration in minutes: "+(40*heads.size()/60));// 40s/head
-		makeUpsideDownCopies(heads.toArray(new String[heads.size()]), newHeads, "textures", uuid, token);
+		System.out.println("Approximate duration in minutes: "+(40*headsToFlip.length)/60);// 40s/head
+		TreeMap<String, String> newHeads = makeUpsideDownCopies(headsToFlip, "tmp_textures", uuid, token);
 
 		System.out.println("Results: ");
 		for(String e : newHeads.keySet()){
@@ -296,11 +306,27 @@ public class WebUtils {
 		System.out.println("Missing drop rates for: "+missingDrpC);
 		System.out.println("Extra drop rates for: "+extraDrpC);
 	}
+	static void checkMissingGrummTextures(){
+		TreeSet<String> regularTxtrs = new TreeSet<String>();
+		TreeSet<String> grummTxtrs = new TreeSet<String>();
+		for(String headData : FileIO.loadFile("head-textures.txt", "").split("\n")){
+			int i = headData.indexOf(':'), j = headData.indexOf('|');
+			if(i != -1){
+				String headName = headData.substring(0, i);
+				if(j != -1 && headName.endsWith("GRUMM")) grummTxtrs.add(headName.substring(0, headName.length()-6));
+				else regularTxtrs.add(headName);
+			}
+		}
+		TreeSet<String> missingGrumms = new TreeSet<String>();
+		for(String headName : regularTxtrs) if(!grummTxtrs.contains(headName)) missingGrumms.add(headName);
+		System.out.println("Missing Grumms for: "+missingGrumms);
+	}
 
 	public static void main(String... args){
 		//com.sun.org.apache.xml.internal.security.Init.init();
 		FileIO.DIR = "./";
 		checkMissingTextures();
+		checkMissingGrummTextures();
 		//runGrumm();
 	}
 }

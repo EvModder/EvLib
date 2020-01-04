@@ -379,6 +379,11 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 		if(index >= root.size){
 			throw new ArrayIndexOutOfBoundsException(index + " >= " + root.size);
 		}
+		if(index < 0){
+			throw new ArrayIndexOutOfBoundsException("Negative index: " + index);
+		}
+		System.out.println("getKeyAtValueIndex: "+index+", root.size: "+root.size);
+		System.out.println("results: "+getEntryAtValueIndex(index));
 		return getEntryAtValueIndex(index).key;
 	}
 
@@ -517,6 +522,8 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	public final Entry<K, X> getEntryAtValueIndex(int index){
 		Entry<K, X> p = root;
 		while(p != null){
+			System.out.println("left sz: "+(p.left == null ? null : p.left.size)
+					+", right sz: "+(p.right == null ? null : p.right.size)+", cur sz: "+p.value.size());
 			int leftSz = p.left != null ? p.left.size : 0;
 			if(leftSz > index) p = p.left;
 			else if(leftSz + p.value.size() <= index){
@@ -1252,7 +1259,7 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 		if(p == null) return false;
 
 		if(p.removeValue(value)){
-			Entry<K, X> parent = p.parent;
+			Entry<K, X> parent = p;
 			while(parent != null){
 				--parent.size;
 				parent = parent.parent;

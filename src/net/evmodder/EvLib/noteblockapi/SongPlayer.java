@@ -91,7 +91,7 @@ public abstract class SongPlayer{
 								}
 							}
 							for(String s : playerList){
-								@SuppressWarnings("deprecation")
+								//@SuppressWarnings("deprecation")
 								Player p = Bukkit.getPlayerExact(s);
 								if(p == null) continue;
 								playTick(p, tick);

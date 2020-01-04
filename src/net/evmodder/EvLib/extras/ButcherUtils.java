@@ -100,7 +100,7 @@ public class ButcherUtils{
 			if(!unique){
 				if(entity instanceof LivingEntity){
 					LivingEntity le = (LivingEntity) entity;
-					if(le.isLeashed()) continue;
+					if(le.isLeashed() || !le.getRemoveWhenFarAway()) continue;
 				}
 				else if(isUnique(entity.getType())) continue;
 			}
