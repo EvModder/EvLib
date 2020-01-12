@@ -31,7 +31,7 @@ import org.bukkit.ChatColor;
  * </pre>
  */
 public class TabText{//max chat width is 53*6 + 2 = 320
-	final static int CHAT_WIDTH = 320, MONO_WIDTH = 80;
+	final static int CHAT_WIDTH = 320, MONO_WIDTH = 80, MAX_PLAYER_NAME_WIDTH = 96/*6*16*/;
 	private int chatHeight;
 	private int[] tabs;
 	private int numPages;
@@ -43,11 +43,14 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 		setText(multilineString);
 	}
 
+	// "tabs" = columns. Specify a width for each.
+	// If flexFill=true, each column will grow evenly to fill any extra width.
 	public static String parse(String str){return parse(str, false, false);}
 	public static String parse(String str, boolean mono, boolean flexFill){
 		int newLine = str.indexOf('\n');
+		// Create a column for each '`' in the top line
 		int numTabs = StringUtils.countMatches(newLine == -1 ? str : str.substring(0, newLine), "`");
-		return parse(str, mono, flexFill, new int[numTabs]);
+		return parse(str, mono, flexFill, new int[Math.max(numTabs, 1)]);
 	}
 	public static String parse(String str, boolean mono, boolean flexFill, int[] tabs){
 		TabText tt = new TabText(str);
@@ -187,7 +190,7 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 		if(mono) return ch == '§' ? -1 : 1;
 		switch(ch){
 			case '§':
-				return -6;
+				return -6;//5
 			case '!':
 			case '.':
 			case ',':
@@ -227,7 +230,22 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 
 	private static int strLen(String str, boolean mono){
 		int len = 0;
-		for(char ch : str.toCharArray()) len += pxLen(ch, mono);
+		if(mono){
+			for(char ch : str.toCharArray()) len += pxLen(ch, true);
+		}
+		else{
+			boolean bold = false, colorPick = false;
+			for(char ch : str.toCharArray()){
+				if(colorPick){
+					if(TextUtils.isColor(ch)) bold = false;
+					else if(ch == 'l' || ch == 'L') bold = true;
+				}
+				colorPick = (ch == '§');
+				int pxLen = pxLen(ch, mono);
+				len += pxLen;
+				if(bold && pxLen > 0) ++len;
+			}
+		}
 		return len;
 	}
 
@@ -249,10 +267,9 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 		return new Object[]{str.substring(0, len4), len2};
 	}
 
-	public static String repeat(int count, char with) {
+	private static String repeat(int count, char with) {
 		return new String(new char[count]).replace('\0', with);
 	}
-
 
 	/**
 	 * sort lines by column values, string or numeric, IF SORT BY DECIMALS IT MUST HAVE SAME DECIMAL POSITIONS

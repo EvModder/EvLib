@@ -35,7 +35,7 @@ public class TextUtils{
 			case 'a': case 'b': case 'c': case 'd': case 'e':
 			case 'k': case 'l': case 'm': case 'n': case 'o':
 			case 'f': case 'r': return true;
-		default: return false;
+			default: return false;
 		}
 	}
 /*	private static final RefClass classIChatBaseComponent = ReflectionUtils.getRefClass("{nms}.IChatBaseComponent");
@@ -300,5 +300,66 @@ public class TextUtils{
 				.append(coordColor).append(String.format("%.2f", loc.getY())).append(commaColor).append(',')
 				.append(coordColor).append(String.format("%.2f", loc.getZ()))
 			.toString();
+	}
+
+	/* ----------==========---------- PIXEL WIDTH CALCULATION METHODS ----------==========---------- */
+	final public static int MAX_PIXEL_WIDTH = 320, MAX_MONO_WIDTH = 80, MAX_PLAYERNAME_WIDTH = 96/*6*16*/;
+	/**
+	 * returns character pixel-width, NOT safe with format codes
+	 * @param ch the character to check
+	 * @return character width in pixels
+	 */
+	public static int pxLen(char ch){
+		switch(ch){
+			case '§':
+				return -6; // Actual width is 5
+			case '.': case ',':
+			case ':': case ';':
+			case 'i': case '!': case '|': case '\'':
+				return 2;
+			case '`':
+			case 'l':
+				return 3;
+			case 'I': case 't':
+			case '[': case ']': case '(': case ')': case '{': case '}':
+			case ' ': // space!
+				return 4;
+			case '"': case '*':
+			case '<': case '>':
+			case 'f': case 'k':
+				return 5;
+			case '@': case '~':
+				return 7;
+		}
+		//for(int px : charList.keySet()) if(charList.get(px).indexOf(ch) >= 0) return px;
+		return 6;
+	}
+
+	/**
+	 * returns String pixel-width, considering format codes
+	 * @param str the String to check
+	 * @return String width in pixels
+	 */
+	public static int strLen(String str, boolean mono){
+		if(mono) return ChatColor.stripColor(str).length();
+		int len = 0;
+		boolean bold = false, colorPick = false;
+		for(char ch : str.toCharArray()){
+			if(colorPick){
+				switch(ch){
+					case '0': case '1': case '2': case '3': case '4':
+					case '5': case '6': case '7': case '8': case '9':
+					case 'a': case 'b': case 'c': case 'd': case 'e':
+					case 'f': case 'r': bold = false; continue;
+					case 'l': bold = true; continue;
+					case 'k': case 'm': case 'n': case 'o': continue;
+					default: /**/continue; // Apparently, "§x" => ""
+				}
+			}
+			colorPick = (ch == '§');
+			len += pxLen(ch);
+			if(bold && pxLen(ch) > 0) ++len;
+		}
+		return len;
 	}
 }
