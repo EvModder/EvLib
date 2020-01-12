@@ -28,7 +28,9 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Container;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -126,6 +128,18 @@ public class EvUtils{// version = 1.1
 		return advs;
 	}
 
+	public static Collection<ItemStack> getEquipmentGuaranteedToDrop(LivingEntity entity){
+		ArrayList<ItemStack> itemsThatWillDrop = new ArrayList<>();
+		EntityEquipment equipment = entity.getEquipment();
+		if(equipment.getItemInMainHandDropChance() >= 1) itemsThatWillDrop.add(equipment.getItemInMainHand());
+		if(equipment.getItemInOffHandDropChance() >= 1) itemsThatWillDrop.add(equipment.getItemInOffHand());
+		if(equipment.getChestplateDropChance() >= 1) itemsThatWillDrop.add(equipment.getChestplate());
+		if(equipment.getLeggingsDropChance() >= 1) itemsThatWillDrop.add(equipment.getLeggings());
+		if(equipment.getHelmetDropChance() >= 1) itemsThatWillDrop.add(equipment.getHelmet());
+		if(equipment.getBootsDropChance() >= 1) itemsThatWillDrop.add(equipment.getBoots());
+		return itemsThatWillDrop;
+	}
+
 	public static boolean notFar(Location from, Location to){
 		int x1 = from.getBlockX(), y1 = from.getBlockY(), z1 = from.getBlockZ(),
 			x2 = to.getBlockX(), y2 = to.getBlockY(), z2 = to.getBlockZ();
@@ -134,6 +148,30 @@ public class EvUtils{// version = 1.1
 				Math.abs(y1 - y2) < 15 &&
 				Math.abs(z1 - z2) < 20 &&
 				from.getWorld().getName().equals(to.getWorld().getName()));
+	}
+
+	public static Location getClosestBlock(Location start, int MAX_DIST, Function<Block, Boolean> test){
+		if(test.apply(start.getBlock())) return start;
+		World w  = start.getWorld();
+		int cX = start.getBlockX(), cY = start.getBlockY(), cZ = start.getBlockZ();
+		for(int dist = 1; dist < MAX_DIST; ++dist){
+			int mnX = cX-dist, mxX = cX+dist;
+			int mnZ = cZ-dist, mxZ = cZ+dist;
+			int mnY = Math.max(cY-dist, 0), mxY = Math.min(cY+dist, 256);
+			for(int y=mnY; y<=mxY; ++y) for(int z=mnZ; z<=mxZ; ++z){
+				if(test.apply(w.getBlockAt(mnX, y, z))) return new Location(w, mnX, y, z);
+				if(test.apply(w.getBlockAt(mxX, y, z))) return new Location(w, mxX, y, z);
+			}
+			for(int x=mnX; x<=mxX; ++x) for(int z=mnZ; z<=mxZ; ++z){
+				if(test.apply(w.getBlockAt(x, mnY, z))) return new Location(w, x, mnY, z);
+				if(test.apply(w.getBlockAt(x, mxY, z))) return new Location(w, x, mxY, z);
+			}
+			for(int x=mnX; x<=mxX; ++x) for(int y=mnY; y<=mxY; ++y){
+				if(test.apply(w.getBlockAt(x, y, mnZ))) return new Location(w, x, y, mnZ);
+				if(test.apply(w.getBlockAt(x, y, mxZ))) return new Location(w, x, y, mxZ);
+			}
+		}
+		return null;
 	}
 
 	public static String executePost(String post){
