@@ -272,6 +272,7 @@ public class EvUtils{// version = 1.1
 		}
 	}
 
+	// TODO: Move to TypeUtils perhaps?
 	public static boolean isHead(Material type){
 		switch(type){
 			case CREEPER_HEAD:

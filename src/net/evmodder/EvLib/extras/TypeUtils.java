@@ -1,6 +1,7 @@
 package net.evmodder.EvLib.extras;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
@@ -10,63 +11,12 @@ public class TypeUtils{EntityType s;
 	final static HashMap<Material, EntityType> eggToEntity = new HashMap<Material, EntityType>();
 	final static HashMap<EntityType, Material> entityToEgg = new HashMap<EntityType, Material>();
 	static{
-		eggToEntity.put(Material.BAT_SPAWN_EGG, EntityType.BAT);
-		eggToEntity.put(Material.BLAZE_SPAWN_EGG, EntityType.BLAZE);
-		eggToEntity.put(Material.CAT_SPAWN_EGG, EntityType.CAT);
-		eggToEntity.put(Material.CAVE_SPIDER_SPAWN_EGG, EntityType.CAVE_SPIDER);
-		eggToEntity.put(Material.CHICKEN_SPAWN_EGG, EntityType.CHICKEN);
-		eggToEntity.put(Material.COD_SPAWN_EGG, EntityType.COD);
-		eggToEntity.put(Material.COW_SPAWN_EGG, EntityType.COW);
-		eggToEntity.put(Material.CREEPER_SPAWN_EGG, EntityType.CREEPER);
-		eggToEntity.put(Material.DOLPHIN_SPAWN_EGG, EntityType.DOLPHIN);
-		eggToEntity.put(Material.DONKEY_SPAWN_EGG, EntityType.DONKEY);
-		eggToEntity.put(Material.DROWNED_SPAWN_EGG, EntityType.DROWNED);
-		eggToEntity.put(Material.ELDER_GUARDIAN_SPAWN_EGG, EntityType.ELDER_GUARDIAN);
-		eggToEntity.put(Material.ENDERMAN_SPAWN_EGG, EntityType.ENDERMAN);
-		eggToEntity.put(Material.ENDERMITE_SPAWN_EGG, EntityType.ENDERMITE);
-		eggToEntity.put(Material.EVOKER_SPAWN_EGG, EntityType.EVOKER);
-		eggToEntity.put(Material.FOX_SPAWN_EGG, EntityType.FOX);
-		eggToEntity.put(Material.GHAST_SPAWN_EGG, EntityType.GHAST);
-		eggToEntity.put(Material.GUARDIAN_SPAWN_EGG, EntityType.GUARDIAN);
-		eggToEntity.put(Material.HORSE_SPAWN_EGG, EntityType.HORSE);
-		eggToEntity.put(Material.HUSK_SPAWN_EGG, EntityType.HUSK);
-		eggToEntity.put(Material.LLAMA_SPAWN_EGG, EntityType.LLAMA);
-		eggToEntity.put(Material.MAGMA_CUBE_SPAWN_EGG, EntityType.MAGMA_CUBE);
+		for(EntityType eType : EntityType.values()){
+			Material eggType = Material.getMaterial(eType.name()+"_SPAWN_EGG");
+			if(eggType != null) eggToEntity.put(eggType, eType);
+		}
 		eggToEntity.put(Material.MOOSHROOM_SPAWN_EGG, EntityType.MUSHROOM_COW);
-		eggToEntity.put(Material.MULE_SPAWN_EGG, EntityType.MULE);
-		eggToEntity.put(Material.OCELOT_SPAWN_EGG, EntityType.OCELOT);
-		eggToEntity.put(Material.PANDA_SPAWN_EGG, EntityType.PANDA);
-		eggToEntity.put(Material.PARROT_SPAWN_EGG, EntityType.PARROT);
-		eggToEntity.put(Material.PHANTOM_SPAWN_EGG, EntityType.PHANTOM);
-		eggToEntity.put(Material.PIG_SPAWN_EGG, EntityType.PIG);
-		eggToEntity.put(Material.PILLAGER_SPAWN_EGG, EntityType.PILLAGER);
-		eggToEntity.put(Material.POLAR_BEAR_SPAWN_EGG, EntityType.POLAR_BEAR);
-		eggToEntity.put(Material.PUFFERFISH_SPAWN_EGG, EntityType.PUFFERFISH);
-		eggToEntity.put(Material.RABBIT_SPAWN_EGG, EntityType.RABBIT);
-		eggToEntity.put(Material.RAVAGER_SPAWN_EGG, EntityType.RAVAGER);
-		eggToEntity.put(Material.SALMON_SPAWN_EGG, EntityType.SALMON);
-		eggToEntity.put(Material.SHEEP_SPAWN_EGG, EntityType.SHEEP);
-		eggToEntity.put(Material.SHULKER_SPAWN_EGG, EntityType.SHULKER);
-		eggToEntity.put(Material.SILVERFISH_SPAWN_EGG, EntityType.SILVERFISH);
-		eggToEntity.put(Material.SKELETON_HORSE_SPAWN_EGG, EntityType.SKELETON_HORSE);
-		eggToEntity.put(Material.SKELETON_SPAWN_EGG, EntityType.SKELETON);
-		eggToEntity.put(Material.SLIME_SPAWN_EGG, EntityType.SLIME);
-		eggToEntity.put(Material.SPIDER_SPAWN_EGG, EntityType.SPIDER);
-		eggToEntity.put(Material.SQUID_SPAWN_EGG, EntityType.SQUID);
-		eggToEntity.put(Material.STRAY_SPAWN_EGG, EntityType.STRAY);
-		eggToEntity.put(Material.TROPICAL_FISH_SPAWN_EGG, EntityType.TROPICAL_FISH);
-		eggToEntity.put(Material.TURTLE_SPAWN_EGG, EntityType.TURTLE);
-		eggToEntity.put(Material.TRADER_LLAMA_SPAWN_EGG, EntityType.TRADER_LLAMA);
-		eggToEntity.put(Material.VEX_SPAWN_EGG, EntityType.VEX);
-		eggToEntity.put(Material.VILLAGER_SPAWN_EGG, EntityType.VILLAGER);
-		eggToEntity.put(Material.VINDICATOR_SPAWN_EGG, EntityType.VINDICATOR);
-		eggToEntity.put(Material.WITCH_SPAWN_EGG, EntityType.WITCH);
-		eggToEntity.put(Material.WITHER_SKELETON_SPAWN_EGG, EntityType.WITHER);
-		eggToEntity.put(Material.WOLF_SPAWN_EGG, EntityType.WOLF);
-		eggToEntity.put(Material.ZOMBIE_HORSE_SPAWN_EGG, EntityType.ZOMBIE_HORSE);
 		eggToEntity.put(Material.ZOMBIE_PIGMAN_SPAWN_EGG, EntityType.PIG_ZOMBIE);
-		eggToEntity.put(Material.ZOMBIE_SPAWN_EGG, EntityType.ZOMBIE);
-		eggToEntity.put(Material.ZOMBIE_VILLAGER_SPAWN_EGG, EntityType.ZOMBIE_VILLAGER);
 		for(Entry<Material, EntityType> e : eggToEntity.entrySet()) entityToEgg.put(e.getValue(), e.getKey());
 	}
 
@@ -530,7 +480,7 @@ public class TypeUtils{EntityType s;
 				return false;
 		}
 	}
-	public static boolean isHow(Material mat){
+	public static boolean isHoe(Material mat){
 		switch(mat){
 			case DIAMOND_HOE:
 			case IRON_HOE:
@@ -550,9 +500,79 @@ public class TypeUtils{EntityType s;
 		PLAYER_HEADS, TATTERED_BOOKS
 	};
 	public static boolean isObtainable(Material mat, ObtainableOptions... opts){
+		HashSet<ObtainableOptions> canObtain = new HashSet<>();
+		for(ObtainableOptions opt : opts) canObtain.add(opt);
+		// Can't determine:
+		// ITEM_LORE, ITEM_NAME_COLOR, CONFLICTING_ENCHANTS, ABOVE_MAX_ENCHANTS, OVERSTACKED, TATTERED_BOOKS
+		// Or: non-holdable double-slabs
 		switch(mat){
-			//TODO: enumerate all unobtainables
+//			case AIR: // Debatable
+//			case CAVE_AIR:
+//			case VOID_AIR:
+			case END_GATEWAY:
+			case END_PORTAL: // Cannot be held (case END_PORTAL_FRAME: is below)
+			case FARMLAND: // Cannot be held
+			case FIRE: // Cannot be held
+			case FROSTED_ICE: // Cannot be held
+			case GRASS_PATH: // Not obtainable with silk
+			case KNOWLEDGE_BOOK:
+//			case LARGE_FERN: // Found in 18.6% of taiga village chests.
+			case REDSTONE_WALL_TORCH: // Cannot be held
+			case REDSTONE_WIRE: // Cannot be held
+			case TALL_SEAGRASS: // Not obtainable with shears
+			case TRIPWIRE: // Cannot be held
+			case WALL_TORCH: // Cannot be held
+			case PISTON_HEAD: // Piston heads: cannot be held
+			case MOVING_PISTON: 
+			case CREEPER_WALL_HEAD: // Wall heads: Cannot be held
+			case DRAGON_WALL_HEAD:
+			case PLAYER_WALL_HEAD:
+			case ZOMBIE_WALL_HEAD:
+			case BRAIN_CORAL_WALL_FAN: // Wall fans: Cannot be held
+			case BUBBLE_CORAL_WALL_FAN:
+			case FIRE_CORAL_WALL_FAN:
+			case HORN_CORAL_WALL_FAN:
+			case TUBE_CORAL_WALL_FAN:
+			case DEAD_BRAIN_CORAL_WALL_FAN:
+			case DEAD_BUBBLE_CORAL_WALL_FAN:
+			case DEAD_FIRE_CORAL_WALL_FAN:
+			case DEAD_HORN_CORAL_WALL_FAN:
+			case DEAD_TUBE_CORAL_WALL_FAN:
+			case ATTACHED_MELON_STEM: // Crops: Cannot be held
+			case ATTACHED_PUMPKIN_STEM:
+			case MELON_STEM:
+			case PUMPKIN_STEM:
+			case BAMBOO_SAPLING:
+			case BEETROOTS:
+			case CARROTS:
+			case CHORUS_PLANT: // Not obtainable with silk
+				return false;
+			case BARRIER:
+				return canObtain.contains(ObtainableOptions.BARRIERS);
+			case BEDROCK:
+				return canObtain.contains(ObtainableOptions.BEDROCK);
+			case END_PORTAL_FRAME:
+				return canObtain.contains(ObtainableOptions.END_PORTAL_FRAMES);
+			case PETRIFIED_OAK_SLAB:
+				return canObtain.contains(ObtainableOptions.PETRIFIED_SLABS);
+			case PLAYER_HEAD:
+				return canObtain.contains(ObtainableOptions.PLAYER_HEADS);
+			case SPAWNER:
+				return canObtain.contains(ObtainableOptions.SILK_SPAWNERS);
+			case COMMAND_BLOCK:
+			case COMMAND_BLOCK_MINECART:
+			case CHAIN_COMMAND_BLOCK:
+			case REPEATING_COMMAND_BLOCK:
+				return canObtain.contains(ObtainableOptions.CMD_BLOCKS);
+			case STRUCTURE_BLOCK:
+			case STRUCTURE_VOID:
+			case JIGSAW:
+				return canObtain.contains(ObtainableOptions.STRUCTURE_BLOCKS);
 			default:
+				if(isFlowerPot(mat) && mat != Material.FLOWER_POT) return false; // Cannot be held
+				if(isWallBanner(mat) || isWallSign(mat)/* || wCoralFan || wHead */) return false; // Cannot be held
+				if(isInfested(mat)) return canObtain.contains(ObtainableOptions.SILK_INFESTED);
+				if(isSpawnEgg(mat)) return canObtain.contains(ObtainableOptions.MOB_EGGS);
 				return true;
 		}
 	}
