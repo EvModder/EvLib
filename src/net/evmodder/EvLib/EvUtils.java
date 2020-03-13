@@ -57,8 +57,8 @@ public class EvUtils{// version = 1.1
 
 	static long[] scale = new long[]{31536000000L, /*2628000000L,*/ 604800000L, 86400000L, 3600000L, 60000L, 1000L};
 	static char[] units = new char[]{'y', /*'m',*/ 'w', 'd', 'h', 'm', 's'};
-	public static String formatTime(long time, ChatColor timeColor, ChatColor unitColor){
-		return formatTime(time, timeColor, unitColor, scale, units);
+	public static String formatTime(long millisecond, ChatColor timeColor, ChatColor unitColor){
+		return formatTime(millisecond, timeColor, unitColor, scale, units);
 	}
 	public static String formatTime(long time, ChatColor timeColor, ChatColor unitColor, long[] scale, char[] units){
 		int i = 0;
