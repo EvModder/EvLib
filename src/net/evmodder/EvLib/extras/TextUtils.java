@@ -295,10 +295,21 @@ public class TextUtils{
 	public static String locationToString(Location loc){
 		return locationToString(loc, ChatColor.GRAY, ChatColor.DARK_GRAY);}
 	public static String locationToString(Location loc, ChatColor coordColor, ChatColor commaColor){
+		return locationToString(loc, coordColor, commaColor, 2);
+	}
+	public static String locationToString(Location loc, ChatColor coordColor, ChatColor commaColor, int precision){
+		if(precision < 1){
+			return new StringBuilder("")
+					.append(coordColor).append(loc.getBlockX()).append(commaColor).append(',')
+					.append(coordColor).append(loc.getBlockY()).append(commaColor).append(',')
+					.append(coordColor).append(loc.getBlockZ())
+				.toString();
+		}
+		String formatP = "%."+precision+"f";
 		return new StringBuilder("")
-				.append(coordColor).append(String.format("%.2f", loc.getX())).append(commaColor).append(',')
-				.append(coordColor).append(String.format("%.2f", loc.getY())).append(commaColor).append(',')
-				.append(coordColor).append(String.format("%.2f", loc.getZ()))
+				.append(coordColor).append(String.format(formatP, loc.getX())).append(commaColor).append(',')
+				.append(coordColor).append(String.format(formatP, loc.getY())).append(commaColor).append(',')
+				.append(coordColor).append(String.format(formatP, loc.getZ()))
 			.toString();
 	}
 
