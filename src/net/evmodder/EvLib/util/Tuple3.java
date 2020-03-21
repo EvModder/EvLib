@@ -19,4 +19,9 @@ implements Comparable<Tuple3<T, R, S>>{
 		int bComp = b.compareTo(o.b);
 		return bComp != 0 ? bComp : c.compareTo(o.c);
 	}
+
+/*	@Override
+	public String toString(){
+		return new StringBuilder().append(a).append(',').append(b).append(',').append(c).toString();
+	}*/
 }

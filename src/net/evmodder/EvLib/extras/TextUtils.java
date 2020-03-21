@@ -298,18 +298,20 @@ public class TextUtils{
 		return locationToString(loc, coordColor, commaColor, 2);
 	}
 	public static String locationToString(Location loc, ChatColor coordColor, ChatColor commaColor, int precision){
+		String coordPrefix = coordColor == null ? "" : ""+coordColor;
+		String commaPrefix = commaColor == null ? "" : ""+commaColor;
 		if(precision < 1){
 			return new StringBuilder("")
-					.append(coordColor).append(loc.getBlockX()).append(commaColor).append(',')
-					.append(coordColor).append(loc.getBlockY()).append(commaColor).append(',')
-					.append(coordColor).append(loc.getBlockZ())
+					.append(coordPrefix).append(loc.getBlockX()).append(commaPrefix).append(',')
+					.append(coordPrefix).append(loc.getBlockY()).append(commaPrefix).append(',')
+					.append(coordPrefix).append(loc.getBlockZ())
 				.toString();
 		}
 		String formatP = "%."+precision+"f";
 		return new StringBuilder("")
-				.append(coordColor).append(String.format(formatP, loc.getX())).append(commaColor).append(',')
-				.append(coordColor).append(String.format(formatP, loc.getY())).append(commaColor).append(',')
-				.append(coordColor).append(String.format(formatP, loc.getZ()))
+				.append(coordPrefix).append(String.format(formatP, loc.getX())).append(commaPrefix).append(',')
+				.append(coordPrefix).append(String.format(formatP, loc.getY())).append(commaPrefix).append(',')
+				.append(coordPrefix).append(String.format(formatP, loc.getZ()))
 			.toString();
 	}
 

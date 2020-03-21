@@ -54,6 +54,30 @@ public class TypeUtils{EntityType s;
 		}
 	}
 
+	public static boolean isWool(Material mat){
+		switch(mat){
+			case BLACK_WOOL:
+			case BLUE_WOOL:
+			case BROWN_WOOL:
+			case CYAN_WOOL:
+			case GRAY_WOOL:
+			case GREEN_WOOL:
+			case LIGHT_BLUE_WOOL:
+			case LIME_WOOL:
+			case MAGENTA_WOOL:
+			case ORANGE_WOOL:
+			case PINK_WOOL:
+			case PURPLE_WOOL:
+			case RED_WOOL:
+			case LIGHT_GRAY_WOOL:
+			case WHITE_WOOL:
+			case YELLOW_WOOL:
+				return true;
+			default:
+				return false;
+		}
+	}
+
 	public static boolean isShulkerBox(Material mat){
 		switch(mat){
 			case SHULKER_BOX:

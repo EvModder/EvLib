@@ -15,4 +15,9 @@ public class Pair<T extends Comparable<T>, R extends Comparable<R>> implements C
 		int tComp = a.compareTo(o.a);
 		return tComp != 0 ? tComp : b.compareTo(o.b);
 	}
+
+/*	@Override
+	public String toString(){
+		return new StringBuilder().append(a).append(',').append(b).toString();
+	}*/
 }
