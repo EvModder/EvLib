@@ -3,6 +3,7 @@ package net.evmodder.EvLib.extras;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
@@ -224,36 +225,6 @@ public class TypeUtils{EntityType s;
 		}
 	}
 
-	public static boolean isFlowerPot(Material mat){
-		switch(mat){
-			case FLOWER_POT:
-			case POTTED_ACACIA_SAPLING:
-			case POTTED_ALLIUM:
-			case POTTED_AZURE_BLUET:
-			case POTTED_BIRCH_SAPLING:
-			case POTTED_BLUE_ORCHID:
-			case POTTED_BROWN_MUSHROOM:
-			case POTTED_CACTUS:
-			case POTTED_DANDELION:
-			case POTTED_DARK_OAK_SAPLING:
-			case POTTED_DEAD_BUSH:
-			case POTTED_FERN:
-			case POTTED_JUNGLE_SAPLING:
-			case POTTED_OAK_SAPLING:
-			case POTTED_ORANGE_TULIP:
-			case POTTED_OXEYE_DAISY:
-			case POTTED_PINK_TULIP:
-			case POTTED_POPPY:
-			case POTTED_RED_MUSHROOM:
-			case POTTED_RED_TULIP:
-			case POTTED_SPRUCE_SAPLING:
-			case POTTED_WHITE_TULIP:
-				return true;
-			default:
-				return false;
-		}
-	}
-
 	public static boolean isCarpet(Material mat){
 		switch(mat){
 			case BLACK_CARPET:
@@ -320,6 +291,145 @@ public class TypeUtils{EntityType s;
 			case RED_WALL_BANNER:
 			case WHITE_WALL_BANNER:
 			case YELLOW_WALL_BANNER:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	public static DyeColor getDyeColor(Material mat){
+		switch(mat){
+			case BLACK_WOOL: case BLACK_SHULKER_BOX: case BLACK_CONCRETE: case BLACK_CONCRETE_POWDER:
+			case BLACK_STAINED_GLASS: case BLACK_TERRACOTTA: case BLACK_GLAZED_TERRACOTTA: case BLACK_CARPET:
+			case BLACK_BANNER: case BLACK_WALL_BANNER:
+				return DyeColor.BLACK;
+			case BLUE_WOOL: case BLUE_SHULKER_BOX: case BLUE_CONCRETE: case BLUE_CONCRETE_POWDER:
+			case BLUE_STAINED_GLASS: case BLUE_TERRACOTTA: case BLUE_GLAZED_TERRACOTTA: case BLUE_CARPET:
+			case BLUE_BANNER: case BLUE_WALL_BANNER:
+				return DyeColor.BLUE;
+			case BROWN_WOOL: case BROWN_SHULKER_BOX: case BROWN_CONCRETE: case BROWN_CONCRETE_POWDER:
+			case BROWN_STAINED_GLASS: case BROWN_TERRACOTTA: case BROWN_GLAZED_TERRACOTTA: case BROWN_CARPET:
+			case BROWN_BANNER: case BROWN_WALL_BANNER:
+				return DyeColor.BROWN;
+			case CYAN_WOOL: case CYAN_SHULKER_BOX: case CYAN_CONCRETE: case CYAN_CONCRETE_POWDER:
+			case CYAN_STAINED_GLASS: case CYAN_TERRACOTTA: case CYAN_GLAZED_TERRACOTTA: case CYAN_CARPET:
+			case CYAN_BANNER: case CYAN_WALL_BANNER:
+				return DyeColor.CYAN;
+			case GRAY_WOOL: case GRAY_SHULKER_BOX: case GRAY_CONCRETE: case GRAY_CONCRETE_POWDER:
+			case GRAY_STAINED_GLASS: case GRAY_TERRACOTTA: case GRAY_GLAZED_TERRACOTTA: case GRAY_CARPET:
+			case GRAY_BANNER: case GRAY_WALL_BANNER:
+				return DyeColor.GRAY;
+			case GREEN_WOOL: case GREEN_SHULKER_BOX: case GREEN_CONCRETE: case GREEN_CONCRETE_POWDER:
+			case GREEN_STAINED_GLASS: case GREEN_TERRACOTTA: case GREEN_GLAZED_TERRACOTTA: case GREEN_CARPET:
+			case GREEN_BANNER: case GREEN_WALL_BANNER:
+				return DyeColor.GREEN;
+			case LIGHT_BLUE_WOOL: case LIGHT_BLUE_SHULKER_BOX: case LIGHT_BLUE_CONCRETE: case LIGHT_BLUE_CONCRETE_POWDER:
+			case LIGHT_BLUE_STAINED_GLASS: case LIGHT_BLUE_TERRACOTTA: case LIGHT_BLUE_GLAZED_TERRACOTTA: case LIGHT_BLUE_CARPET:
+			case LIGHT_BLUE_BANNER: case LIGHT_BLUE_WALL_BANNER:
+				return DyeColor.LIGHT_BLUE;
+			case LIGHT_GRAY_WOOL: case LIGHT_GRAY_SHULKER_BOX: case LIGHT_GRAY_CONCRETE: case LIGHT_GRAY_CONCRETE_POWDER:
+			case LIGHT_GRAY_STAINED_GLASS: case LIGHT_GRAY_TERRACOTTA: case LIGHT_GRAY_GLAZED_TERRACOTTA: case LIGHT_GRAY_CARPET:
+			case LIGHT_GRAY_BANNER: case LIGHT_GRAY_WALL_BANNER:
+				return DyeColor.LIGHT_GRAY;
+			case LIME_WOOL: case LIME_SHULKER_BOX: case LIME_CONCRETE: case LIME_CONCRETE_POWDER:
+			case LIME_STAINED_GLASS: case LIME_TERRACOTTA: case LIME_GLAZED_TERRACOTTA:case LIME_CARPET:
+			case LIME_BANNER: case LIME_WALL_BANNER:
+				return DyeColor.LIME;
+			case MAGENTA_WOOL: case MAGENTA_SHULKER_BOX: case MAGENTA_CONCRETE: case MAGENTA_CONCRETE_POWDER:
+			case MAGENTA_STAINED_GLASS: case MAGENTA_TERRACOTTA: case MAGENTA_GLAZED_TERRACOTTA: case MAGENTA_CARPET:
+			case MAGENTA_BANNER: case MAGENTA_WALL_BANNER:
+				return DyeColor.MAGENTA;
+			case ORANGE_WOOL: case ORANGE_SHULKER_BOX: case ORANGE_CONCRETE: case ORANGE_CONCRETE_POWDER:
+			case ORANGE_STAINED_GLASS: case ORANGE_TERRACOTTA: case ORANGE_GLAZED_TERRACOTTA: case ORANGE_CARPET:
+			case ORANGE_BANNER: case ORANGE_WALL_BANNER:
+				return DyeColor.ORANGE;
+			case PINK_WOOL: case PINK_SHULKER_BOX: case PINK_CONCRETE: case PINK_CONCRETE_POWDER:
+			case PINK_STAINED_GLASS: case PINK_TERRACOTTA: case PINK_GLAZED_TERRACOTTA: case PINK_CARPET:
+			case PINK_BANNER: case PINK_WALL_BANNER:
+				return DyeColor.PINK;
+			case PURPLE_WOOL: case PURPLE_SHULKER_BOX: case PURPLE_CONCRETE: case PURPLE_CONCRETE_POWDER:
+			case PURPLE_STAINED_GLASS: case PURPLE_TERRACOTTA: case PURPLE_GLAZED_TERRACOTTA: case PURPLE_CARPET:
+			case PURPLE_BANNER: case PURPLE_WALL_BANNER:
+				return DyeColor.PURPLE;
+			case RED_WOOL: case RED_SHULKER_BOX: case RED_CONCRETE: case RED_CONCRETE_POWDER:
+			case RED_STAINED_GLASS: case RED_TERRACOTTA: case RED_GLAZED_TERRACOTTA: case RED_CARPET:
+			case RED_BANNER: case RED_WALL_BANNER:
+				return DyeColor.RED;
+			case WHITE_WOOL: case WHITE_SHULKER_BOX: case WHITE_CONCRETE: case WHITE_CONCRETE_POWDER:
+			case WHITE_STAINED_GLASS: case WHITE_TERRACOTTA: case WHITE_GLAZED_TERRACOTTA: case WHITE_CARPET:
+			case WHITE_BANNER: case WHITE_WALL_BANNER:
+				return DyeColor.WHITE;
+			case YELLOW_WOOL: case YELLOW_SHULKER_BOX: case YELLOW_CONCRETE: case YELLOW_CONCRETE_POWDER:
+			case YELLOW_STAINED_GLASS: case YELLOW_TERRACOTTA: case YELLOW_GLAZED_TERRACOTTA: case YELLOW_CARPET:
+			case YELLOW_BANNER: case YELLOW_WALL_BANNER:
+				return DyeColor.YELLOW;
+			default:
+				return null;
+		}
+	}
+
+	/*public Color convertColor(DyeColor dyeColor){
+		switch(dyeColor){
+			case BLACK:
+				return Color.BLACK;
+			case BLUE:
+				return Color.BLUE;
+			case BROWN:
+				return Color.
+			case CYAN:
+				return Color.TEAL;
+			case GRAY:
+				return Color.GRAY;
+			case GREEN:
+				return Color.GREEN;
+			case LIGHT_BLUE:
+				return Color.
+			case LIGHT_GRAY:
+				return Color.SILVER;
+			case LIME:
+				return Color.LIME;
+			case MAGENTA:
+				return Color.FUCHSIA
+			case ORANGE:
+				return Color.ORANGE;
+			case PINK:
+				return Color.
+			case PURPLE:
+				return Color.PURPLE;
+			case RED:
+				return Color.RED;
+			case WHITE:
+				return Color.WHITE;
+			case YELLOW:
+				return Color.YELLOW;
+			//BROWN, LIGHT_BLUE, MAGENTA, PINK =?> FUCHSIA, MAROON, NAVY, OLIVE
+		}
+	}*/
+
+	public static boolean isFlowerPot(Material mat){
+		switch(mat){
+			case FLOWER_POT:
+			case POTTED_ACACIA_SAPLING:
+			case POTTED_ALLIUM:
+			case POTTED_AZURE_BLUET:
+			case POTTED_BIRCH_SAPLING:
+			case POTTED_BLUE_ORCHID:
+			case POTTED_BROWN_MUSHROOM:
+			case POTTED_CACTUS:
+			case POTTED_DANDELION:
+			case POTTED_DARK_OAK_SAPLING:
+			case POTTED_DEAD_BUSH:
+			case POTTED_FERN:
+			case POTTED_JUNGLE_SAPLING:
+			case POTTED_OAK_SAPLING:
+			case POTTED_ORANGE_TULIP:
+			case POTTED_OXEYE_DAISY:
+			case POTTED_PINK_TULIP:
+			case POTTED_POPPY:
+			case POTTED_RED_MUSHROOM:
+			case POTTED_RED_TULIP:
+			case POTTED_SPRUCE_SAPLING:
+			case POTTED_WHITE_TULIP:
 				return true;
 			default:
 				return false;
