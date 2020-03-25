@@ -154,11 +154,11 @@ public class EvUtils{// version = 1.1
 		if(test.apply(start.getBlock())) return start;
 		World w  = start.getWorld();
 		int cX = start.getBlockX(), cY = start.getBlockY(), cZ = start.getBlockZ();
-		for(int dist = 1; dist < MAX_DIST; ++dist){
+		for(int dist = 1; dist <= MAX_DIST; ++dist){
 			int mnX = cX-dist, mxX = cX+dist;
 			int mnZ = cZ-dist, mxZ = cZ+dist;
 			int mnY = Math.max(cY-dist, 0), mxY = Math.min(cY+dist, 256);
-			for(int y=mnY; y<=mxY; ++y) for(int z=mnZ; z<=mxZ; ++z){
+			for(int y=mxY; y>=mnY; --y) for(int z=mnZ; z<=mxZ; ++z){
 				if(test.apply(w.getBlockAt(mnX, y, z))) return new Location(w, mnX, y, z);
 				if(test.apply(w.getBlockAt(mxX, y, z))) return new Location(w, mxX, y, z);
 			}
@@ -166,7 +166,7 @@ public class EvUtils{// version = 1.1
 				if(test.apply(w.getBlockAt(x, mnY, z))) return new Location(w, x, mnY, z);
 				if(test.apply(w.getBlockAt(x, mxY, z))) return new Location(w, x, mxY, z);
 			}
-			for(int x=mnX; x<=mxX; ++x) for(int y=mnY; y<=mxY; ++y){
+			for(int x=mnX; x<=mxX; ++x) for(int y=mxY; y>=mnY; --y){
 				if(test.apply(w.getBlockAt(x, y, mnZ))) return new Location(w, x, y, mnZ);
 				if(test.apply(w.getBlockAt(x, y, mxZ))) return new Location(w, x, y, mxZ);
 			}
