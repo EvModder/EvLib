@@ -7,7 +7,7 @@ public class Pair<T extends Comparable<T>, R extends Comparable<R>> implements C
 		return p != null && p instanceof Pair && a.equals(((Pair<?, ?>)p).a) && b.equals(((Pair<?, ?>)p).b);
 	}
 	@Override public int hashCode(){
-		return a.hashCode() + b.hashCode();
+		return (a == null ? 0 : a.hashCode()) + (b == null ? 0 : b.hashCode());
 	}
 
 	@Override
