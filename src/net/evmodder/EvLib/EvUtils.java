@@ -91,6 +91,19 @@ public class EvUtils{// version = 1.1
 		catch(ArrayIndexOutOfBoundsException | NumberFormatException ex){return null;}
 	}
 
+	public static String getRegionFolder(World world){
+		switch(world.getEnvironment()){
+			case NORMAL:
+				return "./"+world.getName()+"/region/";
+			case NETHER:
+				return "./"+world.getName()+"/DIM-1/region/";
+			case THE_END:
+				return "./"+world.getName()+"/DIM1/region/";
+			default:
+				return null;
+		}
+	}
+
 	public static Collection<Advancement> getVanillaAdvancements(Player p){
 		Vector<Advancement> advs = new Vector<Advancement>();
 		Iterator<Advancement> it = Bukkit.getServer().advancementIterator();

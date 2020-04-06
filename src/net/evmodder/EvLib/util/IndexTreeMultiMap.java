@@ -382,8 +382,8 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 		if(index < 0){
 			throw new ArrayIndexOutOfBoundsException("Negative index: " + index);
 		}
-		System.out.println("getKeyAtValueIndex: "+index+", root.size: "+root.size);
-		System.out.println("results: "+getEntryAtValueIndex(index));
+//		System.out.println("getKeyAtValueIndex: "+index+", root.size: "+root.size);
+//		System.out.println("results: "+getEntryAtValueIndex(index));
 		return getEntryAtValueIndex(index).key;
 	}
 
@@ -522,8 +522,8 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	public final Entry<K, X> getEntryAtValueIndex(int index){
 		Entry<K, X> p = root;
 		while(p != null){
-			System.out.println("left sz: "+(p.left == null ? null : p.left.size)
-					+", right sz: "+(p.right == null ? null : p.right.size)+", cur sz: "+p.value.size());
+//			System.out.println("left sz: "+(p.left == null ? null : p.left.size)
+//					+", right sz: "+(p.right == null ? null : p.right.size)+", cur sz: "+p.value.size());
 			int leftSz = p.left != null ? p.left.size : 0;
 			if(leftSz > index) p = p.left;
 			else if(leftSz + p.value.size() <= index){
@@ -1594,7 +1594,7 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 		Collection<Collection<X>> vs = null;
 		try{
 			Field transientField = getClass().getDeclaredField("values");
-			System.out.print("Access?: " + transientField.canAccess(this));
+//			System.out.print("Access?: " + transientField.canAccess(this));
 			transientField.setAccessible(true);
 			vs = (Collection<Collection<X>>) transientField.get(this);
 			if(vs == null) {
