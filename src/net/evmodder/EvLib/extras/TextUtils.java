@@ -377,6 +377,16 @@ public class TextUtils{
 		//for(int px : charList.keySet()) if(charList.get(px).indexOf(ch) >= 0) return px;
 		return 6;
 	}
+	public static boolean isHalfPixel(char ch){
+		switch(ch){
+			case '´': case '¸'://2
+			case 'ˆ': case '¨'://3
+			case '˜'://4
+				return true;
+			default:
+				return false;
+		}
+	}
 
 	/**
 	 * returns String pixel-width, considering format codes
@@ -386,6 +396,35 @@ public class TextUtils{
 	public static int strLen(String str, boolean mono){
 		if(mono) return ChatColor.stripColor(str).length();
 		int len = 0;
+		boolean bold = false, colorPick = false, halfPixel = false;
+		for(char ch : str.toCharArray()){
+			if(colorPick){
+				switch(ch){
+					case '0': case '1': case '2': case '3': case '4':
+					case '5': case '6': case '7': case '8': case '9':
+					case 'a': case 'b': case 'c': case 'd': case 'e':
+					case 'f': case 'r': bold = false; continue;
+					case 'l': bold = true; continue;
+					case 'k': case 'm': case 'n': case 'o': continue;
+					default: /**/continue; // Apparently, "§x" => ""
+				}
+			}
+			colorPick = (ch == '§');
+			len += pxLen(ch);
+			if(bold && pxLen(ch) > 0){
+				if(isHalfPixel(ch)){
+					if(halfPixel) halfPixel = false;
+					else{halfPixel = true; ++len;} // Round up
+				}
+				else ++len;
+			}
+		}
+		return len;
+	}
+
+	public static double strLenExact(String str, boolean mono){
+		if(mono) return ChatColor.stripColor(str).length();
+		double len = 0;
 		boolean bold = false, colorPick = false;
 		for(char ch : str.toCharArray()){
 			if(colorPick){
@@ -401,7 +440,7 @@ public class TextUtils{
 			}
 			colorPick = (ch == '§');
 			len += pxLen(ch);
-			if(bold && pxLen(ch) > 0) ++len;
+			if(bold && pxLen(ch) > 0) len += isHalfPixel(ch) ? .5 : 1;
 		}
 		return len;
 	}

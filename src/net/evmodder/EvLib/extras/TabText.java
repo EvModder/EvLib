@@ -32,9 +32,9 @@ import org.bukkit.ChatColor;
  */
 public class TabText{//max chat width is 53*6 + 2 = 320
 	final static int CHAT_WIDTH = 320, MONO_WIDTH = 80, MAX_PLAYER_NAME_WIDTH = 96/*6*16*/;
-	final static char W2_SPACE = '´'/*'\''*/, W3_SPACE = 'ˆ'/*'`'*/;
+	final static char W2_HALF_C = '´'/*'\''*/, W3_HALF_C = 'ˆ'/*'`'*/, W4_HALF_C = '˜';
 	private int chatHeight;
-	private int[] tabs;
+	private double[] tabs;
 	private int numPages;
 	private String[] lines;
 	private static Map<Integer, String> charList = new HashMap<Integer, String>();
@@ -51,9 +51,14 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 		int newLine = str.indexOf('\n');
 		// Create a column for each '`' in the top line
 		int numTabs = StringUtils.countMatches(newLine == -1 ? str : str.substring(0, newLine), "`");
-		return parse(str, mono, flexFill, new int[Math.max(numTabs, 1)]);
+		return parse(str, mono, flexFill, new double[Math.max(numTabs, 1)]);
 	}
 	public static String parse(String str, boolean mono, boolean flexFill, int[] tabs){
+		double[] dTabs = new double[tabs.length];
+		for(int i=0; i<tabs.length; ++i) dTabs[i] = tabs[i];
+		return parse(str, mono, flexFill, dTabs);
+	}
+	public static String parse(String str, boolean mono, boolean flexFill, double[] tabs){
 		TabText tt = new TabText(str);
 		tt.setPageHeight(tt.lines.length);
 		tt.tabs = tabs;
@@ -61,13 +66,13 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 		for(int i=0; i<tt.lines.length; ++i){
 			String[] fields = tt.lines[i].split("`");
 			if(fields.length > tt.tabs.length){
-				int[] newTabs = new int[fields.length];
+				double[] newTabs = new double[fields.length];
 				for(int j=0; j<tt.tabs.length; ++j) newTabs[j] = tt.tabs[j];
 				tt.tabs = newTabs;
 				fixI = i;
 			}
 			for(int j=0; j<fields.length; ++j){
-				tt.tabs[j] = Math.max(tt.tabs[j], TextUtils.strLen(fields[j], mono));
+				tt.tabs[j] = Math.max(tt.tabs[j], TextUtils.strLenExact(fields[j], mono));
 				fields[j] = fields[j].trim();// Absorb any leading/trailing buffer provided by the caller
 			}
 			int missingTabs = tt.tabs.length - fields.length;
@@ -80,7 +85,7 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 		}
 		if(flexFill){
 			int sum = 0;
-			for(int w : tt.tabs) sum += w;
+			for(double w : tt.tabs) sum += w;
 			int leftover = ((mono ? MONO_WIDTH : CHAT_WIDTH) - sum) / tt.tabs.length;
 			for(int i=0; i<tt.tabs.length; ++i) tt.tabs[i] += leftover;
 		}
@@ -108,8 +113,8 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 	 * set horizontal positions of "`" separators, considering 6px chars and 53 chars max 
 	 * @param tabs an integer list with desired tab column positions
 	 */
-	public void setTabs(boolean mono, int... tabs){
-		int[] tabs2 = new int[tabs.length + 1];
+	public void setTabs(boolean mono, double... tabs){
+		double[] tabs2 = new double[tabs.length + 1];
 		tabs2[0] = tabs[0];
 		for(int i=1; i<tabs.length; ++i) tabs2[i] = tabs[i] - tabs[i - 1];
 		tabs2[tabs.length] = (mono ? MONO_WIDTH : CHAT_WIDTH) - tabs[tabs.length - 1];
@@ -150,19 +155,22 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 		for(int linePos=fromLine; linePos<toLine; ++linePos){
 			StringBuilder line = new StringBuilder("");
 			String[] fields = lines[linePos].split("`");
-			int lineLen = 0, stopLen = 0;
+			double lineLen = 0, stopLen = 0;
 
 			for(int fieldPos=0; fieldPos<fields.length; ++fieldPos){
 				// add spaces to fill out width of previous line
 				if(lineLen < stopLen-1){
 					if(hideTabs != null) line.append(hideTabs);
-					while(lineLen < stopLen-1){//Goals is lineLen==stopLen but if we hit stopLen-1 it's not possible
+					while(lineLen < stopLen-1.5){//Goals is lineLen==stopLen but if we hit stopLen-1.5 it's not possible
 						if(monospace){line.append(' '); lineLen += 1;}
 						else{
-							int needShift = (stopLen - lineLen) % 4;
-							if(needShift == 0){line.append(' '); lineLen += 4;}
-							else if(needShift == 2){line.append(W2_SPACE); lineLen += 2;}
-							else{line.append(W3_SPACE); lineLen += 3;}
+							double needShift = (stopLen - lineLen) % 8; // Will return value in [2, 7.5]
+							if(needShift == 0 || needShift > 4.5){line.append(' '); lineLen += 4;}
+							else if(needShift == 2){line.append(W2_HALF_C); lineLen += 2;}
+							else if(needShift == 3){line.append(W3_HALF_C); lineLen += 3;}
+							else if(needShift == 2.5){line.append(ChatColor.BOLD).append(W2_HALF_C).append(hideTabs); lineLen += 2.5;}
+							else if(needShift == 3.5){line.append(ChatColor.BOLD).append(W3_HALF_C).append(hideTabs); lineLen += 3.5;}
+							else if(needShift == 4.5){line.append(ChatColor.BOLD).append(W4_HALF_C).append(hideTabs); lineLen += 4.5;}
 						}
 					}
 					line.append(ChatColor.RESET);
@@ -188,7 +196,7 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 	 * @param mono true if length will be in chars (for console) or false if will be in pixels (for chat area)
 	 * @return object array with stripped string [0] and integer length in pixels or chars depending of mono
 	 */
-	private Object[] pxSubstring(String str, int maxLen, boolean mono){
+	private Object[] pxSubstring(String str, double maxLen, boolean mono){
 		if(mono){
 			int len = 0;
 			for(char ch : str.toCharArray()){
@@ -198,9 +206,25 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 			return new Object[]{str.substring(0, len), len};
 		}
 		else{
-			int subStrPxLen = 0, pxLen = 0, subStrLen = 0;
+			double pxLen = 0, subStrPxLen = 0;
+			int subStrLen = 0;
+			boolean bold = false, colorPick = false;
 			for(char ch : str.toCharArray()){
-				if((pxLen += TextUtils.pxLen(ch)) > maxLen) break;
+				if(colorPick){
+					switch(ch){
+						case '0': case '1': case '2': case '3': case '4':
+						case '5': case '6': case '7': case '8': case '9':
+						case 'a': case 'b': case 'c': case 'd': case 'e':
+						case 'f': case 'r': bold = false; continue;
+						case 'l': bold = true; continue;
+						case 'k': case 'm': case 'n': case 'o': continue;
+						default: /**/continue; // Apparently, "§x" => ""
+					}
+				}
+				colorPick = (ch == '§');
+				pxLen += TextUtils.pxLen(ch);
+				if(bold && TextUtils.pxLen(ch) > 0) pxLen += TextUtils.isHalfPixel(ch) ? .5 : 1;
+				if(pxLen > maxLen) break;
 				++subStrLen;
 				subStrPxLen = pxLen;
 			}
