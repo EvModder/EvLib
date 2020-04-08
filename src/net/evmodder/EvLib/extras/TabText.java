@@ -32,6 +32,7 @@ import org.bukkit.ChatColor;
  */
 public class TabText{//max chat width is 53*6 + 2 = 320
 	final static int CHAT_WIDTH = 320, MONO_WIDTH = 80, MAX_PLAYER_NAME_WIDTH = 96/*6*16*/;
+	final static char W2_SPACE = '´'/*'\''*/, W3_SPACE = 'ˆ'/*'`'*/;
 	private int chatHeight;
 	private int[] tabs;
 	private int numPages;
@@ -66,7 +67,7 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 				fixI = i;
 			}
 			for(int j=0; j<fields.length; ++j){
-				tt.tabs[j] = Math.max(tt.tabs[j], strLen(fields[j], mono));
+				tt.tabs[j] = Math.max(tt.tabs[j], TextUtils.strLen(fields[j], mono));
 				fields[j] = fields[j].trim();// Absorb any leading/trailing buffer provided by the caller
 			}
 			int missingTabs = tt.tabs.length - fields.length;
@@ -160,8 +161,8 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 						else{
 							int needShift = (stopLen - lineLen) % 4;
 							if(needShift == 0){line.append(' '); lineLen += 4;}
-							else if(needShift == 2){line.append('\''); lineLen += 2;}
-							else{line.append('`'); lineLen += 3;}
+							else if(needShift == 2){line.append(W2_SPACE); lineLen += 2;}
+							else{line.append(W3_SPACE); lineLen += 3;}
 						}
 					}
 					line.append(ChatColor.RESET);
@@ -181,90 +182,30 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 
 	// PIXEL WIDTH CALCULATION METHODS
 	/**
-	 * returns character total width, considering format codes, internal use
-	 * @param ch the character to check
-	 * @param mono true for result in chars or false for result in pixels
-	 * @return character width depending of "mono"
-	 */
-	private static int pxLen(char ch, boolean mono){
-		if(mono) return ch == '§' ? -1 : 1;
-		switch(ch){
-			case '§':
-				return -6;//5
-			case '!':
-			case '.':
-			case ',':
-			case ':':
-			case ';':
-			case 'i':
-			case '|':
-			case '\'':
-				return 2;
-			case '`':
-			case 'l':
-				return 3;
-			case 'I':
-			case '[':
-			case ']':
-			case '(':
-			case ')':
-			case '{':
-			case '}':
-			case 't':
-			case ' ':
-				return 4;
-			case '"':
-			case '*':
-			case '<':
-			case '>':
-			case 'f':
-			case 'k':
-				return 5;
-			case '@':
-			case '~':
-				return 7;
-		}
-		for(int px : charList.keySet()) if(charList.get(px).indexOf(ch) >= 0) return px;
-		return 6;
-	}
-
-	private static int strLen(String str, boolean mono){
-		int len = 0;
-		if(mono){
-			for(char ch : str.toCharArray()) len += pxLen(ch, true);
-		}
-		else{
-			boolean bold = false, colorPick = false;
-			for(char ch : str.toCharArray()){
-				if(colorPick){
-					if(TextUtils.isColor(ch)) bold = false;
-					else if(ch == 'l' || ch == 'L') bold = true;
-				}
-				colorPick = (ch == '§');
-				int pxLen = pxLen(ch, mono);
-				len += pxLen;
-				if(bold && pxLen > 0) ++len;
-			}
-		}
-		return len;
-	}
-
-	/**
 	 * returns substring, in chars or pixels, considering format codes
 	 * @param str input string
 	 * @param len desired string length
 	 * @param mono true if length will be in chars (for console) or false if will be in pixels (for chat area)
 	 * @return object array with stripped string [0] and integer length in pixels or chars depending of mono
 	 */
-	private Object[] pxSubstring(String str, int len, boolean mono){
-		int len2 = 0, len3 = 0, len4 = 0;
-
-		for(char ch : str.toCharArray()){
-			if((len3 += pxLen(ch, mono)) > len) break;
-			++len4;
-			len2 = len3;
+	private Object[] pxSubstring(String str, int maxLen, boolean mono){
+		if(mono){
+			int len = 0;
+			for(char ch : str.toCharArray()){
+				len += (ch == '§' ? -1 : 1);
+				if(len > maxLen) break;
+			}
+			return new Object[]{str.substring(0, len), len};
 		}
-		return new Object[]{str.substring(0, len4), len2};
+		else{
+			int subStrPxLen = 0, pxLen = 0, subStrLen = 0;
+			for(char ch : str.toCharArray()){
+				if((pxLen += TextUtils.pxLen(ch)) > maxLen) break;
+				++subStrLen;
+				subStrPxLen = pxLen;
+			}
+			return new Object[]{str.substring(0, subStrLen), subStrPxLen};
+		}
 	}
 
 	private static String repeat(int count, char with) {
