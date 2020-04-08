@@ -316,6 +316,7 @@ public class TextUtils{
 	}
 
 	/* ----------==========---------- PIXEL WIDTH CALCULATION METHODS ----------==========---------- */
+	// Supports ASCII codes 32-255, assumes width=6 for unknown chars
 	final public static int MAX_PIXEL_WIDTH = 320, MAX_MONO_WIDTH = 80, MAX_PLAYERNAME_WIDTH = 96/*6*16*/;
 	/**
 	 * returns character pixel-width, NOT safe with format codes
@@ -326,23 +327,52 @@ public class TextUtils{
 		switch(ch){
 			case '§':
 				return -6; // Actual width is 5
-			case '.': case ',':
+			case '.': case ','://comma44
 			case ':': case ';':
 			case 'i': case '!': case '|': case '\'':
+			case '¡': case '¦': case '´': case '¸':
+				case '·':
 				return 2;
 			case '`':
 			case 'l':
+			case '‚'://comma130
+			case 'ˆ':
+			case '‘': case '’':
+			case '•':
+			case '¨':
+			case 'ì': case 'í':
 				return 3;
 			case 'I': case 't':
+			case 'Ì': case 'Í': case 'Î': case 'Ï': case 'î': case 'ï':
 			case '[': case ']': case '(': case ')': case '{': case '}':
-			case ' ': // space!
+			case ' '://space!
+			case '‹': case '›':
+			case '˜':
+			case '°': case '¹':
 				return 4;
 			case '"': case '*':
 			case '<': case '>':
 			case 'f': case 'k':
+			case '„': case '“': case '”':
+			case 'ª': case '²': case '³': case 'º':
 				return 5;
-			case '@': case '~':
+//			case '-':
+//				return 6;
+			case '@': case '~': case '–':
+			case '«': case '»':
+			case '¶':
 				return 7;
+			case '…':
+			case '‰':
+			case '¤':
+			case '©': case '®':
+			case '¼': case '½': case '¾':
+				return 8;
+			case '—':
+			case '™':
+				return 9;
+			case 'Œ': case 'œ': case 'Æ': case 'æ':
+				return 10;
 		}
 		//for(int px : charList.keySet()) if(charList.get(px).indexOf(ch) >= 0) return px;
 		return 6;
