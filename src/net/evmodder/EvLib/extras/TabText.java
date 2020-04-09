@@ -135,6 +135,22 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 		charList.get(charsWidth).concat(charsList);
 	}
 
+	public static String getPxSpaces(double pxLenGoal, boolean monospace, ChatColor hideTabs){
+		if(monospace) return repeat((int)pxLenGoal, ' ');
+		StringBuilder builder = new StringBuilder();
+		double pxLen = 0;
+		while(pxLen < pxLenGoal-1.5){// If we hit (pxLenGoal-1.5) it is not possible, sadly, as there are no chars with width < 2px
+			double needShift = (pxLenGoal - pxLen) % 4;
+			if(needShift == 0){builder.append(' '); pxLen += 4;}
+			else if(needShift == 2){builder.append(W2_HALF_C); pxLen += 2;}
+			else if(needShift == 1 || needShift == 3){builder.append(W3_HALF_C); pxLen += 3;}
+			else if(needShift == 2.5){builder.append(ChatColor.BOLD).append(W2_HALF_C).append(hideTabs); pxLen += 2.5;}
+			else if(needShift == 1.5 || needShift == 3.5){builder.append(ChatColor.BOLD).append(W3_HALF_C).append(hideTabs); pxLen += 3.5;}
+			else if(needShift == 0.5){builder.append(ChatColor.BOLD).append(W4_HALF_C).append(hideTabs); pxLen += 4.5;}
+		}
+		return builder.toString();
+	}
+
 	/**
 	 * get your formatted page, for chat area or console
 	 * @param page desired page number (0 = all in one), considering preconfigured page height
@@ -164,7 +180,7 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 				if(lineLen < stopLen){
 					if(hideTabs != null) line.append(hideTabs);
 					if(monospace) while(lineLen < stopLen){line.append(' '); lineLen += 1;}
-					else while(lineLen < stopLen-1.5){//Goals is lineLen==stopLen but if we hit stopLen-1.5 it's not possible
+					else while(lineLen < stopLen-1.5){// (stopLen-1.5) is not possible, as there are no chars with width < 2px
 						double needShift = (stopLen - lineLen) % 4;
 						if(needShift == 0){line.append(' '); lineLen += 4;}
 						else if(needShift == 2){line.append(W2_HALF_C); lineLen += 2;}
