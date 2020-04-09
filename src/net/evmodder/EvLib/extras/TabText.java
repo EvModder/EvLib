@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
+import net.evmodder.EvLib.extras.TextUtils.StrAndPxLen;
 
 /**<pre>
  * TabText: class to write column formatted text in minecraft chat area
@@ -150,7 +151,7 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 
 		// prepare lines iteration
 		StringBuilder outputLines = new StringBuilder("");
-		Object[] field;
+		StrAndPxLen subStrAndSubPxLen;
 		// iterate each line
 		for(int linePos=fromLine; linePos<toLine; ++linePos){
 			StringBuilder line = new StringBuilder("");
@@ -165,6 +166,7 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 						if(monospace){line.append(' '); lineLen += 1;}
 						else{
 							double needShift = (stopLen - lineLen) % 8; // Will return value in [2, 7.5]
+							org.bukkit.Bukkit.getLogger().info("needShift="+needShift+",lineLen="+lineLen+",stopLen="+stopLen);
 							if(needShift == 0 || needShift > 4.5){line.append(' '); lineLen += 4;}
 							else if(needShift == 2){line.append(W2_HALF_C); lineLen += 2;}
 							else if(needShift == 3){line.append(W3_HALF_C); lineLen += 3;}
@@ -177,59 +179,15 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 				}
 
 				// get field and set line properties
-				field = pxSubstring(fields[fieldPos], tabs[fieldPos], monospace);
-				line.append((String) field[0]);
-				lineLen += (int) field[1];
+				subStrAndSubPxLen = TextUtils.pxSubstring(fields[fieldPos], tabs[fieldPos], monospace);
+				line.append(subStrAndSubPxLen.str);
+				lineLen += subStrAndSubPxLen.pxLen;
 				stopLen += tabs[fieldPos];
 			}
 			if(outputLines.length() > 0) outputLines.append('\n');
 			outputLines.append(line);
 		}
 		return outputLines.toString();
-	}
-
-	// PIXEL WIDTH CALCULATION METHODS
-	/**
-	 * returns substring, in chars or pixels, considering format codes
-	 * @param str input string
-	 * @param len desired string length
-	 * @param mono true if length will be in chars (for console) or false if will be in pixels (for chat area)
-	 * @return object array with stripped string [0] and integer length in pixels or chars depending of mono
-	 */
-	private Object[] pxSubstring(String str, double maxLen, boolean mono){
-		if(mono){
-			int len = 0;
-			for(char ch : str.toCharArray()){
-				len += (ch == '§' ? -1 : 1);
-				if(len > maxLen) break;
-			}
-			return new Object[]{str.substring(0, len), len};
-		}
-		else{
-			double pxLen = 0, subStrPxLen = 0;
-			int subStrLen = 0;
-			boolean bold = false, colorPick = false;
-			for(char ch : str.toCharArray()){
-				if(colorPick){
-					switch(ch){
-						case '0': case '1': case '2': case '3': case '4':
-						case '5': case '6': case '7': case '8': case '9':
-						case 'a': case 'b': case 'c': case 'd': case 'e':
-						case 'f': case 'r': bold = false; continue;
-						case 'l': bold = true; continue;
-						case 'k': case 'm': case 'n': case 'o': continue;
-						default: /**/continue; // Apparently, "§x" => ""
-					}
-				}
-				colorPick = (ch == '§');
-				pxLen += TextUtils.pxLen(ch);
-				if(bold && TextUtils.pxLen(ch) > 0) pxLen += TextUtils.isHalfPixel(ch) ? .5 : 1;
-				if(pxLen > maxLen) break;
-				++subStrLen;
-				subStrPxLen = pxLen;
-			}
-			return new Object[]{str.substring(0, subStrLen), subStrPxLen};
-		}
 	}
 
 	private static String repeat(int count, char with) {

@@ -226,6 +226,29 @@ public class TextUtils{
 		return builder.toString();
 	}
 
+	public static String stripColorsOnly(String str){return stripColorsOnly(str, COLOR_SYMBOL);}
+	public static String stripColorsOnly(String str, char altColorChar){
+		StringBuilder builder = new StringBuilder("");
+		boolean colorPick = false;
+		for(char ch : str.toCharArray()){
+			if(colorPick && !isColor(ch)){colorPick=false; builder.append(altColorChar).append(ch);}
+			else if((colorPick=(ch == '§')) == false) builder.append(ch);
+		}
+		if(colorPick) builder.append(altColorChar);
+		return builder.toString();
+	}
+	public static String stripFormatsOnly(String str){return stripFormatsOnly(str, COLOR_SYMBOL);}
+	public static String stripFormatsOnly(String str, char altColorChar){
+		StringBuilder builder = new StringBuilder("");
+		boolean colorPick = false;
+		for(char ch : str.toCharArray()){
+			if(colorPick && !isFormat(ch)){colorPick=false; builder.append(altColorChar).append(ch);}
+			else if((colorPick=(ch == '§')) == false) builder.append(ch);
+		}
+		if(colorPick) builder.append(altColorChar);
+		return builder.toString();
+	}
+
 	public static ChatColor getCurrentColor(String str){
 		char[] msg = str.toCharArray();
 		for(int i=msg.length-1; i>0; --i){
@@ -331,7 +354,7 @@ public class TextUtils{
 			case ':': case ';':
 			case 'i': case '!': case '|': case '\'':
 			case '¡': case '¦': case '´': case '¸':
-				case '·':
+			case '·':
 				return 2;
 			case '`':
 			case 'l':
@@ -443,5 +466,53 @@ public class TextUtils{
 			if(bold && pxLen(ch) > 0) len += isHalfPixel(ch) ? .5 : 1;
 		}
 		return len;
+	}
+
+	public static class StrAndPxLen{
+		public String str;
+		public double pxLen;
+		public StrAndPxLen(String s, double l){str = s; pxLen = l;}
+	}
+	/**
+	 * returns substring, in chars or pixels, considering format codes
+	 * @param str input string
+	 * @param len desired string length
+	 * @param mono true if length will be in chars (for console) or false if will be in pixels (for chat area)
+	 * @return object array with stripped string [0] and integer length in pixels or chars depending of mono
+	 */
+	public static StrAndPxLen pxSubstring(String str, double maxLen, boolean mono){
+		if(mono){
+			int len = 0;
+			for(char ch : str.toCharArray()){
+				len += (ch == '§' ? -1 : 1);// Apparently, "§x" => ""
+				if(len > maxLen) break;
+			}
+			return new StrAndPxLen(str.substring(0, len), len);
+		}
+		else{
+			double pxLen = 0, subStrPxLen = 0;
+			int subStrLen = 0;
+			boolean bold = false, colorPick = false;
+			for(char ch : str.toCharArray()){
+				if(colorPick){
+					switch(ch){
+						case '0': case '1': case '2': case '3': case '4':
+						case '5': case '6': case '7': case '8': case '9':
+						case 'a': case 'b': case 'c': case 'd': case 'e':
+						case 'f': case 'r': bold = false; continue;
+						case 'l': bold = true; continue;
+						case 'k': case 'm': case 'n': case 'o': continue;
+						default: /**/continue; // Apparently, "§x" => ""
+					}
+				}
+				colorPick = (ch == '§');
+				pxLen += TextUtils.pxLen(ch);
+				if(bold && TextUtils.pxLen(ch) > 0) pxLen += TextUtils.isHalfPixel(ch) ? .5 : 1;
+				if(pxLen > maxLen) break;
+				++subStrLen;
+				subStrPxLen = pxLen;
+			}
+			return new StrAndPxLen(str.substring(0, subStrLen), subStrPxLen);
+		}
 	}
 }
