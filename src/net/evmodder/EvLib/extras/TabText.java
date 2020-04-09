@@ -167,12 +167,13 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 						else{
 							double needShift = (stopLen - lineLen) % 8; // Will return value in [2, 7.5]
 							org.bukkit.Bukkit.getLogger().info("needShift="+needShift+",lineLen="+lineLen+",stopLen="+stopLen);
-							if(needShift == 0 || needShift > 4.5){line.append(' '); lineLen += 4;}
-							else if(needShift == 2){line.append(W2_HALF_C); lineLen += 2;}
+//							if(needShift == 0 || needShift == 4 || needShift > 4.5){line.append(' '); lineLen += 4;}
+							/*else */if(needShift == 2){line.append(W2_HALF_C); lineLen += 2;}
 							else if(needShift == 3){line.append(W3_HALF_C); lineLen += 3;}
 							else if(needShift == 2.5){line.append(ChatColor.BOLD).append(W2_HALF_C).append(hideTabs); lineLen += 2.5;}
 							else if(needShift == 3.5){line.append(ChatColor.BOLD).append(W3_HALF_C).append(hideTabs); lineLen += 3.5;}
 							else if(needShift == 4.5){line.append(ChatColor.BOLD).append(W4_HALF_C).append(hideTabs); lineLen += 4.5;}
+							else{line.append(' '); lineLen += 4;}
 						}
 					}
 					line.append(ChatColor.RESET);
