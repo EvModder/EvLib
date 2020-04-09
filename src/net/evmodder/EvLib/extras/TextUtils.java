@@ -484,12 +484,13 @@ public class TextUtils{
 	 */
 	public static StrAndPxLen pxSubstring(String str, double maxLen, boolean mono){
 		if(mono){
-			int len = 0;
+			int len = 0, subStrLen = 0;
 			for(char ch : str.toCharArray()){
-				len += (ch == '§' ? -1 : 1);// Apparently, "§x" => ""
+				len += (ch == '§' ? -1 : 1);
 				if(len > maxLen) break;
+				++subStrLen;
 			}
-			return new StrAndPxLen(str.substring(0, len), len);
+			return new StrAndPxLen(str.substring(0, subStrLen), len);
 		}
 		else{
 			double pxLen = 0, subStrPxLen = 0;

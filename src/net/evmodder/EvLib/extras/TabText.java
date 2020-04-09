@@ -32,8 +32,9 @@ import net.evmodder.EvLib.extras.TextUtils.StrAndPxLen;
  * </pre>
  */
 public class TabText{//max chat width is 53*6 + 2 = 320
+	final static int CHAT_HEIGHT = 100;//Chat history goes back 100 lines
 	final static int CHAT_WIDTH = 320, MONO_WIDTH = 80, MAX_PLAYER_NAME_WIDTH = 96/*6*16*/;
-	final static char W2_HALF_C = '´'/*'\''*/, W3_HALF_C = 'ˆ'/*'`'*/, W4_HALF_C = '˜';
+	final static char W2_HALF_C = '´'/*'\''*/, W3_HALF_C = 'ˆ'/*'`'*/, W4_HALF_C = '˜';//Half-pixel-characters with widths [2, 3, 4]
 	private int chatHeight;
 	private double[] tabs;
 	private int numPages;
