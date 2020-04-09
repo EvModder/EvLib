@@ -85,9 +85,9 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 			tt.lines[i] += repeat(missingTabs, '`');
 		}
 		if(flexFill){
-			int sum = 0;
+			double sum = 0;
 			for(double w : tt.tabs) sum += w;
-			int leftover = ((mono ? MONO_WIDTH : CHAT_WIDTH) - sum) / tt.tabs.length;
+			double leftover = ((mono ? MONO_WIDTH : CHAT_WIDTH) - sum) / tt.tabs.length;
 			for(int i=0; i<tt.tabs.length; ++i) tt.tabs[i] += leftover;
 		}
 		return tt.getPage(0, mono, ChatColor.BLACK);
@@ -159,22 +159,18 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 			double lineLen = 0, stopLen = 0;
 
 			for(int fieldPos=0; fieldPos<fields.length; ++fieldPos){
-				// add spaces to fill out width of previous line
-				if(lineLen < stopLen-1){
+				// add spaces to fill out width of previous tab
+				if(lineLen < stopLen){
 					if(hideTabs != null) line.append(hideTabs);
-					while(lineLen < stopLen-1.5){//Goals is lineLen==stopLen but if we hit stopLen-1.5 it's not possible
-						if(monospace){line.append(' '); lineLen += 1;}
-						else{
-							double needShift = (stopLen - lineLen) % 8; // Will return value in [2, 7.5]
-							org.bukkit.Bukkit.getLogger().info("needShift="+needShift+",lineLen="+lineLen+",stopLen="+stopLen);
-//							if(needShift == 0 || needShift == 4 || needShift > 4.5){line.append(' '); lineLen += 4;}
-							/*else */if(needShift == 2){line.append(W2_HALF_C); lineLen += 2;}
-							else if(needShift == 3){line.append(W3_HALF_C); lineLen += 3;}
-							else if(needShift == 2.5){line.append(ChatColor.BOLD).append(W2_HALF_C).append(hideTabs); lineLen += 2.5;}
-							else if(needShift == 3.5){line.append(ChatColor.BOLD).append(W3_HALF_C).append(hideTabs); lineLen += 3.5;}
-							else if(needShift == 4.5){line.append(ChatColor.BOLD).append(W4_HALF_C).append(hideTabs); lineLen += 4.5;}
-							else{line.append(' '); lineLen += 4;}
-						}
+					if(monospace) while(lineLen < stopLen){line.append(' '); lineLen += 1;}
+					else while(lineLen < stopLen-1.5){//Goals is lineLen==stopLen but if we hit stopLen-1.5 it's not possible
+						double needShift = (stopLen - lineLen) % 4;
+						if(needShift == 0){line.append(' '); lineLen += 4;}
+						else if(needShift == 2){line.append(W2_HALF_C); lineLen += 2;}
+						else if(needShift == 1 || needShift == 3){line.append(W3_HALF_C); lineLen += 3;}
+						else if(needShift == 2.5){line.append(ChatColor.BOLD).append(W2_HALF_C).append(hideTabs); lineLen += 2.5;}
+						else if(needShift == 1.5 || needShift == 3.5){line.append(ChatColor.BOLD).append(W3_HALF_C).append(hideTabs); lineLen += 3.5;}
+						else if(needShift == 0.5){line.append(ChatColor.BOLD).append(W4_HALF_C).append(hideTabs); lineLen += 4.5;}
 					}
 					line.append(ChatColor.RESET);
 				}

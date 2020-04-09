@@ -422,6 +422,7 @@ public class TextUtils{
 		boolean bold = false, colorPick = false, halfPixel = false;
 		for(char ch : str.toCharArray()){
 			if(colorPick){
+				colorPick = false;
 				switch(ch){
 					case '0': case '1': case '2': case '3': case '4':
 					case '5': case '6': case '7': case '8': case '9':
@@ -432,12 +433,12 @@ public class TextUtils{
 					default: /**/continue; // Apparently, "§x" => ""
 				}
 			}
-			colorPick = (ch == '§');
+			if(ch == '§'){colorPick = true; continue;}
 			len += pxLen(ch);
-			if(bold && pxLen(ch) > 0){
+			if(bold){
 				if(isHalfPixel(ch)){
-					if(halfPixel) halfPixel = false;
-					else{halfPixel = true; ++len;} // Round up
+					if(!halfPixel) ++len; // Round up
+					halfPixel = !halfPixel;
 				}
 				else ++len;
 			}
@@ -451,6 +452,7 @@ public class TextUtils{
 		boolean bold = false, colorPick = false;
 		for(char ch : str.toCharArray()){
 			if(colorPick){
+				colorPick = false;
 				switch(ch){
 					case '0': case '1': case '2': case '3': case '4':
 					case '5': case '6': case '7': case '8': case '9':
@@ -461,9 +463,9 @@ public class TextUtils{
 					default: /**/continue; // Apparently, "§x" => ""
 				}
 			}
-			colorPick = (ch == '§');
+			if(ch == '§'){colorPick = true; continue;}
 			len += pxLen(ch);
-			if(bold && pxLen(ch) > 0) len += isHalfPixel(ch) ? .5 : 1;
+			if(bold) len += isHalfPixel(ch) ? .5 : 1;
 		}
 		return len;
 	}
@@ -495,6 +497,8 @@ public class TextUtils{
 			boolean bold = false, colorPick = false;
 			for(char ch : str.toCharArray()){
 				if(colorPick){
+					colorPick = false;
+					subStrLen += 2;
 					switch(ch){
 						case '0': case '1': case '2': case '3': case '4':
 						case '5': case '6': case '7': case '8': case '9':
@@ -505,9 +509,9 @@ public class TextUtils{
 						default: /**/continue; // Apparently, "§x" => ""
 					}
 				}
-				colorPick = (ch == '§');
+				if(ch == '§'){colorPick = true; continue;}
 				pxLen += TextUtils.pxLen(ch);
-				if(bold && TextUtils.pxLen(ch) > 0) pxLen += TextUtils.isHalfPixel(ch) ? .5 : 1;
+				if(bold) pxLen += isHalfPixel(ch) ? .5 : 1;
 				if(pxLen > maxLen) break;
 				++subStrLen;
 				subStrPxLen = pxLen;
