@@ -3,8 +3,10 @@ package net.evmodder.EvLib.extras;
 import java.util.Arrays;
 import java.util.LinkedList;
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 public class TextUtils{
@@ -61,12 +63,12 @@ public class TextUtils{
 		FILE("&[something]", "open_file", Event.CLICK),
 		RUN_CMD("§2", "run_command", Event.CLICK),
 		SUGGEST_CMD("§9", "suggest_command", Event.CLICK),
-		PAGE("&[something]", "change_page", Event.CLICK),
+		PAGE("${PAGE}", "change_page", Event.CLICK),
 		//HoverEvent
 		SHOW_TEXT("§a", "show_text", Event.HOVER),
-		ACHIEVEMENT("&[something]", "show_achievement", Event.HOVER),
-		ITEM("&[something]", "show_item", Event.HOVER),
-		ENTITY("&[something]", "show_entity", Event.HOVER),
+		ACHIEVEMENT("${ACHIEVEMENT}", "show_achievement", Event.HOVER),
+		ITEM("${ITEM}", "show_item", Event.HOVER),
+		ENTITY("${ENTITY}", "show_entity", Event.HOVER),
 
 		//custom
 		WARP(ChatColor.LIGHT_PURPLE+"@", "run_command", Event.CLICK);
@@ -114,10 +116,10 @@ public class TextUtils{
 
 				String actionText="";
 				//detect underlying command/link/values
-				if(hyperText.contains("=>")){
-					String[] data = hyperText.split("=>");
-					hyperText = data[0];
-					actionText = data[1].trim();
+				int keyValueI = hyperText.indexOf("=>");
+				if(keyValueI != -1){
+					hyperText = hyperText.substring(0, keyValueI);
+					actionText = hyperText.substring(keyValueI+2).trim();
 				}
 				else{
 					if(node == TextAction.RUN_CMD){
@@ -176,7 +178,27 @@ public class TextUtils{
 		if(postMsg != null && !postMsg.isEmpty()) raw.append(",{\"text\": \"").append(postMsg).append("\"}");
 		raw.append(']');
 		for(Player p : recipients){
-			CommandUtils.runCommand("minecraft:tellraw "+p.getName()+' '+raw);
+			//CommandUtils.runCommand("minecraft:tellraw "+p.getName()+' '+raw);//TODO: remove dependency
+			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "minecraft:tellraw "+p.getName()+' '+raw);
+			//p.sendRawMessage(raw);//TODO: Doesn't work! (last checked: 1.12.1)
+		}
+	}
+
+	public static void getModifiedText(String preMsg, String hyperMsg, TextAction action, String value,
+			String postMsg, Player... recipients){
+		preMsg = preMsg.replace("\n", "\\n");
+		hyperMsg = hyperMsg.replace("\n", "\\n");
+		value = value.replace("\n", "\\n");
+		postMsg = postMsg.replace("\n", "\\n");
+		StringBuilder raw = new StringBuilder("[");
+		if(preMsg != null && !preMsg.isEmpty()) raw.append("{\"text\":\"").append(preMsg).append("\"},");
+		raw.append("{\"text\":\"").append(hyperMsg).append("\",\"clickEvent\":{\"action\":\"")
+				.append(action.action).append("\",\"value\":\"").append(value).append("\"}}");
+		if(postMsg != null && !postMsg.isEmpty()) raw.append(",{\"text\": \"").append(postMsg).append("\"}");
+		raw.append(']');
+		for(Player p : recipients){
+			//CommandUtils.runCommand("minecraft:tellraw "+p.getName()+' '+raw);//TODO: remove dependency
+			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "minecraft:tellraw "+p.getName()+' '+raw);
 			//p.sendRawMessage(raw);//TODO: Doesn't work! (last checked: 1.12.1)
 		}
 	}
@@ -196,7 +218,8 @@ public class TextUtils{
 		if(postMsg != null && !postMsg.isEmpty()) raw.append(", {\"text\": \"").append(postMsg).append("\"} ");
 		raw.append(']');
 		for(Player p : recipients){
-			CommandUtils.runCommand("minecraft:tellraw "+p.getName()+' '+raw);
+			//CommandUtils.runCommand("minecraft:tellraw "+p.getName()+' '+raw);//TODO: remove dependency
+			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "minecraft:tellraw "+p.getName()+' '+raw);
 			//p.sendRawMessage(raw);//TODO: Doesn't work! (last checked: 1.12.1)
 		}
 	}
@@ -336,6 +359,20 @@ public class TextUtils{
 				.append(coordPrefix).append(String.format(formatP, loc.getY())).append(commaPrefix).append(',')
 				.append(coordPrefix).append(String.format(formatP, loc.getZ()))
 			.toString();
+	}
+
+	private static String capitalizeWords(String str){
+		StringBuilder builder = new StringBuilder();
+		boolean lastIsSpace = true;
+		for(char ch : str.toCharArray()){
+			builder.append((lastIsSpace && 'a' <= ch && ch <= 'z') ? Character.toUpperCase(ch) : ch);
+			lastIsSpace = ch == ' ';
+		}
+		return builder.toString();
+	}
+
+	public static String getNormalizedName(Material material){
+		return capitalizeWords(material.name().toLowerCase().replace("_", " "));
 	}
 
 	/* ----------==========---------- PIXEL WIDTH CALCULATION METHODS ----------==========---------- */
