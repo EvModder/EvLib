@@ -237,7 +237,7 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 *
 	 * @return the number of values in the map associated with the given key
 	 */
-	public int valuesSize(Object key){
+	public int valuesSize(K key){
 		Entry<K, X> e = getEntry(key);
 		return e == null ? 0 : e.value.size();
 	}
@@ -256,8 +256,9 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
+	@SuppressWarnings("unchecked")
 	public boolean containsKey(Object key){
-		return getEntry(key) != null;
+		return getEntry((K)key) != null;
 	}
 
 	/**
@@ -309,7 +310,8 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 *             does not permit null keys
 	 */
 	public Collection<X> get(Object key){
-		Entry<K, X> p = getEntry(key);
+		@SuppressWarnings("unchecked")
+		Entry<K, X> p = getEntry((K)key);
 		return (p == null ? null : p.value);
 	}
 
@@ -474,7 +476,7 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	final Entry<K, X> getEntry(Object key){
+	final Entry<K, X> getEntry(K key){
 		// Offload comparator-based version for sake of performance
 		if(comparator != null) return getEntryUsingComparator(key);
 		if(key == null) throw new NullPointerException();
@@ -496,14 +498,12 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 * that are less dependent on comparator performance, but is
 	 * worthwhile here.)
 	 */
-	final Entry<K, X> getEntryUsingComparator(Object key){
-		@SuppressWarnings("unchecked")
-		K k = (K)key;
+	final Entry<K, X> getEntryUsingComparator(K key){
 		Comparator<? super K> cpr = comparator;
 		if(cpr != null) {
 			Entry<K, X> p = root;
 			while(p != null){
-				int cmp = cpr.compare(k, p.key);
+				int cmp = cpr.compare(key, p.key);
 				if(cmp < 0) p = p.left;
 				else if(cmp > 0) p = p.right;
 				else return p;
@@ -701,7 +701,7 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	public final int getKeyIndex(Object key){
+	public final int getKeyIndex(K key){
 		// Offload comparator-based version for sake of performance
 		if(comparator != null) return getKeyIndexUsingComparator(key);
 		if(key == null) throw new NullPointerException();
@@ -769,7 +769,7 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	public final int getFloorIndex(Object key){
+	public final int getFloorIndex(K key){
 		// Offload comparator-based version for sake of performance
 		if(comparator != null) return getFloorIndexUsingComparator(key);
 		if(key == null) throw new NullPointerException();
@@ -837,7 +837,7 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	public final int getCeilingIndex(Object key){
+	public final int getCeilingIndex(K key){
 		// Offload comparator-based version for sake of performance
 		if(comparator != null) return getCeilingIndexUsingComparator(key);
 		if(key == null) throw new NullPointerException();
@@ -1229,7 +1229,8 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 *             does not permit null keys
 	 */
 	public Collection<X> remove(Object key){
-		Entry<K, X> p = getEntry(key);
+		@SuppressWarnings("unchecked")
+		Entry<K, X> p = getEntry((K)key);
 		if(p == null) return null;
 
 		Collection<X> oldValue = p.value;
@@ -1254,8 +1255,9 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	public boolean remove(Object key, Object value){
-		Entry<K, X> p = getEntry(key);
+	public boolean remove(Object  key, Object value){
+		@SuppressWarnings("unchecked")
+		Entry<K, X> p = getEntry((K)key);
 		if(p == null) return false;
 
 		if(p.removeValue(value)){
@@ -1287,8 +1289,8 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	public boolean remove(Object key, Collection<?> values){
-		Entry<K, X> p = getEntry(key);
+	public boolean remove(K key, Collection<X> values){
+		Entry<K, X> p = getEntry((K)key);
 		if(p == null) return false;
 
 		int oldSize = p.value.size();
@@ -1820,7 +1822,8 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 
 		public boolean contains(Object o){
 			if(!(o instanceof Map.Entry)) return false;
-			Map.Entry<?, ?> entry = (Map.Entry<?, ?>)o;
+			@SuppressWarnings("unchecked")
+			Map.Entry<K, X> entry = (Map.Entry<K, X>)o;
 			Object value = entry.getValue();
 			Entry<K, X> p = getEntry(entry.getKey());
 			return p != null && valEquals(p.getValue(), value);
@@ -1828,7 +1831,8 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 
 		public boolean remove(Object o){
 			if(!(o instanceof Map.Entry)) return false;
-			Map.Entry<?, ?> entry = (Map.Entry<?, ?>)o;
+			@SuppressWarnings("unchecked")
+			Map.Entry<K, X> entry = (Map.Entry<K, X>)o;
 			Object value = entry.getValue();
 			Entry<K, X> p = getEntry(entry.getKey());
 			if(p != null && valEquals(p.getValue(), value)) {
@@ -2372,17 +2376,19 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 
 			public boolean contains(Object o){
 				if(!(o instanceof Map.Entry)) return false;
-				Map.Entry<?, ?> entry = (Map.Entry<?, ?>)o;
-				Object key = entry.getKey();
+				@SuppressWarnings("unchecked")
+				Map.Entry<K, X> entry = (Map.Entry<K, X>)o;
+				K key = entry.getKey();
 				if(!inRange(key)) return false;
-				IndexTreeMultiMap.Entry<?, ?> node = m.getEntry(key);
+				IndexTreeMultiMap.Entry<K, X> node = m.getEntry(key);
 				return node != null && valEquals(node.getValue(), entry.getValue());
 			}
 
 			public boolean remove(Object o){
 				if(!(o instanceof Map.Entry)) return false;
-				Map.Entry<?, ?> entry = (Map.Entry<?, ?>)o;
-				Object key = entry.getKey();
+				@SuppressWarnings("unchecked")
+				Map.Entry<K, X> entry = (Map.Entry<K, X>)o;
+				K key = entry.getKey();
 				if(!inRange(key)) return false;
 				IndexTreeMultiMap.Entry<K, X> node = m.getEntry(key);
 				if(node != null && valEquals(node.getValue(), entry.getValue())) {
