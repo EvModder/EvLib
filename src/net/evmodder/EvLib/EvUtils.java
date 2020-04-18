@@ -243,12 +243,11 @@ public class EvUtils{// version = 1.1
 		return exists.get(player);
 	}
 
-	public static ArrayList<Player> getNearbyPlayers(Location loc, int range){//+
-		range = range*range;
+	public static ArrayList<Player> getNearbyPlayers(Location loc, int max_dist){//+
+		max_dist = max_dist*max_dist;
 		ArrayList<Player> ppl = new ArrayList<Player>();
 		for(Player p : Bukkit.getServer().getOnlinePlayers()){
-			if(p.getWorld().getName().equals(loc.getWorld().getName()) && p.getLocation().distanceSquared(loc) > range)
-				ppl.add(p);
+			if(p.getWorld().getUID().equals(loc.getWorld().getUID()) && p.getLocation().distanceSquared(loc) < max_dist) ppl.add(p);
 		}
 		return ppl;
 	}
