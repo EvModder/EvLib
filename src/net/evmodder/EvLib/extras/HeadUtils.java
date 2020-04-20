@@ -55,14 +55,6 @@ public class HeadUtils {
 	}
 
 	private static Field fieldProfileItem, fieldProfileBlock;
-//	private static RefClass classCraftWorld = ReflectionUtils.getRefClass("{cb}.CraftWorld");
-//	private static RefClass classBlockPosition = ReflectionUtils.getRefClass("{nms}.BlockPosition");
-//	private static RefClass classTileEntitySkull = ReflectionUtils.getRefClass("{nms}.TileEntitySkull");
-//	private static RefClass classWorldServer = ReflectionUtils.getRefClass("{nms}.WorldServer");
-//	private static RefMethod methodGetHandle = classCraftWorld.getMethod("getHandle");
-//	private static RefMethod methodGetTileEntity = classWorldServer.getMethod("getTileEntity");
-//	private static RefMethod methodGetGameProfile = classTileEntitySkull.getMethod("getGameProfile");
-//	private static RefConstructor cBlockPosition = classBlockPosition.getConstructor(int.class, int.class, int.class);
 	public static void setGameProfile(SkullMeta meta, GameProfile profile){
 		try{
 			if(fieldProfileItem == null) fieldProfileItem = meta.getClass().getDeclaredField("profile");
@@ -108,11 +100,6 @@ public class HeadUtils {
 		catch(IllegalArgumentException e){e.printStackTrace();}
 		catch(IllegalAccessException e){e.printStackTrace();}
 		return null;
-		/*return (GameProfile)methodGetGameProfile.of(//TileEntitySkull
-				methodGetTileEntity.of(//WorldServer
-						methodGetHandle.of(bState.getWorld()).call())//CraftWorld
-				.call(cBlockPosition.create(bState.getX(), bState.getY(), bState.getZ())))
-			.call();*/
 	}
 
 	public static ItemStack makeSkull(String textureCode){
