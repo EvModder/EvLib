@@ -189,8 +189,7 @@ public class TellrawUtils{
 			return builder.append('}').toString();
 		}
 	}
-
-	public final static class TellrawBlob {
+	public final static class TellrawBlob extends Component{
 		Component last = null;
 		List<Component> components;
 		public TellrawBlob(Component...components){
@@ -218,6 +217,16 @@ public class TellrawUtils{
 				(comp1 instanceof ActionComponent && comp2 instanceof ActionComponent && ((ActionComponent)comp1).sameActionsAs((ActionComponent)comp2));
 		}
 		public boolean addComponent(@Nonnull Component component){
+			if(component instanceof TellrawBlob){
+				TellrawBlob blob = (TellrawBlob) component;
+				if(blob.components.isEmpty()) return false;
+				// We can safely flatten TellrawBlobs, UNLESS they start with a selector component
+				if(blob.components.get(0) instanceof SelectorComponent == false){
+					for(Component comp : blob.components) addComponent(comp);
+					return true;
+				}
+				return components.add(last = component);
+			}
 			String compText = getModifiableText(component);
 			if(compText != null){
 				if(compText.isEmpty()) return false;
@@ -238,9 +247,12 @@ public class TellrawUtils{
 
 		public boolean replaceRawTextWithComponent(@Nonnull String textToReplace, @Nonnull Component replacement){
 			if(textToReplace.isEmpty()) return false;
-
+			boolean updated = false;
 			for(int i=0; i<components.size(); ++i){
 				Component comp = components.get(i);
+				if(comp instanceof TellrawBlob){
+					if(((TellrawBlob)comp).replaceRawTextWithComponent(textToReplace, replacement)) updated = true;
+				}
 				if(comp instanceof RawTextComponent == false) continue;
 				RawTextComponent txComp = (RawTextComponent) comp;
 				if(txComp.text.contains(textToReplace) == false) continue;
@@ -250,6 +262,9 @@ public class TellrawUtils{
 				boolean replacementHasText = hasModifiableText(replacement);
 				boolean canBeEmptyBefore = (replacementHasText ? ChatColor.stripColor(textBefore) : textBefore).isEmpty();
 				boolean canBeEmptyAfter = (replacementHasText ? ChatColor.stripColor(textAfter) : textAfter).isEmpty();
+				// Necessary to prevent accidentally creating a global selector
+				if(i == 0 && replacement instanceof SelectorComponent && canBeEmptyBefore){components.add(0, new RawTextComponent("")); i = 1;}
+
 				if(replacementHasText){
 					String replacementText = getModifiableText(replacement);
 					if(canBeEmptyBefore) replacementText = textBefore + replacementText;
@@ -266,32 +281,22 @@ public class TellrawUtils{
 				else if(canBeEmptyAfter){
 					txComp.text = textBefore;
 					components.add(i+1, replacement);
+					++i;
 				}
 				else{
 					txComp.text = textBefore;
 					components.add(i+1, new RawTextComponent(textAfter));
 					components.add(i+1, replacement);
+					i+=2;
 				}
-				// Necessary to prevent accidentally creating a global selector
-				if(i == 0 && replacement instanceof SelectorComponent && canBeEmptyBefore) components.add(0, new RawTextComponent(""));
-//				replaceRawTextWithComponent(textToReplace, replacement); // Call recursively to replace all occurances (DANGEROUS)
-				return true;
+				updated = true;
 			}
-			return false;
+			return updated;
 		}
 
-		public String getPlainText(){
+		@Override public String toPlainText(){
 			StringBuilder builder = new StringBuilder();
-			for(Component comp : components){
-				if(hasModifiableText(comp)) builder.append(TextUtils.unescapeString(getModifiableText(comp)));
-				else if(comp instanceof SelectorComponent){
-					Collection<Entity> entities = ((SelectorComponent)comp).selector.resolve();
-					if(entities == null || entities.isEmpty()) continue;
-					Collection<String> names = entities.stream().filter(e -> e != null).map(e -> getNormalizedName(e)).collect(Collectors.toList());
-					builder.append(String.join(ChatColor.GRAY+", "+ChatColor.RESET, names));
-				}
-				else{/* what goes here? */}
-			}
+			for(Component comp : components) builder.append(comp.toPlainText());
 			return builder.toString();
 		}
 		@Override public String toString(){
@@ -313,7 +318,7 @@ public class TellrawUtils{
 
 
 
-	// Selector stuff. TODO: should probably relocate all of this
+	// TODO: Selector stuff, should probably relocate all of this
 	private static String getNormalizedName(Entity entity){
 		if(entity instanceof Player) return ((Player)entity).getDisplayName();
 		return entity.getName() != null ? entity.getName() : TextUtils.getNormalizedName(entity.getType());

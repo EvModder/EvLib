@@ -2,6 +2,7 @@ package net.evmodder.EvLib.extras;
 
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.Random;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -210,6 +211,20 @@ public class TextUtils{
 	}
 	//============================================================================================================//
 
+	public static String generateRandomASCII(int desiredLength){//TODO: currently unused
+		StringBuilder builder = new StringBuilder();
+		Random rand = new Random();
+		for(int i=0; i<desiredLength; ++i){
+			int randC = 33 + rand.nextInt(223);
+			switch(randC){
+				// These are all spaces; we avoid using them just generate a new randC
+				case 127: case 129: case 141: case 143: case 144: case 157: case 160: case 173: --i; continue;
+				default: break;
+			}
+			builder.append((char)randC);
+		}
+		return builder.toString();
+	}
 
 	public static String translateAlternateColorCodes(char altColorChar, String textToTranslate){
 		char[] msg = textToTranslate.toCharArray();

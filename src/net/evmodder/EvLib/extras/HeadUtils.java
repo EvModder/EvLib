@@ -102,9 +102,6 @@ public class HeadUtils {
 		return null;
 	}
 
-	public static ItemStack makeSkull(String textureCode){
-		return makeSkull(textureCode, ChatColor.YELLOW+"UNKNOWN Head");
-	}
 	public static ItemStack makeSkull(String textureCode, String headName){
 		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
 		if(textureCode == null) return item;
