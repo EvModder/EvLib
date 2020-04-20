@@ -7,6 +7,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 public class TextUtils{
@@ -41,6 +43,8 @@ public class TextUtils{
 		}
 	}
 
+
+	//======================================== TODO: DELETE ALL THIS CRAP ========================================//
 	enum Event{CLICK,HOVER};
 	public enum TextAction{
 		//ClickEvent
@@ -204,6 +208,8 @@ public class TextUtils{
 			//p.sendRawMessage(raw);//TODO: Doesn't work! (last checked: 1.12.1)
 		}
 	}
+	//============================================================================================================//
+
 
 	public static String translateAlternateColorCodes(char altColorChar, String textToTranslate){
 		char[] msg = textToTranslate.toCharArray();
@@ -341,6 +347,42 @@ public class TextUtils{
 				.append(coordPrefix).append(String.format(formatP, loc.getZ()))
 			.toString();
 	}
+	public static Location getLocationFromString(String s){
+		String[] data = ChatColor.stripColor(s).split(",");
+		World world = org.bukkit.Bukkit.getWorld(data[0]);
+		if(world != null){
+			try{return new Location(world,
+					Integer.parseInt(data[1]), Integer.parseInt(data[2]), Integer.parseInt(data[3]));}
+			catch(NumberFormatException ex){}
+		}
+		return null;
+	}
+	public static Location getLocationFromString(World w, String s){
+		String[] data = ChatColor.stripColor(s).split(",");
+		try{return new Location(w,
+				Double.parseDouble(data[data.length-3]),
+				Double.parseDouble(data[data.length-2]),
+				Double.parseDouble(data[data.length-1]));}
+		catch(ArrayIndexOutOfBoundsException | NumberFormatException ex){return null;}
+	}
+
+	static long[] scale = new long[]{31536000000L, /*2628000000L,*/ 604800000L, 86400000L, 3600000L, 60000L, 1000L};
+	static char[] units = new char[]{'y', /*'m',*/ 'w', 'd', 'h', 'm', 's'};
+	public static String formatTime(long millisecond, ChatColor timeColor, ChatColor unitColor){
+		return formatTime(millisecond, timeColor, unitColor, scale, units);
+	}
+	public static String formatTime(long time, ChatColor timeColor, ChatColor unitColor, long[] scale, char[] units){
+		int i = 0;
+		while(time < scale[i]) ++i;
+		StringBuilder builder = new StringBuilder("");
+		for(; i < scale.length-1; ++i){
+			builder.append(timeColor).append(time / scale[i]).append(unitColor).append(units[i]).append(", ");
+			time %= scale[i];
+		}
+		return builder.append(timeColor).append(time / scale[scale.length-1])
+					  .append(unitColor).append(units[units.length-1]).toString();
+	}
+
 
 	public static String capitalizeAndSpacify(String str, char toSpace){
 		StringBuilder builder = new StringBuilder("");
@@ -353,8 +395,8 @@ public class TextUtils{
 		return builder.toString();
 	}
 
-	public static String getNormalizedName(Material material){//TODO: move to TypeUtils?
-		switch(material.name()){
+	public static String getNormalizedItemName(String material){//TODO: move to TypeUtils?
+		switch(material){
 			case "CREEPER_BANNER_PATTERN":
 			case "FLOWER_BANNER_PATTERN":
 			case "GLOBE_BANNER_PATTERN":
@@ -363,11 +405,10 @@ public class TextUtils{
 				return "Banner Pattern";
 			default:
 //				return capitalizeWords(material.name().toLowerCase().replace("_", " "));
-				return capitalizeAndSpacify(material.name(), '_');
+				return capitalizeAndSpacify(material, '_');
 		}
 	}
-
-	public static String getNormalizedName(String eType){
+	public static String getNormalizedEntityName(String eType){//TODO: move to EntityUtils?
 		//TODO: improve this algorithm / test for errors
 		switch(eType){
 		case "PIG_ZOMBIE":
@@ -380,7 +421,11 @@ public class TextUtils{
 			return capitalizeAndSpacify(eType, '_');
 		}
 	}
+	public static String getNormalizedName(Material material){return getNormalizedItemName(material.name());}
+	public static String getNormalizedName(EntityType eType){return getNormalizedEntityName(eType.name());}
 
+
+	//TODO: Move this to TabText (once TabText is cleaned up)?
 	/* ----------==========---------- PIXEL WIDTH CALCULATION METHODS ----------==========---------- */
 	// Supports ASCII codes 32-255, assumes width=6 for unknown chars
 	final public static int MAX_PIXEL_WIDTH = 320, MAX_MONO_WIDTH = 80, MAX_PLAYERNAME_WIDTH = 96/*6*16*/;

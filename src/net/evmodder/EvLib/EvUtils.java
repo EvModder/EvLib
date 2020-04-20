@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Vector;
 import java.util.function.Function;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -17,51 +16,14 @@ import org.bukkit.World;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 
 public class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,WebUtils,TextUtils
-	public static Vector<String> installedEvPlugins(){
-		Vector<String> evPlugins = new Vector<String>();
-		for(Plugin pl : Bukkit.getServer().getPluginManager().getPlugins()){
-			try{
-				@SuppressWarnings("unused")
-				String ver = pl.getClass().getField("EvLib_ver").get(null).toString();
-				evPlugins.add(pl.getName());
-				//TODO: potentially return list of different EvLib versions being used
-			}
-			catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e){}
-		}
-		return evPlugins;
-	}
-
-	//TODO: move to EntityUtils
-	public static String getNormalizedName(EntityType entity){
-		//TODO: improve this algorithm / test for errors
-		switch(entity){
-		case PIG_ZOMBIE:
-			return "Zombie Pigman";
-		case MUSHROOM_COW:
-			return "Mooshroom";
-		default:
-			boolean wordStart = true;
-			char[] arr = entity.name().toCharArray();
-			for(int i=0; i<arr.length; ++i){
-				if(wordStart) wordStart = false;
-				else if(arr[i] == '_' || arr[i] == ' '){arr[i] = ' '; wordStart = true;}
-				else arr[i] = Character.toLowerCase(arr[i]);
-			}
-			return new String(arr);
-		}
-	}
-
-	//TODO: move to EntityUtils
-	public static Collection<ItemStack> getEquipmentGuaranteedToDrop(LivingEntity entity){
+	public static Collection<ItemStack> getEquipmentGuaranteedToDrop(LivingEntity entity){//TODO: move to EntityUtils
 		ArrayList<ItemStack> itemsThatWillDrop = new ArrayList<>();
 		EntityEquipment equipment = entity.getEquipment();
 		if(equipment.getItemInMainHandDropChance() >= 1) itemsThatWillDrop.add(equipment.getItemInMainHand());
@@ -130,42 +92,6 @@ public class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,WebUti
 			default:
 				return null;
 		}
-	}
-
-	static long[] scale = new long[]{31536000000L, /*2628000000L,*/ 604800000L, 86400000L, 3600000L, 60000L, 1000L};
-	static char[] units = new char[]{'y', /*'m',*/ 'w', 'd', 'h', 'm', 's'};
-	public static String formatTime(long millisecond, ChatColor timeColor, ChatColor unitColor){
-		return formatTime(millisecond, timeColor, unitColor, scale, units);
-	}
-	public static String formatTime(long time, ChatColor timeColor, ChatColor unitColor, long[] scale, char[] units){
-		int i = 0;
-		while(time < scale[i]) ++i;
-		StringBuilder builder = new StringBuilder("");
-		for(; i < scale.length-1; ++i){
-			builder.append(timeColor).append(time / scale[i]).append(unitColor).append(units[i]).append(", ");
-			time %= scale[i];
-		}
-		return builder.append(timeColor).append(time / scale[scale.length-1])
-					  .append(unitColor).append(units[units.length-1]).toString();
-	}
-
-	public static Location getLocationFromString(String s){
-		String[] data = s.split(",");
-		World world = org.bukkit.Bukkit.getWorld(data[0]);
-		if(world != null){
-			try{return new Location(world,
-					Integer.parseInt(data[1]), Integer.parseInt(data[2]), Integer.parseInt(data[3]));}
-			catch(NumberFormatException ex){}
-		}
-		return null;
-	}
-	public static Location getLocationFromString(World w, String s){
-		String[] data = s.split(",");
-		try{return new Location(w,
-				Double.parseDouble(data[data.length-3]),
-				Double.parseDouble(data[data.length-2]),
-				Double.parseDouble(data[data.length-1]));}
-		catch(ArrayIndexOutOfBoundsException | NumberFormatException ex){return null;}
 	}
 
 	public static boolean notFar(Location from, Location to){

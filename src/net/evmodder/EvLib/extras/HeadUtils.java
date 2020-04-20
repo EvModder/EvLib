@@ -212,7 +212,7 @@ public class HeadUtils {
 		else{
 			GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(entity.name().getBytes()), entity.name());
 			HeadUtils.setGameProfile(meta, profile);
-			meta.setDisplayName(ChatColor.YELLOW+TextUtils.getNormalizedName(entity.name())+" "+getDroppedHeadTypeName(entity));
+			meta.setDisplayName(ChatColor.YELLOW+TextUtils.getNormalizedName(entity)+" "+getDroppedHeadTypeName(entity));
 		}
 		head.setItemMeta(meta);
 		return head;

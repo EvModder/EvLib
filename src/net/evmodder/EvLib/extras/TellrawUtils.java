@@ -20,7 +20,6 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Objective;
-import net.evmodder.EvLib.EvUtils;
 
 public class TellrawUtils{
 	public enum ClickEvent{// Descriptions below are from https://minecraft.gamepedia.com/Raw_JSON_text_format
@@ -317,7 +316,7 @@ public class TellrawUtils{
 	// Selector stuff. TODO: should probably relocate all of this
 	private static String getNormalizedName(Entity entity){
 		if(entity instanceof Player) return ((Player)entity).getDisplayName();
-		return entity.getName() != null ? entity.getName() : EvUtils.getNormalizedName(entity.getType());
+		return entity.getName() != null ? entity.getName() : TextUtils.getNormalizedName(entity.getType());
 	}
 
 	private static boolean isValidPositionNumber(String value){

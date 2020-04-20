@@ -9,12 +9,13 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Vector;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.google.common.io.Files;
-import net.evmodder.EvLib.EvUtils;
 
 public class FileIO{// version = X1.0
 	static final String EV_DIR = "./plugins/EvFolder/";
@@ -36,9 +37,23 @@ public class FileIO{// version = X1.0
 		catch(IOException e){e.printStackTrace();}
 	}
 
+	public static Vector<String> installedEvPlugins(){
+		Vector<String> evPlugins = new Vector<String>();
+		for(Plugin pl : Bukkit.getServer().getPluginManager().getPlugins()){
+			try{
+				@SuppressWarnings("unused")
+				String ver = pl.getClass().getField("EvLib_ver").get(null).toString();
+				evPlugins.add(pl.getName());
+				//TODO: potentially return list of different EvLib versions being used
+			}
+			catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e){}
+		}
+		return evPlugins;
+	}
+
 	static void verifyDir(JavaPlugin evPl){
 		final String CUSTOM_DIR = "./plugins/"+evPl.getName()+"/";
-		if(!new File(EV_DIR).exists() && (FORCE_CUSTOM_DIR || EvUtils.installedEvPlugins().size() < 2)){
+		if(!new File(EV_DIR).exists() && (FORCE_CUSTOM_DIR || FileIO.installedEvPlugins().size() < 2)){
 			DIR = CUSTOM_DIR;
 		}
 		else if(new File(CUSTOM_DIR).exists()){//merge with EvFolder
