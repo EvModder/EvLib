@@ -25,7 +25,22 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
-public class EvUtils{// version = 1.1
+public class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,WebUtils,TextUtils
+	public static Vector<String> installedEvPlugins(){
+		Vector<String> evPlugins = new Vector<String>();
+		for(Plugin pl : Bukkit.getServer().getPluginManager().getPlugins()){
+			try{
+				@SuppressWarnings("unused")
+				String ver = pl.getClass().getField("EvLib_ver").get(null).toString();
+				evPlugins.add(pl.getName());
+				//TODO: potentially return list of different EvLib versions being used
+			}
+			catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e){}
+		}
+		return evPlugins;
+	}
+
+	//TODO: move to EntityUtils
 	public static String getNormalizedName(EntityType entity){
 		//TODO: improve this algorithm / test for errors
 		switch(entity){
@@ -45,53 +60,17 @@ public class EvUtils{// version = 1.1
 		}
 	}
 
-	static long[] scale = new long[]{31536000000L, /*2628000000L,*/ 604800000L, 86400000L, 3600000L, 60000L, 1000L};
-	static char[] units = new char[]{'y', /*'m',*/ 'w', 'd', 'h', 'm', 's'};
-	public static String formatTime(long millisecond, ChatColor timeColor, ChatColor unitColor){
-		return formatTime(millisecond, timeColor, unitColor, scale, units);
-	}
-	public static String formatTime(long time, ChatColor timeColor, ChatColor unitColor, long[] scale, char[] units){
-		int i = 0;
-		while(time < scale[i]) ++i;
-		StringBuilder builder = new StringBuilder("");
-		for(; i < scale.length-1; ++i){
-			builder.append(timeColor).append(time / scale[i]).append(unitColor).append(units[i]).append(", ");
-			time %= scale[i];
-		}
-		return builder.append(timeColor).append(time / scale[scale.length-1])
-					  .append(unitColor).append(units[units.length-1]).toString();
-	}
-
-	public static Location getLocationFromString(String s){
-		String[] data = s.split(",");
-		World world = org.bukkit.Bukkit.getWorld(data[0]);
-		if(world != null){
-			try{return new Location(world,
-					Integer.parseInt(data[1]), Integer.parseInt(data[2]), Integer.parseInt(data[3]));}
-			catch(NumberFormatException ex){}
-		}
-		return null;
-	}
-	public static Location getLocationFromString(World w, String s){
-		String[] data = s.split(",");
-		try{return new Location(w,
-				Double.parseDouble(data[data.length-3]),
-				Double.parseDouble(data[data.length-2]),
-				Double.parseDouble(data[data.length-1]));}
-		catch(ArrayIndexOutOfBoundsException | NumberFormatException ex){return null;}
-	}
-
-	public static String getRegionFolder(World world){
-		switch(world.getEnvironment()){
-			case NORMAL:
-				return "./"+world.getName()+"/region/";
-			case NETHER:
-				return "./"+world.getName()+"/DIM-1/region/";
-			case THE_END:
-				return "./"+world.getName()+"/DIM1/region/";
-			default:
-				return null;
-		}
+	//TODO: move to EntityUtils
+	public static Collection<ItemStack> getEquipmentGuaranteedToDrop(LivingEntity entity){
+		ArrayList<ItemStack> itemsThatWillDrop = new ArrayList<>();
+		EntityEquipment equipment = entity.getEquipment();
+		if(equipment.getItemInMainHandDropChance() >= 1) itemsThatWillDrop.add(equipment.getItemInMainHand());
+		if(equipment.getItemInOffHandDropChance() >= 1) itemsThatWillDrop.add(equipment.getItemInOffHand());
+		if(equipment.getChestplateDropChance() >= 1) itemsThatWillDrop.add(equipment.getChestplate());
+		if(equipment.getLeggingsDropChance() >= 1) itemsThatWillDrop.add(equipment.getLeggings());
+		if(equipment.getHelmetDropChance() >= 1) itemsThatWillDrop.add(equipment.getHelmet());
+		if(equipment.getBootsDropChance() >= 1) itemsThatWillDrop.add(equipment.getBoots());
+		return itemsThatWillDrop;
 	}
 
 	public static Collection<Advancement> getVanillaAdvancements(Player p){
@@ -131,16 +110,62 @@ public class EvUtils{// version = 1.1
 		return advs;
 	}
 
-	public static Collection<ItemStack> getEquipmentGuaranteedToDrop(LivingEntity entity){
-		ArrayList<ItemStack> itemsThatWillDrop = new ArrayList<>();
-		EntityEquipment equipment = entity.getEquipment();
-		if(equipment.getItemInMainHandDropChance() >= 1) itemsThatWillDrop.add(equipment.getItemInMainHand());
-		if(equipment.getItemInOffHandDropChance() >= 1) itemsThatWillDrop.add(equipment.getItemInOffHand());
-		if(equipment.getChestplateDropChance() >= 1) itemsThatWillDrop.add(equipment.getChestplate());
-		if(equipment.getLeggingsDropChance() >= 1) itemsThatWillDrop.add(equipment.getLeggings());
-		if(equipment.getHelmetDropChance() >= 1) itemsThatWillDrop.add(equipment.getHelmet());
-		if(equipment.getBootsDropChance() >= 1) itemsThatWillDrop.add(equipment.getBoots());
-		return itemsThatWillDrop;
+	public static int maxCapacity(Inventory inv, Material item){
+		int sum = 0;
+		for(ItemStack i : inv.getContents()){
+			if(i == null || i.getType() == Material.AIR) sum += item.getMaxStackSize();
+			else if(i.getType() == item) sum += item.getMaxStackSize() - i.getAmount();
+		}
+		return sum;
+	}
+
+	public static String getRegionFolder(World world){
+		switch(world.getEnvironment()){
+			case NORMAL:
+				return "./"+world.getName()+"/region/";
+			case NETHER:
+				return "./"+world.getName()+"/DIM-1/region/";
+			case THE_END:
+				return "./"+world.getName()+"/DIM1/region/";
+			default:
+				return null;
+		}
+	}
+
+	static long[] scale = new long[]{31536000000L, /*2628000000L,*/ 604800000L, 86400000L, 3600000L, 60000L, 1000L};
+	static char[] units = new char[]{'y', /*'m',*/ 'w', 'd', 'h', 'm', 's'};
+	public static String formatTime(long millisecond, ChatColor timeColor, ChatColor unitColor){
+		return formatTime(millisecond, timeColor, unitColor, scale, units);
+	}
+	public static String formatTime(long time, ChatColor timeColor, ChatColor unitColor, long[] scale, char[] units){
+		int i = 0;
+		while(time < scale[i]) ++i;
+		StringBuilder builder = new StringBuilder("");
+		for(; i < scale.length-1; ++i){
+			builder.append(timeColor).append(time / scale[i]).append(unitColor).append(units[i]).append(", ");
+			time %= scale[i];
+		}
+		return builder.append(timeColor).append(time / scale[scale.length-1])
+					  .append(unitColor).append(units[units.length-1]).toString();
+	}
+
+	public static Location getLocationFromString(String s){
+		String[] data = s.split(",");
+		World world = org.bukkit.Bukkit.getWorld(data[0]);
+		if(world != null){
+			try{return new Location(world,
+					Integer.parseInt(data[1]), Integer.parseInt(data[2]), Integer.parseInt(data[3]));}
+			catch(NumberFormatException ex){}
+		}
+		return null;
+	}
+	public static Location getLocationFromString(World w, String s){
+		String[] data = s.split(",");
+		try{return new Location(w,
+				Double.parseDouble(data[data.length-3]),
+				Double.parseDouble(data[data.length-2]),
+				Double.parseDouble(data[data.length-1]));}
+		catch(ArrayIndexOutOfBoundsException | NumberFormatException ex){return null;}
 	}
 
 	public static boolean notFar(Location from, Location to){
@@ -151,6 +176,15 @@ public class EvUtils{// version = 1.1
 				Math.abs(y1 - y2) < 15 &&
 				Math.abs(z1 - z2) < 20 &&
 				from.getWorld().getName().equals(to.getWorld().getName()));
+	}
+
+	public static ArrayList<Player> getNearbyPlayers(Location loc, int max_dist){//+
+		max_dist = max_dist*max_dist;
+		ArrayList<Player> ppl = new ArrayList<Player>();
+		for(Player p : Bukkit.getServer().getOnlinePlayers()){
+			if(p.getWorld().getUID().equals(loc.getWorld().getUID()) && p.getLocation().distanceSquared(loc) < max_dist) ppl.add(p);
+		}
+		return ppl;
 	}
 
 	public static Location getClosestBlock(Location start, int MAX_DIST, Function<Block, Boolean> test){
@@ -175,38 +209,6 @@ public class EvUtils{// version = 1.1
 			}
 		}
 		return null;
-	}
-
-	public static int maxCapacity(Inventory inv, Material item){
-		int sum = 0;
-		for(ItemStack i : inv.getContents()){
-			if(i == null || i.getType() == Material.AIR) sum += item.getMaxStackSize();
-			else if(i.getType() == item) sum += item.getMaxStackSize() - i.getAmount();
-		}
-		return sum;
-	}
-
-	public static Vector<String> installedEvPlugins(){
-		Vector<String> evPlugins = new Vector<String>();
-		for(Plugin pl : Bukkit.getServer().getPluginManager().getPlugins()){
-			try{
-				@SuppressWarnings("unused")
-				String ver = pl.getClass().getField("EvLib_ver").get(null).toString();
-				evPlugins.add(pl.getName());
-				//TODO: potentially return list of different EvLib versions being used
-			}
-			catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e){}
-		}
-		return evPlugins;
-	}
-
-	public static ArrayList<Player> getNearbyPlayers(Location loc, int max_dist){//+
-		max_dist = max_dist*max_dist;
-		ArrayList<Player> ppl = new ArrayList<Player>();
-		for(Player p : Bukkit.getServer().getOnlinePlayers()){
-			if(p.getWorld().getUID().equals(loc.getWorld().getUID()) && p.getLocation().distanceSquared(loc) < max_dist) ppl.add(p);
-		}
-		return ppl;
 	}
 
 	public static List<Block> getConnectedBlocks(Block block0, Function<Block, Boolean> test, 

@@ -361,7 +361,7 @@ public class TextUtils{
 			.toString();
 	}
 
-	private static String capitalizeAndSpacify(String str, char toSpace){
+	public static String capitalizeAndSpacify(String str, char toSpace){
 		StringBuilder builder = new StringBuilder("");
 		boolean upper = true;
 		for(char ch : str.toCharArray()){
@@ -393,8 +393,9 @@ public class TextUtils{
 			return "Zombie Pigman";
 		case "MUSHROOM_COW":
 			return "Mooshroom";
-		case "TROPICAL_FISH"://TODO: 22 varieties, e.g. Clownfish
+		case "TROPICAL_FISH"://TODO: 22 varieties, e.g. Clownfish (already implemented in TextureKeyLookup.java)
 		default:
+//			return capitalizeWords(eType.toLowerCase().replace("_", " "));
 			return capitalizeAndSpacify(eType, '_');
 		}
 	}
