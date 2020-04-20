@@ -3,10 +3,13 @@ package net.evmodder.EvLib.extras;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
+import org.apache.commons.lang.NotImplementedException;
+import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
+import org.bukkit.inventory.ItemStack;
 
 public class TypeUtils{EntityType s;
 	final static HashMap<Material, EntityType> eggToEntity = new HashMap<Material, EntityType>();
@@ -52,6 +55,49 @@ public class TypeUtils{EntityType s;
 				return true;
 			default:
 				return false;
+		}
+	}
+
+	public static ChatColor getRarityColor(ItemStack item, boolean checkCustomName){
+		if(checkCustomName && item.hasItemMeta() && item.getItemMeta().hasDisplayName()){
+			String displayName = item.getItemMeta().getDisplayName();
+			ChatColor color = null;
+			for(int i=0; i+1 < displayName.length() && displayName.charAt(i) == ChatColor.COLOR_CHAR; i+=2)
+				color = ChatColor.getByChar(displayName.charAt(i+1));//TODO: currently matches formats as well
+			if(color != null) return color;
+		}
+		switch(item.getType()){
+			// EPIC:
+			case DRAGON_EGG:
+			case ENCHANTED_GOLDEN_APPLE:
+			case MOJANG_BANNER_PATTERN:
+			case COMMAND_BLOCK: case CHAIN_COMMAND_BLOCK: case REPEATING_COMMAND_BLOCK:
+			case JIGSAW: case STRUCTURE_BLOCK:
+				return ChatColor.LIGHT_PURPLE;
+			// RARE:
+			case BEACON:
+			case CONDUIT:
+			case END_CRYSTAL:
+			case GOLDEN_APPLE:
+			case MUSIC_DISC_11: case MUSIC_DISC_13: case MUSIC_DISC_BLOCKS: case MUSIC_DISC_CAT: case MUSIC_DISC_CHIRP: case MUSIC_DISC_FAR:
+			case MUSIC_DISC_MALL: case MUSIC_DISC_MELLOHI: case MUSIC_DISC_STAL: case MUSIC_DISC_WAIT: case MUSIC_DISC_WARD:
+				return ChatColor.AQUA;
+			// UNCOMMON:
+			case CREEPER_BANNER_PATTERN:
+			case SKULL_BANNER_PATTERN:
+			case EXPERIENCE_BOTTLE:
+			case DRAGON_BREATH:
+			case ELYTRA:
+			case ENCHANTED_BOOK:
+			case PLAYER_HEAD: case CREEPER_HEAD: case ZOMBIE_HEAD: case DRAGON_HEAD:
+			case SKELETON_SKULL: case WITHER_SKELETON_SKULL:
+			case HEART_OF_THE_SEA:
+			case NETHER_STAR:
+			case TOTEM_OF_UNDYING:
+				return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : ChatColor.YELLOW;
+			// COMMON:
+			default:
+				return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : ChatColor.WHITE;
 		}
 	}
 
@@ -628,7 +674,7 @@ public class TypeUtils{EntityType s;
 	}
 
 	public static boolean isPlanks(Material mat){
-		switch(mat){
+		switch(mat){//TODO: update with new nether logs
 			case ACACIA_PLANKS:
 			case BIRCH_PLANKS:
 			case DARK_OAK_PLANKS:
@@ -642,7 +688,7 @@ public class TypeUtils{EntityType s;
 	}
 
 	public static boolean isSword(Material mat){
-		switch(mat){
+		switch(mat){//TODO: netherrite swords/tools
 			case DIAMOND_SWORD:
 			case IRON_SWORD:
 			case STONE_SWORD:
@@ -701,6 +747,50 @@ public class TypeUtils{EntityType s;
 				return false;
 		}
 	}
+
+	private static byte pickaxeNumber(Material pickType){
+		switch(pickType){//TODO: netherite pickaxe
+			case DIAMOND_PICKAXE:
+				return 4;
+			case IRON_PICKAXE:
+				return 3;
+			case STONE_PICKAXE:
+				return 2;
+			case WOODEN_PICKAXE:
+			case GOLDEN_PICKAXE:
+				return 1;
+			default:
+				if(pickType.name().endsWith("PICKAXE")){
+					throw new NotImplementedException("Unknown pickaxe type: "+pickType+", please update EvLib");
+				}
+				return 0;
+		}
+	}
+	public static boolean pickIsAtLeast(Material pickType, Material needPick){//+
+		return pickaxeNumber(pickType) >= pickaxeNumber(needPick);
+	}
+	private static byte swordNumber(Material swordType){
+		switch(swordType){//TODO: netherite sword
+			case DIAMOND_SWORD:
+				return 4;
+			case IRON_SWORD:
+				return 3;
+			case STONE_SWORD:
+				return 2;
+			case GOLDEN_SWORD:
+			case WOODEN_SWORD:
+				return 1;
+			default:
+				if(swordType.name().endsWith("SWORD")){
+					throw new NotImplementedException("Unknown pickaxe type: "+swordType+", please update EvLib");
+				}
+				return 0;
+		}
+	}
+	public static boolean swordIsAtLeast(Material swordType, Material needSword){//+
+		return swordNumber(swordType) >= swordNumber(needSword);
+	}
+
 
 	enum ObtainableOptions{
 		SILK_SPAWNERS, SILK_INFESTED, MOB_EGGS, CMD_BLOCKS,

@@ -7,7 +7,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,18 +14,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Nameable;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.Container;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -284,69 +280,6 @@ public class EvUtils{// version = 1.1
 		}
 	}
 
-	// TODO: Move to TypeUtils perhaps?
-	public static boolean isHead(Material type){
-		switch(type){
-			case CREEPER_HEAD:
-			case CREEPER_WALL_HEAD:
-			case DRAGON_HEAD:
-			case DRAGON_WALL_HEAD:
-			case PLAYER_HEAD:
-			case PLAYER_WALL_HEAD:
-			case ZOMBIE_HEAD:
-			case ZOMBIE_WALL_HEAD:
-			case SKELETON_SKULL:
-			case SKELETON_WALL_SKULL:
-			case WITHER_SKELETON_SKULL:
-			case WITHER_SKELETON_WALL_SKULL:
-				return true;
-			default:
-				return false;
-		}
-	}
-	public static boolean isPlayerHead(Material type){
-		return type == Material.PLAYER_HEAD || type == Material.PLAYER_WALL_HEAD;
-	}
-
-	public static boolean hasGrummName(Nameable e){
-		return e.getCustomName() != null && !(e instanceof Player) &&
-				(e.getCustomName().equals("Dinnerbone") || e.getCustomName().equals("Grumm"));
-	}
-
-	public static EntityType getEntityByName(String name){
-		//TODO: improve this algorithm / test for errors
-		if(name.toUpperCase().startsWith("MHF_")) name = normalizedNameFromMHFName(name);
-		name = name.toUpperCase().replace(' ', '_');
-
-		try{EntityType type = EntityType.valueOf(name.toUpperCase()); return type;}
-		catch(IllegalArgumentException ex){}
-		name = name.replace("_", "");
-		for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(name)) return t;
-		if(name.equals("ZOMBIEPIGMAN")) return EntityType.PIG_ZOMBIE;
-		else if(name.equals("MOOSHROOM")) return EntityType.MUSHROOM_COW;
-		return EntityType.UNKNOWN;
-	}
-	public static String getMHFHeadName(String eType){
-		switch(eType){
-		case "MAGMA_CUBE":
-			return "MHF_LavaSlime";
-		case "IRON_GOLEM":
-			return "MHF_Golem";
-		case "MOOSHROOM":
-			return "MHF_MushroomCow";
-		case "WITHER_SKELETON":
-			return "MHF_Wither";
-		default:
-			StringBuilder builder = new StringBuilder("MHF_");
-			boolean lower = false;
-			for(char ch : eType.toCharArray()){
-				if(ch == '_') lower = false;
-				else if(lower) builder.append(Character.toLowerCase(ch));
-				else{builder.append(Character.toUpperCase(ch)); lower = true;}
-			}
-			return builder.toString();
-		}
-	}
 	public static String getNormalizedName(String eType){
 		//TODO: improve this algorithm / test for errors
 		switch(eType){
@@ -356,65 +289,11 @@ public class EvUtils{// version = 1.1
 			return "Mooshroom";
 		case "TROPICAL_FISH"://TODO: 22 varieties, e.g. Clownfish
 		default:
-			return capitalizeAndSpacify(eType, '_');
-		}
-	}
-	public static String normalizedNameFromMHFName(String mhfName){
-		mhfName = mhfName.substring(4);
-		String mhfCompact = mhfName.replace("_", "").replace(" ", "").toLowerCase();
-		if(mhfCompact.equals("lavaslime")) return "Magma Cube";
-		else if(mhfCompact.equals("golem")) return "Iron Golem";
-		else if(mhfCompact.equals("pigzombie")) return "Zombie Pigman";
-		else if(mhfCompact.equals("mushroomcow")) return "Mooshroom";
-		else{
-			char[] chars = mhfName.toCharArray();
-			StringBuilder name = new StringBuilder("").append(chars[0]);
-			for(int i=1; i<chars.length; ++i){
-				if(Character.isUpperCase(chars[i]) && chars[i-1] != ' ') name.append(' ');
-				name.append(chars[i]);
-			}
-			return name.toString();
+			return EvUtils.capitalizeAndSpacify(eType, '_');
 		}
 	}
 
-	private static byte pickaxeNumber(Material pickType){
-		switch(pickType){
-			case DIAMOND_PICKAXE:
-				return 4;
-			case IRON_PICKAXE:
-				return 3;
-			case STONE_PICKAXE:
-				return 2;
-			case WOODEN_PICKAXE:
-			case GOLDEN_PICKAXE:
-				return 1;
-			default:
-				return 0;
-		}
-	}
-	public static boolean pickIsAtLeast(Material pickType, Material needPick){//+
-		return pickaxeNumber(pickType) >= pickaxeNumber(needPick);
-	}
-	private static byte swordNumber(Material swordType){
-		switch(swordType){
-			case DIAMOND_SWORD:
-				return 4;
-			case IRON_SWORD:
-				return 3;
-			case STONE_SWORD:
-				return 2;
-			case GOLDEN_SWORD:
-			case WOODEN_SWORD:
-				return 1;
-			default:
-				return 0;
-		}
-	}
-	public static boolean swordIsAtLeast(Material swordType, Material needSword){//+
-		return swordNumber(swordType) >= swordNumber(needSword);
-	}
-
-	public static List<Block> getBlockStructure(Block block0, Function<Block, Boolean> test, 
+	public static List<Block> getConnectedBlocks(Block block0, Function<Block, Boolean> test, 
 			List<BlockFace> dirs, int MAX_SIZE){//+
 		HashSet<Block> visited = new HashSet<Block>();
 		List<Block> results = new ArrayList<Block>();
@@ -429,42 +308,5 @@ public class EvUtils{// version = 1.1
 			}
 		}
 		return results;
-	}
-
-	final static List<BlockFace> dirs6 = Arrays.asList(BlockFace.UP, BlockFace.DOWN,
-			BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST);//+
-	public static ArrayDeque<Container> getStorageDepot(Location loc){//+
-		return getBlockStructure(loc.getBlock(), (b -> b.getState() instanceof Container), dirs6, 1000).stream()
-				.map(b -> (Container)b.getState()).collect(
-						Collector.of(ArrayDeque::new,
-								ArrayDeque::add,
-								(a, b) -> {a.addAll(b); return a;}
-						//(deq, t) -> deq.addFirst(t),
-						//(d1, d2) -> {d2.addAll(d1); return d2;}
-						));
-	}
-
-	public static boolean checkHeight(Material blockType, double offset){
-		switch(blockType){//TODO: RaysWorks world w/ every block height & TypeUtils.isStair() etc
-			case ACACIA_SLAB:
-				return offset == .5;
-			case ACACIA_STAIRS:
-				return offset == .5 || offset == 1;
-			case ACACIA_FENCE:
-				return offset == 1.5;
-			default:
-				return offset == 1;
-		}
-	}
-
-	public static boolean isOnGround(Location loc){//for parkour world anti-cheat &/| checkpoints
-		if(loc == null) return false;
-		boolean useBelow = loc.getBlock() == null || loc.getBlock().isEmpty();
-		if(useBelow){
-			loc.setY(loc.getY() - 1D);
-			if(loc.getBlock() == null || loc.getBlock().isEmpty()) return false;
-			return checkHeight(loc.getBlock().getType(), 1D + loc.getY() - loc.getBlockY());
-		}
-		return checkHeight(loc.getBlock().getType(), loc.getY() - loc.getBlockY());
 	}
 }

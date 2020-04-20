@@ -10,7 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 public class TextUtils{
-	static final char COLOR_SYMBOL = ChatColor.WHITE.toString().charAt(0);
+	//static final char COLOR_SYMBOL = ChatColor.WHITE.toString().charAt(0);
 	static final char RESET = ChatColor.RESET.toString().charAt(0);
 	public static final char[] COLOR_CHARS = new char[]
 			{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
@@ -118,8 +118,8 @@ public class TextUtils{
 				//detect underlying command/link/values
 				int keyValueI = hyperText.indexOf("=>");
 				if(keyValueI != -1){
-					hyperText = hyperText.substring(0, keyValueI);
 					actionText = hyperText.substring(keyValueI+2).trim();
+					hyperText = hyperText.substring(0, keyValueI);
 				}
 				else{
 					if(node == TextAction.RUN_CMD){
@@ -228,7 +228,7 @@ public class TextUtils{
 		char[] msg = textToTranslate.toCharArray();
 		for(int i=1; i<msg.length; ++i){
 			if(msg[i-1] == altColorChar && isColorOrFormat(msg[i]) && !isEscaped(msg, i-1)){
-				msg[i-1] = COLOR_SYMBOL;
+				msg[i-1] = ChatColor.COLOR_CHAR;
 				++i;
 			}
 		}
@@ -240,7 +240,7 @@ public class TextUtils{
 		for(int i=1; i<msg.length; ++i){
 			if(msg[i-1] == altColorChar && isColorOrFormat(msg[i]) && !isEscaped(msg, i-1)){
 				if(msg[i] == RESET){builder.append(RESET); continue;}
-				builder.append(COLOR_SYMBOL);
+				builder.append(ChatColor.COLOR_CHAR);
 				++i;
 			}
 			builder.append(msg[i-1]);
@@ -249,7 +249,7 @@ public class TextUtils{
 		return builder.toString();
 	}
 
-	public static String stripColorsOnly(String str){return stripColorsOnly(str, COLOR_SYMBOL);}
+	public static String stripColorsOnly(String str){return stripColorsOnly(str, ChatColor.COLOR_CHAR);}
 	public static String stripColorsOnly(String str, char altColorChar){
 		StringBuilder builder = new StringBuilder("");
 		boolean colorPick = false;
@@ -260,7 +260,7 @@ public class TextUtils{
 		if(colorPick) builder.append(altColorChar);
 		return builder.toString();
 	}
-	public static String stripFormatsOnly(String str){return stripFormatsOnly(str, COLOR_SYMBOL);}
+	public static String stripFormatsOnly(String str){return stripFormatsOnly(str, ChatColor.COLOR_CHAR);}
 	public static String stripFormatsOnly(String str, char altColorChar){
 		StringBuilder builder = new StringBuilder("");
 		boolean colorPick = false;
@@ -275,7 +275,7 @@ public class TextUtils{
 	public static ChatColor getCurrentColor(String str){
 		char[] msg = str.toCharArray();
 		for(int i=msg.length-1; i>0; --i){
-			if(msg[i-1] == COLOR_SYMBOL && isColor(msg[i])) return ChatColor.getByChar(msg[i]);
+			if(msg[i-1] == ChatColor.COLOR_CHAR && isColor(msg[i])) return ChatColor.getByChar(msg[i]);
 		}
 		return null;
 	}
@@ -283,7 +283,7 @@ public class TextUtils{
 	public static ChatColor getCurrentFormat(String str){
 		char[] msg = str.toCharArray();
 		for(int i=msg.length-1; i>0; --i){
-			if(msg[i-1] == COLOR_SYMBOL && isColorOrFormat(msg[i])){
+			if(msg[i-1] == ChatColor.COLOR_CHAR && isColorOrFormat(msg[i])){
 				return isColor(msg[i]) ? null : ChatColor.getByChar(msg[i]);
 			}
 		}
@@ -293,7 +293,7 @@ public class TextUtils{
 		char[] msg = str.toCharArray();
 		String result = "";
 		for(int i=msg.length-1; i>0; --i){
-			if(msg[i-1] == COLOR_SYMBOL){
+			if(msg[i-1] == ChatColor.COLOR_CHAR){
 				if(isColor(msg[i])) return ChatColor.getByChar(msg[i]) + result;
 				if(isFormat(msg[i])){result = ChatColor.getByChar(msg[i]) + result; --i;}
 			}
@@ -325,9 +325,9 @@ public class TextUtils{
 		return builder.toString();
 	}
 
-	public static String escapeTextActionCodes(String str){
+	public static String escape(String str, String... thingsToEscape){
 		str = str.replace("\\", "\\\\");//Escape escapes first!
-		for(TextAction n : TextAction.values()) str.replace(n.marker, "\\"+n.marker);
+		for(String item : thingsToEscape) str = str.replace(item, "\\"+item);
 		return str;
 	}
 
@@ -371,8 +371,17 @@ public class TextUtils{
 		return builder.toString();
 	}
 
-	public static String getNormalizedName(Material material){
-		return capitalizeWords(material.name().toLowerCase().replace("_", " "));
+	public static String getNormalizedName(Material material){//TODO: move to TypeUtils?
+		switch(material.name()){
+			case "CREEPER_BANNER_PATTERN":
+			case "FLOWER_BANNER_PATTERN":
+			case "GLOBE_BANNER_PATTERN":
+			case "MOJANG_BANNER_PATTERN":
+			case "SKULL_BANNER_PATTERN":
+				return "Banner Pattern";
+			default:
+				return capitalizeWords(material.name().toLowerCase().replace("_", " "));
+		}
 	}
 
 	/* ----------==========---------- PIXEL WIDTH CALCULATION METHODS ----------==========---------- */
