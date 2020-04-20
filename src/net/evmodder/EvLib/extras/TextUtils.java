@@ -361,12 +361,13 @@ public class TextUtils{
 			.toString();
 	}
 
-	private static String capitalizeWords(String str){
-		StringBuilder builder = new StringBuilder();
-		boolean lastIsSpace = true;
+	private static String capitalizeAndSpacify(String str, char toSpace){
+		StringBuilder builder = new StringBuilder("");
+		boolean upper = true;
 		for(char ch : str.toCharArray()){
-			builder.append((lastIsSpace && 'a' <= ch && ch <= 'z') ? Character.toUpperCase(ch) : ch);
-			lastIsSpace = ch == ' ';
+			if(ch == toSpace){builder.append(' '); upper=true;}
+			else if(upper){builder.append(Character.toUpperCase(ch)); upper=false;}
+			else{builder.append(Character.toLowerCase(ch));}
 		}
 		return builder.toString();
 	}
@@ -380,7 +381,21 @@ public class TextUtils{
 			case "SKULL_BANNER_PATTERN":
 				return "Banner Pattern";
 			default:
-				return capitalizeWords(material.name().toLowerCase().replace("_", " "));
+//				return capitalizeWords(material.name().toLowerCase().replace("_", " "));
+				return capitalizeAndSpacify(material.name(), '_');
+		}
+	}
+
+	public static String getNormalizedName(String eType){
+		//TODO: improve this algorithm / test for errors
+		switch(eType){
+		case "PIG_ZOMBIE":
+			return "Zombie Pigman";
+		case "MUSHROOM_COW":
+			return "Mooshroom";
+		case "TROPICAL_FISH"://TODO: 22 varieties, e.g. Clownfish
+		default:
+			return capitalizeAndSpacify(eType, '_');
 		}
 	}
 

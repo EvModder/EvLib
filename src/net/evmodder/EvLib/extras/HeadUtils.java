@@ -16,7 +16,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import net.evmodder.EvLib.EvUtils;
 
 public class HeadUtils {
 	public static final String[] MHF_Heads = new String[]{//Standard, Mojang-Provided MHF Heads
@@ -226,7 +225,7 @@ public class HeadUtils {
 		else{
 			GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(entity.name().getBytes()), entity.name());
 			HeadUtils.setGameProfile(meta, profile);
-			meta.setDisplayName(ChatColor.YELLOW+EvUtils.getNormalizedName(entity.name())+" "+getDroppedHeadTypeName(entity));
+			meta.setDisplayName(ChatColor.YELLOW+TextUtils.getNormalizedName(entity.name())+" "+getDroppedHeadTypeName(entity));
 		}
 		head.setItemMeta(meta);
 		return head;

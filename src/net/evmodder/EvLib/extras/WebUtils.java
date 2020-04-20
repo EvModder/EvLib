@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.TreeMap;
@@ -29,6 +30,33 @@ import net.evmodder.EvLib.FileIO;
 
 public class WebUtils {
 	private final static String authserver = "https://authserver.mojang.com";
+
+	public static String getReadURL(String post){
+		try{
+			URLConnection connection = new URL(post).openConnection();
+			//conn.setRequestMethod("GET");
+			connection.setUseCaches(false);
+			connection.setDoOutput(true);
+			connection.setDoInput(true);
+
+			// Get response
+//			Scanner s = new Scanner(connection.getInputStream()).useDelimiter("\\A");
+//			String response = s.hasNext() ? s.next() : null;
+//			s.close();
+//			return response;
+			BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+			StringBuilder resp = new StringBuilder();
+			String line = null;
+			while ((line=rd.readLine()) != null) resp.append('\n').append(line);
+			rd.close();
+			return resp.length() > 0 ? resp.substring(1) : null;
+		}
+		catch(IOException e){
+			System.out.println(e.getStackTrace());
+			return null;
+		}
+	}
 
 	public static String putReadURL(String payload, String url){
 		try{
@@ -68,22 +96,6 @@ public class WebUtils {
 			in.close();
 
 			return resp.toString();
-		}
-		catch(IOException e){e.printStackTrace(); return null;}
-	}
-
-	public static String getReadURL(String url){
-		try{
-			HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
-			//conn.setRequestMethod("GET");
-			conn.setDoInput(true);
-			BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			StringBuilder resp = new StringBuilder();
-			String line = null;
-			while ((line=in.readLine()) != null) resp.append('\n').append(line);
-			in.close();
-
-			return resp.length() > 0 ? resp.substring(1) : null;
 		}
 		catch(IOException e){e.printStackTrace(); return null;}
 	}
