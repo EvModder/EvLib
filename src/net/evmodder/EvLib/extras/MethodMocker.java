@@ -15,17 +15,12 @@ import org.bukkit.entity.Player;
 public class MethodMocker{
 	public static Object getProxy(final Object s, final Class<?>[] interfaces,
 			final Map<String, Function> overwrites, final boolean callDefaultMethod){
-		//System.out.println("Creating proxy for: "+s.getClass().getName());
 		final ClassLoader classLoader = s.getClass().getClassLoader();
-		//final Class<?>[] interfaces = new Class[]{s.getClass()};
 		final InvocationHandler invocationHandler = new InvocationHandler() {
 			@Override
 			public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
 				Function addedFunction = overwrites.get(method.getName());
-				//System.out.println("Invoked: "+method.getName());
 				if(addedFunction != null){
-					//System.out.println("overwrite called: "+method.getName()+", args[0]: "+(args.length > 0 ? args[0] : ""));
-					//System.out.println("result: "+addedFunction.apply(args));
 					if(callDefaultMethod) addedFunction.apply(args);
 					else return addedFunction.apply(args);
 				}

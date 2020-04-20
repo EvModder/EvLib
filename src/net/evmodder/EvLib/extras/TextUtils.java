@@ -40,22 +40,7 @@ public class TextUtils{
 			default: return false;
 		}
 	}
-/*	private static final RefClass classIChatBaseComponent = ReflectionUtils.getRefClass("{nms}.IChatBaseComponent");
-	private static final RefClass classChatSerializer = ReflectionUtils.getRefClass("{nms}.IChatBaseComponent$ChatSerializer");
-	private static final RefClass classPacketPlayOutChat = ReflectionUtils.getRefClass("{nms}.PacketPlayOutChat");
-	private static final RefClass classCraftPlayer = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
-	private static final RefClass classEntityPlayer = ReflectionUtils.getRefClass("{nms}.EntityPlayer");
-	private static final RefClass classPlayerConnection = ReflectionUtils.getRefClass("{nms}.PlayerConnection");
-	private static final RefClass classPacket = ReflectionUtils.getRefClass("{nms}.Packet");
 
-	private static final RefMethod methodA = classChatSerializer.getMethod("a", String.class);
-	private static final RefMethod methodAddSibling = classIChatBaseComponent.getMethod("addSibling", classIChatBaseComponent);
-	private static final RefMethod methodGetHandle = classCraftPlayer.getMethod("getHandle");
-	private static final RefMethod methodSendPacket = classPlayerConnection.getMethod("sendPacket", classPacket);
-
-	private static final RefField fieldPlayerConnection = classEntityPlayer.getField("playerConnection");
-	private static final RefConstructor makePacketPlayOutChat = classPacketPlayOutChat.getConstructor(classIChatBaseComponent);
-*/
 	enum Event{CLICK,HOVER};
 	public enum TextAction{
 		//ClickEvent
@@ -130,10 +115,6 @@ public class TextUtils{
 					}
 					else actionText = hyperText.trim();
 				}
-
-//				Eventials.getPlugin().getLogger().info("PreText: "+preText);
-//				Eventials.getPlugin().getLogger().info("HyperText: "+hyperText);
-//				Eventials.getPlugin().getLogger().info("ActionText: "+actionText);
 
 				if(!preText.isEmpty()) raw.append(",{\"text\":\"").append(preText).append("\"}");
 				if(!hyperText.isEmpty()){

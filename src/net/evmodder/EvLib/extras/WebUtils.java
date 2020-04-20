@@ -39,13 +39,7 @@ public class WebUtils {
 			connection.setDoOutput(true);
 			connection.setDoInput(true);
 
-			// Get response
-//			Scanner s = new Scanner(connection.getInputStream()).useDelimiter("\\A");
-//			String response = s.hasNext() ? s.next() : null;
-//			s.close();
-//			return response;
 			BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-
 			StringBuilder resp = new StringBuilder();
 			String line = null;
 			while ((line=rd.readLine()) != null) resp.append('\n').append(line);

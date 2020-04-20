@@ -67,7 +67,6 @@ public class TellrawUtils{
 	public static abstract class Component{
 		abstract public String toPlainText();
 	};
-//	public static abstract class TextComponent extends Component{};
 	public static abstract class ComputedTextComponent extends Component{
 		abstract public String toStringKV();
 	};
