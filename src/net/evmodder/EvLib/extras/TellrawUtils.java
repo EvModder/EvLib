@@ -272,6 +272,7 @@ public class TellrawUtils{
 					setModifiableText(replacement, replacementText);
 				}
 				if(canBeEmptyBefore && canBeEmptyAfter){
+					if(i == components.size()-1) last = replacement;
 					components.set(i, replacement);
 				}
 				else if(canBeEmptyBefore){
@@ -280,14 +281,14 @@ public class TellrawUtils{
 				}
 				else if(canBeEmptyAfter){
 					txComp.text = textBefore;
-					components.add(i+1, replacement);
-					++i;
+					if(++i == components.size()) components.add(last = replacement);
+					else components.add(i, replacement);
 				}
 				else{
 					txComp.text = textBefore;
-					components.add(i+1, new RawTextComponent(textAfter));
-					components.add(i+1, replacement);
-					i+=2;
+					RawTextComponent textAfterComp = new RawTextComponent(textAfter);
+					if(++i == components.size()){components.add(replacement); components.add(last = textAfterComp);}
+					else{components.add(i, textAfterComp); components.add(i, replacement);}
 				}
 				updated = true;
 			}
