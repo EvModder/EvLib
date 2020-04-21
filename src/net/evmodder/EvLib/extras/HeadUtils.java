@@ -61,10 +61,7 @@ public class HeadUtils {
 			fieldProfileItem.setAccessible(true);
 			fieldProfileItem.set(meta, profile);
 		}
-		catch(NoSuchFieldException e){e.printStackTrace();}
-		catch(SecurityException e){e.printStackTrace();}
-		catch(IllegalArgumentException e){e.printStackTrace();}
-		catch(IllegalAccessException e){e.printStackTrace();}
+		catch(NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e){e.printStackTrace();}
 	}
 	public static void setGameProfile(Skull bState, GameProfile profile){
 		try{
@@ -72,10 +69,7 @@ public class HeadUtils {
 			fieldProfileBlock.setAccessible(true);
 			fieldProfileBlock.set(bState, profile);
 		}
-		catch(NoSuchFieldException e){e.printStackTrace();}
-		catch(SecurityException e){e.printStackTrace();}
-		catch(IllegalArgumentException e){e.printStackTrace();}
-		catch(IllegalAccessException e){e.printStackTrace();}
+		catch(NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e){e.printStackTrace();}
 	}
 	public static GameProfile getGameProfile(SkullMeta meta){
 		try{
@@ -83,10 +77,7 @@ public class HeadUtils {
 			fieldProfileItem.setAccessible(true);
 			return (GameProfile) fieldProfileItem.get(meta);
 		}
-		catch(NoSuchFieldException e){e.printStackTrace();}
-		catch(SecurityException e){e.printStackTrace();}
-		catch(IllegalArgumentException e){e.printStackTrace();}
-		catch(IllegalAccessException e){e.printStackTrace();}
+		catch(NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e){e.printStackTrace();}
 		return null;
 	}
 	public static GameProfile getGameProfile(Skull bState){
@@ -95,10 +86,7 @@ public class HeadUtils {
 			fieldProfileBlock.setAccessible(true);
 			return (GameProfile) fieldProfileBlock.get(bState);
 		}
-		catch(NoSuchFieldException e){e.printStackTrace();}
-		catch(SecurityException e){e.printStackTrace();}
-		catch(IllegalArgumentException e){e.printStackTrace();}
-		catch(IllegalAccessException e){e.printStackTrace();}
+		catch(NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e){e.printStackTrace();}
 		return null;
 	}
 
@@ -116,13 +104,14 @@ public class HeadUtils {
 		return item;
 	}
 
+	public static String getPlayerHeadName(String playerName){return ChatColor.YELLOW+playerName+" Head";}
 	public static ItemStack getPlayerHead(GameProfile profile){
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
 		setGameProfile(meta, profile);
 		if(profile.getName() != null){
 			if(profile.getName().startsWith("MHF_")) meta.setDisplayName(ChatColor.YELLOW+profile.getName());
-			else meta.setDisplayName(ChatColor.YELLOW+profile.getName()+" Head");
+			else meta.setDisplayName(getPlayerHeadName(profile.getName()));
 		}
 		head.setItemMeta(meta);
 		return head;
@@ -165,6 +154,31 @@ public class HeadUtils {
 		}
 	}
 
+	public static EntityType getEntityFromHead(Material type){
+		switch(type){
+			case CREEPER_HEAD:
+			case CREEPER_WALL_HEAD:
+				return EntityType.CREEPER;
+			case DRAGON_HEAD:
+			case DRAGON_WALL_HEAD:
+				return EntityType.ENDER_DRAGON;
+			case PLAYER_HEAD:
+			case PLAYER_WALL_HEAD:
+				return EntityType.PLAYER;
+			case ZOMBIE_HEAD:
+			case ZOMBIE_WALL_HEAD:
+				return EntityType.ZOMBIE;
+			case SKELETON_SKULL:
+			case SKELETON_WALL_SKULL:
+				return EntityType.SKELETON;
+			case WITHER_SKELETON_SKULL:
+			case WITHER_SKELETON_WALL_SKULL:
+				return EntityType.WITHER_SKELETON;
+			default:
+				throw new IllegalArgumentException("Unkown head type: "+type);
+		}
+	}
+
 	public static boolean isPlayerHead(Material type){
 		return type == Material.PLAYER_HEAD || type == Material.PLAYER_WALL_HEAD;
 	}
@@ -196,7 +210,7 @@ public class HeadUtils {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
+	@Deprecated
 	public static ItemStack makeSkull(EntityType entity){
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -219,20 +233,6 @@ public class HeadUtils {
 		return e.getCustomName() != null && (e.getCustomName().equals("Dinnerbone") || e.getCustomName().equals("Grumm"));
 	}
 
-	//TODO: move to EvUtils?
-	public static EntityType getEntityByName(String name){
-		//TODO: improve this function / test for errors
-		if(name.toUpperCase().startsWith("MHF_")) name = normalizedNameFromMHFName(name);
-		name = name.toUpperCase().replace(' ', '_');
-
-		try{EntityType type = EntityType.valueOf(name.toUpperCase()); return type;}
-		catch(IllegalArgumentException ex){}
-		name = name.replace("_", "");
-		for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(name)) return t;
-		if(name.equals("ZOMBIEPIGMAN")) return EntityType.PIG_ZOMBIE;
-		else if(name.equals("MOOSHROOM")) return EntityType.MUSHROOM_COW;
-		return EntityType.UNKNOWN;
-	}
 	public static String getMHFHeadName(String eType){
 		switch(eType){
 		case "MAGMA_CUBE":

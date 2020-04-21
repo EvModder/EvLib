@@ -430,7 +430,7 @@ public class TextUtils{
 			return "Zombie Pigman";
 		case "MUSHROOM_COW":
 			return "Mooshroom";
-		case "TROPICAL_FISH"://TODO: 22 varieties, e.g. Clownfish (already implemented in TextureKeyLookup.java)
+		case "TROPICAL_FISH"://TODO: 22 varieties (already implemented in TextureKeyLookup.java)
 		default:
 //			return capitalizeWords(eType.toLowerCase().replace("_", " "));
 			return capitalizeAndSpacify(eType, '_');
