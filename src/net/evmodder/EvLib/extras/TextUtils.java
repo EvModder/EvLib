@@ -397,6 +397,19 @@ public class TextUtils{
 		return builder.append(timeColor).append(time / scale[scale.length-1])
 					  .append(unitColor).append(units[units.length-1]).toString();
 	}
+	public static long parseTime(String formattedTime){
+		formattedTime = formattedTime.toLowerCase();
+		//formattedTime.matches("(?:y[1-9][0-9]*)?(?:ew[1-9][0-9]*)?(?:d[1-9][0-9]*)?(?:h[1-9][0-9]*)?(?:m[1-9][0-9]*)?(?:s[1-9][0-9]*)?");
+		long time = 0;
+		for(int i=0; i<units.length && !formattedTime.isEmpty(); ++i){
+			int idx = formattedTime.indexOf(units[i]);
+			if(idx != -1){
+				time += Long.parseLong(formattedTime.substring(0, idx))*scale[i];
+				formattedTime = formattedTime.substring(idx+1);
+			}
+		}
+		return time;
+	}
 
 
 	public static String capitalizeAndSpacify(String str, char toSpace){
