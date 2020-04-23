@@ -5,7 +5,6 @@
  */
 package net.evmodder.EvLib.extras;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,7 +17,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Objective;
-import net.evmodder.EvLib.extras.SelectorUtils.Selector;
 
 public class TellrawUtils{
 	public enum ClickEvent{// Descriptions below are from https://minecraft.gamepedia.com/Raw_JSON_text_format
@@ -115,6 +113,7 @@ public class TellrawUtils{
 		final Objective objective;
 		String value; // Optional; overwrites output of score selector
 		public ScoreComponent(@Nonnull Object selector, @Nonnull Objective objective){this.selector = selector; this.objective = objective;}
+		public ScoreComponent(@Nonnull String name, @Nonnull Objective objective){this.selector = name; this.objective = objective;}
 		//tellraw @a {"score":{"name":"@p","objective":"levels","value":"3333"}}
 
 		@Override public String toPlainText(){
