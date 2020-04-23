@@ -278,6 +278,10 @@ public class TellrawUtils{
 				if(comp instanceof RawTextComponent == false) continue;
 				RawTextComponent txComp = (RawTextComponent) comp;
 				if(txComp.text.contains(textToReplace) == false) continue;
+				if(replacement instanceof RawTextComponent){
+					txComp.text = txComp.text.replace(textToReplace, ((RawTextComponent)replacement).text);
+					continue;
+				}
 				int matchIdx = txComp.text.indexOf(textToReplace);
 				String textBefore = txComp.text.substring(0, matchIdx);
 				String textAfter = txComp.text.substring(matchIdx+textToReplace.length());
