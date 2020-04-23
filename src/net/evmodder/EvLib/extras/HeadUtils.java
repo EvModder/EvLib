@@ -63,11 +63,11 @@ public class HeadUtils {
 		}
 		catch(NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e){e.printStackTrace();}
 	}
-	public static void setGameProfile(Skull bState, GameProfile profile){
+	public static void setGameProfile(Skull skull, GameProfile profile){
 		try{
-			if(fieldProfileBlock == null) fieldProfileBlock = bState.getClass().getDeclaredField("profile");
+			if(fieldProfileBlock == null) fieldProfileBlock = skull.getClass().getDeclaredField("profile");
 			fieldProfileBlock.setAccessible(true);
-			fieldProfileBlock.set(bState, profile);
+			fieldProfileBlock.set(skull, profile);
 		}
 		catch(NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e){e.printStackTrace();}
 	}
@@ -80,11 +80,11 @@ public class HeadUtils {
 		catch(NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e){e.printStackTrace();}
 		return null;
 	}
-	public static GameProfile getGameProfile(Skull bState){
+	public static GameProfile getGameProfile(Skull skull){
 		try{
-			if(fieldProfileBlock == null) fieldProfileBlock = bState.getClass().getDeclaredField("profile");
+			if(fieldProfileBlock == null) fieldProfileBlock = skull.getClass().getDeclaredField("profile");
 			fieldProfileBlock.setAccessible(true);
-			return (GameProfile) fieldProfileBlock.get(bState);
+			return (GameProfile) fieldProfileBlock.get(skull);
 		}
 		catch(NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e){e.printStackTrace();}
 		return null;
