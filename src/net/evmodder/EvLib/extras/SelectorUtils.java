@@ -173,6 +173,14 @@ public class SelectorUtils{
 						entities.removeIf(e -> e.getBoundingBox().getMinZ() <= minZ || e.getBoundingBox().getMaxZ() >= maxZ);
 						break;
 					case DISTANCE:
+						double minDist = getRangeMin(argument.value, 0);
+						double maxDist = getRangeMax(argument.value, Double.MAX_VALUE);
+						double minDistSq = minDist * minDist;
+						double maxDistSq = maxDist * maxDist;
+						entities.removeIf(e -> {
+							double distSq = e.getLocation().distanceSquared(origin);
+							return distSq > minDistSq || distSq > maxDistSq;
+						});
 					case LEVEL:
 						double minLevel = getRangeMin(argument.value, 0);
 						double maxLevel = getRangeMax(argument.value, Double.MAX_VALUE);
