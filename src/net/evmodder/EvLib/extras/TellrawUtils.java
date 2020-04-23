@@ -86,11 +86,11 @@ public class TellrawUtils{
 		@Override public String toPlainText(){
 			Collection<String> names = null;
 			try{
-				UUID uuid = UUID.fromString(selector.toString());
+				UUID uuid = selector instanceof UUID ? (UUID)selector : UUID.fromString(selector.toString());
 				names = Arrays.asList(getNormalizedName(Bukkit.getEntity(uuid)));
 			}
 			catch(IllegalArgumentException ex){};
-			try{
+			if(names == null) try{
 				Class<?> clazz = Class.forName("net.evmodder.EvLib.extras.SelectorUtils.Selector");
 				@SuppressWarnings("unchecked")
 				Collection<Entity> entities = (Collection<Entity>)clazz.getMethod("resolve").invoke(selector);
@@ -302,8 +302,8 @@ public class TellrawUtils{
 					components.set(i, replacement);
 				}
 				else if(canBeEmptyBefore){
-					components.add(i, replacement);
 					txComp.text = textAfter;
+					components.add(i, replacement);
 				}
 				else if(canBeEmptyAfter){
 					txComp.text = textBefore;
