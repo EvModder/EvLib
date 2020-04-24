@@ -325,9 +325,11 @@ public class SelectorUtils{
 			// Attempt to parse as UUID selector
 			try{return new Selector(UUID.fromString(str));}
 			catch(IllegalArgumentException ex){}
+
 			// Attempt to parse as selector without arguments
 			try{new Selector(SelectorType.fromString(str), sender);}
 			catch(IllegalArgumentException ex){}
+
 			// Attempt to parse @<SelectorType>[<argument=value>, ...]
 			SelectorType type = SelectorType.fromString(str.substring(0, 2));
 			ArrayList<SelectorArgument> arguments = new ArrayList<>();
