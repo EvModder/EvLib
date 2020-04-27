@@ -340,8 +340,8 @@ public class TextUtils{
 		return list;
 	}
 
-	public static String locationToString(Location loc){
-		return locationToString(loc, ChatColor.GRAY, ChatColor.DARK_GRAY);}
+	public static String locationToStrig(Location loc){
+		return locationToString(loc, null, null);}
 	public static String locationToString(Location loc, ChatColor coordColor, ChatColor commaColor){
 		return locationToString(loc, coordColor, commaColor, 2);
 	}
@@ -383,19 +383,36 @@ public class TextUtils{
 
 	static long[] scale = new long[]{31536000000L, /*2628000000L,*/ 604800000L, 86400000L, 3600000L, 60000L, 1000L};
 	static char[] units = new char[]{'y', /*'m',*/ 'w', 'd', 'h', 'm', 's'};
-	public static String formatTime(long millisecond, ChatColor timeColor, ChatColor unitColor){
-		return formatTime(millisecond, timeColor, unitColor, scale, units);
+	public static String formatTime(long millisecond){
+		return formatTime(millisecond, true, "", "", ", ", scale, units);
 	}
-	public static String formatTime(long time, ChatColor timeColor, ChatColor unitColor, long[] scale, char[] units){
+	public static String formatTime(long millisecond, boolean show0s){
+		return formatTime(millisecond, show0s, "", "", ", ", scale, units);
+	}
+	public static String formatTime(long millisecond, boolean show0s, ChatColor timeColor, ChatColor unitColor){
+		return formatTime(millisecond, show0s, timeColor, unitColor, null);
+	}
+	public static String formatTime(long millisecond, boolean show0s, ChatColor timeColor, ChatColor unitColor, ChatColor commaColor){
+		String timePrefix = timeColor == null ? "" : timeColor+"";
+		String unitPrefix = unitColor == null ? "" : unitColor+"";
+		String commaPrefix = commaColor == null ? ", " : commaColor+", ";
+		return formatTime(millisecond, show0s, timePrefix, unitPrefix, commaPrefix, scale, units);
+	}
+	public static String formatTime(long millisecond, boolean show0s, String timePrefix, String unitPrefix, String sep){
+		return formatTime(millisecond, show0s, timePrefix, unitPrefix, sep, scale, units);
+	}
+	public static String formatTime(long time, boolean show0s, String timePrefix, String unitPrefix, String sep, long[] scale, char[] units){
 		int i = 0;
 		while(time < scale[i]) ++i;
 		StringBuilder builder = new StringBuilder("");
 		for(; i < scale.length-1; ++i){
-			builder.append(timeColor).append(time / scale[i]).append(unitColor).append(units[i]).append(", ");
+			if(show0s || time / scale[i] != 0){
+				builder.append(timePrefix).append(time / scale[i]).append(unitPrefix).append(units[i]).append(sep);
+			}
 			time %= scale[i];
 		}
-		return builder.append(timeColor).append(time / scale[scale.length-1])
-					  .append(unitColor).append(units[units.length-1]).toString();
+		return builder.append(timePrefix).append(time / scale[scale.length-1])
+					  .append(unitPrefix).append(units[units.length-1]).toString();
 	}
 	public static long parseTime(String formattedTime){
 		formattedTime = formattedTime.toLowerCase();
