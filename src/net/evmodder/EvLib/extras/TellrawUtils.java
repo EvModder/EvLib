@@ -74,27 +74,29 @@ public class TellrawUtils{
 	public final static class SelectorComponent extends Component{
 //		final Selector selector;
 		final Object selector;
-		public SelectorComponent(@Nonnull Object selector){this.selector = selector;}
-		public SelectorComponent(@Nonnull UUID uuid){this.selector = uuid;}
+		final boolean useDisplayName;
+		public SelectorComponent(@Nonnull Object selector){this.selector = selector; this.useDisplayName = true;}
+		public SelectorComponent(@Nonnull UUID uuid){this.selector = uuid; this.useDisplayName = true;}
+		public SelectorComponent(@Nonnull Object selector, boolean useDisplayName){this.selector = selector; this.useDisplayName = useDisplayName;}
+		public SelectorComponent(@Nonnull UUID uuid, boolean useDisplayName){this.selector = uuid; this.useDisplayName = useDisplayName;}
 //		public SelectorComponent(@Nonnull SelectorType type, @Nonnull SelectorArgument...arguments){this.selector = new Selector(type, arguments);}
 
-
-		private static String getNormalizedName(Entity entity){
-			if(entity instanceof Player) return ((Player)entity).getDisplayName();
+		private static String getNormalizedName(Entity entity, boolean useDisplayName){
+			if(entity instanceof Player && useDisplayName) return ((Player)entity).getDisplayName();
 			return entity.getName() != null ? entity.getName() : TextUtils.getNormalizedName(entity.getType());
 		}
 		@Override public String toPlainText(){
 			Collection<String> names = null;
 			try{
 				UUID uuid = selector instanceof UUID ? (UUID)selector : UUID.fromString(selector.toString());
-				names = Arrays.asList(getNormalizedName(Bukkit.getEntity(uuid)));
+				names = Arrays.asList(getNormalizedName(Bukkit.getEntity(uuid), useDisplayName));
 			}
 			catch(IllegalArgumentException ex){};
 			if(names == null) try{
 				Class<?> clazz = Class.forName("net.evmodder.EvLib.extras.SelectorUtils.Selector");
 				@SuppressWarnings("unchecked")
 				Collection<Entity> entities = (Collection<Entity>)clazz.getMethod("resolve").invoke(selector);
-				names = entities.stream().filter(e -> e != null).map(e -> getNormalizedName(e)).collect(Collectors.toList());
+				names = entities.stream().filter(e -> e != null).map(e -> getNormalizedName(e, useDisplayName)).collect(Collectors.toList());
 			}
 			catch(Exception ex){names = Arrays.asList(selector.toString());}
 			return String.join(ChatColor.GRAY+", "+ChatColor.RESET, names);
