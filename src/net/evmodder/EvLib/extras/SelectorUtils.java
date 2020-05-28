@@ -292,6 +292,7 @@ public class SelectorUtils{
 					case PREDICATE:
 						// TODO:
 						// Example: predicate=example:test_predicate
+						// BronGhast video: https://www.youtube.com/watch?v=NbZo3IPlHSA
 					case ADVANCEMENTS:
 						// TODO:
 						// @a[advancements={story/form_obsidian=false}], @a[advancement={<namespaced ID>={<criteria>=<bool>}}]

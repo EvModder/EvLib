@@ -472,6 +472,7 @@ public class TextUtils{
 
 	//TODO: Move this to TabText (once TabText is cleaned up)?
 	/* ----------==========---------- PIXEL WIDTH CALCULATION METHODS ----------==========---------- */
+	//https://minecraft.gamepedia.com/Resource_pack#Fonts, DefaultAsstes/assets/minecraft/textures/font/ascii.png
 	final public static int MAX_PIXEL_WIDTH = 320, MAX_MONO_WIDTH = 80, MAX_PLAYERNAME_MONO_WIDTH=16, MAX_PLAYERNAME_PIXEL_WIDTH = 96/*6*16*/;
 	// Supports ASCII + Extended codes (32-255), and currently just assumes width=6 for all others
 	// Note: Returns 1 more than actual width, since all characters are separated by a pixel
