@@ -401,18 +401,22 @@ public class TextUtils{
 	public static String formatTime(long millisecond, boolean show0s, String timePrefix, String unitPrefix, String sep){
 		return formatTime(millisecond, show0s, timePrefix, unitPrefix, sep, scale, units);
 	}
-	public static String formatTime(long time, boolean show0s, String timePrefix, String unitPrefix, String sep, long[] scale, char[] units){
+	public static String formatTime(long millis, boolean show0s, String timePrefix, String unitPrefix, String sep, long[] scale, char[] units){
+		if(millis == 0) return new StringBuilder(timePrefix).append("0").append(unitPrefix).append(units[units.length-1]).toString();
 		int i = 0;
-		while(time < scale[i]) ++i;
+		while(millis < scale[i]) ++i;
 		StringBuilder builder = new StringBuilder("");
 		for(; i < scale.length-1; ++i){
-			if(show0s || time / scale[i] != 0){
-				builder.append(timePrefix).append(time / scale[i]).append(unitPrefix).append(units[i]).append(sep);
+			if(show0s || millis / scale[i] != 0){
+				long scaledTime = millis / scale[i];
+				builder.append(timePrefix).append(scaledTime).append(unitPrefix).append(units[i]).append(sep);
 			}
-			time %= scale[i];
+			millis %= scale[i];
 		}
-		return builder.append(timePrefix).append(time / scale[scale.length-1])
-					  .append(unitPrefix).append(units[units.length-1]).toString();
+		if(show0s || millis != 0) builder
+			.append(timePrefix).append(millis / scale[scale.length-1])
+			.append(unitPrefix).append(units[units.length-1]).toString();
+		return builder.toString();
 	}
 	public static long parseTime(String formattedTime){
 		formattedTime = formattedTime.toLowerCase();
