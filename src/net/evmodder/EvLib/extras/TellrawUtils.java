@@ -64,6 +64,7 @@ public class TellrawUtils{
 	public final static class RawTextComponent extends ComputedTextComponent{
 		String text;
 		public RawTextComponent(@Nonnull String text){this.text = text;}
+		public void setText(@Nonnull String text){this.text = text;}
 		//tellraw @a "test"
 		//tellraw @a {"text":"test"}
 
@@ -170,6 +171,7 @@ public class TellrawUtils{
 		final ComputedTextComponent component;
 		final TextClickAction clickAction;
 		final TextHoverAction hoverAction;
+		public ComputedTextComponent getComputedText(){return component;}
 		public ActionComponent(@Nonnull ComputedTextComponent component, @Nonnull TextClickAction clickAction, @Nonnull TextHoverAction hoverAction){
 			this.component = component;
 			this.clickAction = clickAction;
@@ -220,20 +222,30 @@ public class TellrawUtils{
 			this.components = new ArrayList<>();
 			for(Component comp : components) addComponent(comp);
 		}
+		//TODO: make this NOT public?
+		public List<Component> getComponents(){
+			return components;
+		}
 
 		// TODO: make this an attribute of abstract Component class instead?
 		private boolean hasModifiableText(Component comp){
-			return comp instanceof RawTextComponent || (comp instanceof ActionComponent && ((ActionComponent)comp).component instanceof RawTextComponent);
+			return comp instanceof RawTextComponent || (comp instanceof ActionComponent
+					&& ((ActionComponent)comp).getComputedText() instanceof RawTextComponent);
 		}
 		private String getModifiableText(Component comp){
-			return comp instanceof RawTextComponent ? ((RawTextComponent)comp).text :
-					comp instanceof ActionComponent && ((ActionComponent)comp).component instanceof RawTextComponent
-					? ((RawTextComponent)((ActionComponent)comp).component).text : null;
+			return comp instanceof RawTextComponent ? ((RawTextComponent)comp).toPlainText() :
+					comp instanceof ActionComponent && ((ActionComponent)comp).getComputedText() instanceof RawTextComponent
+					? ((RawTextComponent)((ActionComponent)comp).getComputedText()).toPlainText() : null;
 		}
 		private void setModifiableText(Component comp, String text){
-			if(comp instanceof RawTextComponent) ((RawTextComponent)comp).text += text;
-			else if(comp instanceof ActionComponent && ((ActionComponent)comp).component instanceof RawTextComponent)
-				((RawTextComponent)((ActionComponent)comp).component).text = text;
+			if(comp instanceof RawTextComponent){
+				RawTextComponent rtComp = (RawTextComponent)comp;
+				rtComp.setText(rtComp.toPlainText() + text);
+			}
+			else if(comp instanceof ActionComponent && ((ActionComponent)comp).getComputedText() instanceof RawTextComponent){
+				RawTextComponent rtComp = (RawTextComponent)((ActionComponent)comp).getComputedText();
+				rtComp.setText(rtComp.toPlainText() + text);
+			}
 			// else throw error?
 		}
 		private boolean canSafelyMergeText(Component comp1, Component comp2){
@@ -243,10 +255,10 @@ public class TellrawUtils{
 		public boolean addComponent(@Nonnull Component component){
 			if(component instanceof TellrawBlob){
 				TellrawBlob blob = (TellrawBlob) component;
-				if(blob.components.isEmpty()) return false;
+				if(blob.getComponents().isEmpty()) return false;
 				// We can safely flatten TellrawBlobs, UNLESS they start with a selector component
-				if(blob.components.get(0) instanceof SelectorComponent == false){
-					for(Component comp : blob.components) addComponent(comp);
+				if(blob.getComponents().get(0) instanceof SelectorComponent == false){
+					for(Component comp : blob.getComponents()) addComponent(comp);
 					return true;
 				}
 				return components.add(last = component);
@@ -279,14 +291,14 @@ public class TellrawUtils{
 				}
 				if(comp instanceof RawTextComponent == false) continue;
 				RawTextComponent txComp = (RawTextComponent) comp;
-				if(txComp.text.contains(textToReplace) == false) continue;
+				if(txComp.toPlainText().contains(textToReplace) == false) continue;
 				if(replacement instanceof RawTextComponent){
-					txComp.text = txComp.text.replace(textToReplace, ((RawTextComponent)replacement).text);
+					txComp.setText(txComp.toPlainText().replace(textToReplace, ((RawTextComponent)replacement).toPlainText()));
 					continue;
 				}
-				int matchIdx = txComp.text.indexOf(textToReplace);
-				String textBefore = txComp.text.substring(0, matchIdx);
-				String textAfter = txComp.text.substring(matchIdx+textToReplace.length());
+				int matchIdx = txComp.toPlainText().indexOf(textToReplace);
+				String textBefore = txComp.toPlainText().substring(0, matchIdx);
+				String textAfter = txComp.toPlainText().substring(matchIdx+textToReplace.length());
 				boolean replacementHasText = hasModifiableText(replacement);
 				boolean canBeEmptyBefore = (replacementHasText ? ChatColor.stripColor(textBefore) : textBefore).isEmpty();
 				boolean canBeEmptyAfter = (replacementHasText ? ChatColor.stripColor(textAfter) : textAfter).isEmpty();
@@ -304,16 +316,16 @@ public class TellrawUtils{
 					components.set(i, replacement);
 				}
 				else if(canBeEmptyBefore){
-					txComp.text = textAfter;
+					txComp.setText(textAfter);
 					components.add(i, replacement);
 				}
 				else if(canBeEmptyAfter){
-					txComp.text = textBefore;
+					txComp.setText(textBefore);
 					if(++i == components.size()) components.add(last = replacement);
 					else components.add(i, replacement);
 				}
 				else{
-					txComp.text = textBefore;
+					txComp.setText(textBefore);
 					RawTextComponent textAfterComp = new RawTextComponent(textAfter);
 					if(++i == components.size()){components.add(replacement); components.add(last = textAfterComp);}
 					else{components.add(i, textAfterComp); components.add(i, replacement);}

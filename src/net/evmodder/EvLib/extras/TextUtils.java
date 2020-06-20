@@ -418,6 +418,12 @@ public class TextUtils{
 			.append(unitPrefix).append(units[units.length-1]).toString();
 		return builder.toString();
 	}
+	/**
+	 * Takes a string such as 30w6d11h55m33s or 1y and returns a value in milliseconds
+	 *
+	 * @param formattedTime an Ev-style formatted time string
+	 * @return a {@code long} representing the time interval in milliseconds.
+	 */
 	public static long parseTime(String formattedTime){
 		formattedTime = formattedTime.toLowerCase();
 		//formattedTime.matches("(?:y[1-9][0-9]*)?(?:ew[1-9][0-9]*)?(?:d[1-9][0-9]*)?(?:h[1-9][0-9]*)?(?:m[1-9][0-9]*)?(?:s[1-9][0-9]*)?");
