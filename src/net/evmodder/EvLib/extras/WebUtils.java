@@ -16,6 +16,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.TreeMap;
@@ -226,8 +227,11 @@ public class WebUtils {
 							"https://sessionserver.mojang.com/session/minecraft/profile/"+uuid).openConnection();
 					conn.setDoOutput(true);
 					BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-					String resp = in.readLine();
-					String textureBeg = "\"textures\",\"value\":\"";
+					StringBuilder builder = new StringBuilder();
+					while((line=in.readLine()) != null) builder.append(line);
+					String resp = builder.toString().replaceAll(" ", "");
+					//System.out.println("response: "+resp);
+					String textureBeg = "\"name\":\"textures\",\"value\":\"";
 					String textureEnd = "\"}]}";
 					String newVal = resp.substring(resp.indexOf(textureBeg)+textureBeg.length());
 					newVal = newVal.substring(0, newVal.indexOf(textureEnd));
@@ -261,9 +265,9 @@ public class WebUtils {
 		System.out.println("token = "+token);
 
 		String[] targetHeads = new String[]{
-				"BEE:", "BEE|ANGRY:", "BEE|POLLINATED:", "BEE|POLLINATED|ANGRY:",
-				"CAT|TUXEDO:",
-				"GHAST|SCREAMING:"
+				"HOGLIN:", "PIGLIN:",
+				"STRIDER:", "STRIDER|COLD:", "STRIDER|WARM:",
+				"ZOMBIFIED_PIGLIN:"
 		};
 		String[] headsData = FileIO.loadFile("head-textures.txt", "").split("\n");
 		String[] headsToFlip = new String[targetHeads.length];
@@ -293,6 +297,11 @@ public class WebUtils {
 		TreeSet<String> missingDrpC = new TreeSet<String>(), extraDrpC = new TreeSet<String>();
 		for(EntityType type : EntityType.values()){
 			if(type.isAlive()){missingTxr.add(type.name()); missingDrpC.add(type.name());}
+		}
+		for(EntityType type : Arrays.asList(EntityType.ARMOR_STAND, EntityType.LEASH_HITCH, EntityType.MINECART, EntityType.MINECART_CHEST,
+				EntityType.MINECART_COMMAND, EntityType.MINECART_FURNACE, EntityType.MINECART_HOPPER, EntityType.MINECART_MOB_SPAWNER,
+				EntityType.MINECART_TNT, EntityType.UNKNOWN)){
+			missingTxr.add(type.name()); missingDrpC.add(type.name());
 		}
 		for(String headData : FileIO.loadFile("head-textures.txt", "").split("\n")){
 			int i = headData.indexOf(':'), j = headData.indexOf('|');

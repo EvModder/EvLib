@@ -3,7 +3,6 @@ package net.evmodder.EvLib.extras;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
-import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
@@ -20,7 +19,7 @@ public class TypeUtils{EntityType s;
 			if(eggType != null) eggToEntity.put(eggType, eType);
 		}
 		eggToEntity.put(Material.MOOSHROOM_SPAWN_EGG, EntityType.MUSHROOM_COW);
-		eggToEntity.put(Material.ZOMBIE_PIGMAN_SPAWN_EGG, EntityType.PIG_ZOMBIE);
+		//eggToEntity.put(Material.ZOMBIE_PIGMAN_SPAWN_EGG, EntityType.PIG_ZOMBIE);
 		for(Entry<Material, EntityType> e : eggToEntity.entrySet()) entityToEgg.put(e.getValue(), e.getKey());
 	}
 
@@ -761,7 +760,7 @@ public class TypeUtils{EntityType s;
 				return 1;
 			default:
 				if(pickType.name().endsWith("PICKAXE")){
-					throw new NotImplementedException("Unknown pickaxe type: "+pickType+", please update EvLib");
+					throw new IllegalArgumentException("Unknown pickaxe type: "+pickType+", please update EvLib");
 				}
 				return 0;
 		}
@@ -782,7 +781,7 @@ public class TypeUtils{EntityType s;
 				return 1;
 			default:
 				if(swordType.name().endsWith("SWORD")){
-					throw new NotImplementedException("Unknown pickaxe type: "+swordType+", please update EvLib");
+					throw new IllegalArgumentException("Unknown pickaxe type: "+swordType+", please update EvLib");
 				}
 				return 0;
 		}

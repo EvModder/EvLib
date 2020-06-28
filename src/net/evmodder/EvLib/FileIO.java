@@ -9,13 +9,14 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Vector;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import com.google.common.io.Files;
 
 public class FileIO{// version = X1.0
 	static final String EV_DIR = "./plugins/EvFolder/";
@@ -26,13 +27,15 @@ public class FileIO{// version = X1.0
 	public static void moveDirectoryContents(File srcDir, File destDir){
 		if(srcDir.isDirectory()){
 			for(File file : srcDir.listFiles()){
-				try{Files.move(file, new File(destDir.getPath()+"/"+file.getName()));}
+				try{Files.move(file.toPath(), new File(destDir.getPath()+"/"+file.getName()).toPath(),
+						StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);}
 				catch(IOException e){e.printStackTrace();}
 			}
 			srcDir.delete();
 		}
 		else try{
-			Files.move(srcDir, new File(destDir.getPath()+"/"+srcDir.getName()));
+			Files.move(srcDir.toPath(), new File(destDir.getPath()+"/"+srcDir.getName()).toPath(),
+					StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
 		}
 		catch(IOException e){e.printStackTrace();}
 	}

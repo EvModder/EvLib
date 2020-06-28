@@ -3,14 +3,11 @@ package net.evmodder.EvLib.extras;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Random;
-import org.apache.commons.lang.StringUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
 
 public class TextUtils{
 	//static final char COLOR_SYMBOL = ChatColor.WHITE.toString().charAt(0);
@@ -46,7 +43,7 @@ public class TextUtils{
 
 
 	//======================================== TODO: DELETE ALL THIS CRAP ========================================//
-	enum Event{CLICK,HOVER};
+	/*enum Event{CLICK,HOVER};
 	public enum TextAction{
 		//ClickEvent
 		LINK("§b", "open_url", Event.CLICK),
@@ -131,15 +128,15 @@ public class TextUtils{
 					raw.append('}');
 				}
 				// Old (but perfectly valid) method:
-/*				raw.append(",{\"text\":\"").append(preText).append('"');
-				if(!hyperText.isEmpty()){
-					raw.append(",\"extra\":[{\"text\":\"").append(hyperText).append("\"");
-					if(node != null) raw.append(",\"").append(node.type == Event.CLICK ? "clickEvent" : "hoverEvent")
-						.append("\":{\"action\":\"").append(node.action).append("\",\"value\":\"")
-						.append(actionText).append("\"}}");
-					raw.append(']');
-				}
-				raw.append('}');*/
+//				raw.append(",{\"text\":\"").append(preText).append('"');
+//				if(!hyperText.isEmpty()){
+//					raw.append(",\"extra\":[{\"text\":\"").append(hyperText).append("\"");
+//					if(node != null) raw.append(",\"").append(node.type == Event.CLICK ? "clickEvent" : "hoverEvent")
+//						.append("\":{\"action\":\"").append(node.action).append("\",\"value\":\"")
+//						.append(actionText).append("\"}}");
+//					raw.append(']');
+//				}
+//				raw.append('}');
 
 				// /tellraw @a ["First","Second","Third"]
 				// {"text":"Click","clickEvent":{"action":"open_url","value":"http://google.com"}}
@@ -208,7 +205,7 @@ public class TextUtils{
 			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "minecraft:tellraw "+p.getName()+' '+raw);
 			//p.sendRawMessage(raw);//TODO: Doesn't work! (last checked: 1.12.1)
 		}
-	}
+	}*/
 	//============================================================================================================//
 
 	public static String generateRandomASCII(int desiredLength){//TODO: currently unused
@@ -268,7 +265,7 @@ public class TextUtils{
 		boolean colorPick = false;
 		for(char ch : str.toCharArray()){
 			if(colorPick && !isFormat(ch)){colorPick=false; builder.append(altColorChar).append(ch);}
-			else if((colorPick=(ch == '§')) == false) builder.append(ch);
+			else if((colorPick=(ch == altColorChar)) == false) builder.append(ch);
 		}
 		if(colorPick) builder.append(altColorChar);
 		return builder.toString();
