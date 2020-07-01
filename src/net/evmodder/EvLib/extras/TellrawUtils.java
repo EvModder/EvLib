@@ -69,8 +69,8 @@ public class TellrawUtils{
 		//tellraw @a {"text":"test"}
 
 		@Override public String toPlainText(){return text;}
-		@Override public String toString(){return new StringBuilder().append('"').append(TextUtils.escape(text, "\"\n")).append('"').toString();}
-		@Override public String toStringKV(){return new StringBuilder().append("\"text\":\"").append(TextUtils.escape(text, "\"\n")).append('"').toString();}
+		@Override public String toString(){return new StringBuilder().append('"').append(TextUtils.escape(text, "\"","\n")).append('"').toString();}
+		@Override public String toStringKV(){return new StringBuilder().append("\"text\":\"").append(TextUtils.escape(text, "\"","\n")).append('"').toString();}
 	}
 	public final static class SelectorComponent extends Component{
 //		final Selector selector;
@@ -103,7 +103,7 @@ public class TellrawUtils{
 			return String.join(ChatColor.GRAY+", "+ChatColor.RESET, names);
 		}
 		@Override public String toString(){
-			return new StringBuilder().append("{\"selector\":\"").append(TextUtils.escape(selector.toString(), "\"\n")).append("\"}").toString();
+			return new StringBuilder().append("{\"selector\":\"").append(TextUtils.escape(selector.toString(), "\"","\n")).append("\"}").toString();
 		}
 	}
 	public final static class ScoreComponent extends ComputedTextComponent{
@@ -136,7 +136,7 @@ public class TellrawUtils{
 		@Override public String toStringKV(){
 			StringBuilder builder = new StringBuilder().append("\"score\":{\"name\":\"")
 					.append(selector.toString()).append("\",\"objective\":\"").append(objective.getName()).append('"');
-			if(value != null) builder.append(",\"value\":\"").append(TextUtils.escape(value, "\"\n")).append('"');
+			if(value != null) builder.append(",\"value\":\"").append(TextUtils.escape(value, "\"","\n")).append('"');
 			return builder.append("}").toString();
 		}
 		@Override public String toString(){return new StringBuilder().append('{').append(toStringKV()).append('}').toString();}
@@ -172,6 +172,9 @@ public class TellrawUtils{
 		final TextClickAction clickAction;
 		final TextHoverAction hoverAction;
 		public ComputedTextComponent getComputedText(){return component;}
+		public TextClickAction getClickAction(){return clickAction;}
+		public TextHoverAction getHoverAction(){return hoverAction;}
+
 		public ActionComponent(@Nonnull ComputedTextComponent component, @Nonnull TextClickAction clickAction, @Nonnull TextHoverAction hoverAction){
 			this.component = component;
 			this.clickAction = clickAction;
@@ -209,9 +212,9 @@ public class TellrawUtils{
 		@Override public String toString(){
 			StringBuilder builder = new StringBuilder().append('{').append(component.toStringKV());
 			if(clickAction != null) builder.append(",\"clickEvent\":{\"action\":\"").append(clickAction.event)
-									.append("\",\"value\":\"").append(TextUtils.escape(clickAction.value, "\"\n")).append("\"}");
+									.append("\",\"value\":\"").append(TextUtils.escape(clickAction.value, "\"","\n")).append("\"}");
 			if(hoverAction != null) builder.append(",\"hoverEvent\":{\"action\":\"").append(hoverAction.event)
-									.append("\",\"value\":\"").append(TextUtils.escape(hoverAction.value, "\"\n")).append("\"}");
+									.append("\",\"value\":\"").append(TextUtils.escape(hoverAction.value, "\"","\n")).append("\"}");
 			return builder.append('}').toString();
 		}
 	}
@@ -239,14 +242,22 @@ public class TellrawUtils{
 		}
 		private void setModifiableText(Component comp, String text){
 			if(comp instanceof RawTextComponent){
-				RawTextComponent rtComp = (RawTextComponent)comp;
-				rtComp.setText(rtComp.toPlainText() + text);
+				((RawTextComponent)comp).setText(text);
 			}
 			else if(comp instanceof ActionComponent && ((ActionComponent)comp).getComputedText() instanceof RawTextComponent){
-				RawTextComponent rtComp = (RawTextComponent)((ActionComponent)comp).getComputedText();
-				rtComp.setText(rtComp.toPlainText() + text);
+				((RawTextComponent)((ActionComponent)comp).getComputedText()).setText(text);
 			}
 			// else throw error?
+		}
+		private Component copyWithNewText(Component comp, String text){
+			if(comp instanceof RawTextComponent){
+				return new RawTextComponent(text);
+			}
+			else if(comp instanceof ActionComponent && ((ActionComponent)comp).getComputedText() instanceof RawTextComponent){
+				return new ActionComponent(text, ((ActionComponent)comp).getClickAction(), ((ActionComponent)comp).getHoverAction());
+			}
+			// else throw error?
+			return null;
 		}
 		private boolean canSafelyMergeText(Component comp1, Component comp2){
 			return (comp1 instanceof RawTextComponent && comp2 instanceof RawTextComponent) ||
@@ -281,7 +292,7 @@ public class TellrawUtils{
 //		public void addComponent(@Nonnull String txt, @Nonnull ClickEvent evt, @Nonnull String val){addComponent(new ActionComponent(txt, evt, val));}
 //		public void addComponent(@Nonnull String txt, @Nonnull HoverEvent evt, @Nonnull String val){addComponent(new ActionComponent(txt, evt, val));}
 
-		public boolean replaceRawTextWithComponent(@Nonnull String textToReplace, @Nonnull Component replacement){
+		public boolean replaceRawTextWithComponent(@Nonnull final String textToReplace, @Nonnull final Component replacement){
 			if(textToReplace.isEmpty()) return false;
 			boolean updated = false;
 			for(int i=0; i<components.size(); ++i){
@@ -291,44 +302,45 @@ public class TellrawUtils{
 				}
 				if(comp instanceof RawTextComponent == false) continue;
 				RawTextComponent txComp = (RawTextComponent) comp;
-				if(txComp.toPlainText().contains(textToReplace) == false) continue;
+				final String text = txComp.toPlainText();
+				if(text.contains(textToReplace) == false) continue;
 				if(replacement instanceof RawTextComponent){
-					txComp.setText(txComp.toPlainText().replaceAll(textToReplace, ((RawTextComponent)replacement).toPlainText()));
+					txComp.setText(text.replaceAll(textToReplace, ((RawTextComponent)replacement).toPlainText()));
 					continue;
 				}
-				int matchIdx = txComp.toPlainText().indexOf(textToReplace);
-				String textBefore = txComp.toPlainText().substring(0, matchIdx);
-				String textAfter = txComp.toPlainText().substring(matchIdx+textToReplace.length());
+				int matchIdx = text.indexOf(textToReplace);
+				String textBefore = text.substring(0, matchIdx);
+				String textAfter = text.substring(matchIdx+textToReplace.length());
 				boolean replacementHasText = hasModifiableText(replacement);
 				boolean canBeEmptyBefore = (replacementHasText ? ChatColor.stripColor(textBefore) : textBefore).isEmpty();
 				boolean canBeEmptyAfter = (replacementHasText ? ChatColor.stripColor(textAfter) : textAfter).isEmpty();
 				// Necessary to prevent accidentally creating a global selector
 				if(i == 0 && replacement instanceof SelectorComponent && canBeEmptyBefore){components.add(0, new RawTextComponent("")); i = 1;}
 
+				Component replacementInst = replacement;
 				if(replacementHasText){
 					String replacementText = getModifiableText(replacement);
-					if(canBeEmptyBefore) replacementText = textBefore + replacementText;
-					if(canBeEmptyAfter) replacementText += textAfter;
-					setModifiableText(replacement, replacementText);
+					if(canBeEmptyBefore) replacementInst = copyWithNewText(replacement, textBefore + replacementText);
+					if(canBeEmptyAfter) replacementInst = copyWithNewText(replacement, replacementText + textAfter);
 				}
 				if(canBeEmptyBefore && canBeEmptyAfter){
-					if(i == components.size()-1) last = replacement;
-					components.set(i, replacement);
+					if(i == components.size()-1) last = replacementInst;
+					components.set(i, replacementInst);
 				}
 				else if(canBeEmptyBefore){
 					txComp.setText(textAfter);
-					components.add(i, replacement);
+					components.add(i, replacementInst);
 				}
 				else if(canBeEmptyAfter){
 					txComp.setText(textBefore);
-					if(++i == components.size()) components.add(last = replacement);
-					else components.add(i, replacement);
+					if(++i == components.size()) components.add(last = replacementInst);
+					else components.add(i, replacementInst);
 				}
 				else{
 					txComp.setText(textBefore);
 					RawTextComponent textAfterComp = new RawTextComponent(textAfter);
-					if(++i == components.size()){components.add(replacement); components.add(last = textAfterComp);}
-					else{components.add(i, textAfterComp); components.add(i, replacement);}
+					if(++i == components.size()){components.add(replacementInst); components.add(last = textAfterComp);}
+					else{components.add(i, textAfterComp); components.add(i, replacementInst);}
 				}
 				updated = true;
 			}
