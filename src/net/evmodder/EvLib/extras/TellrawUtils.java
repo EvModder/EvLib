@@ -69,8 +69,8 @@ public class TellrawUtils{
 		//tellraw @a {"text":"test"}
 
 		@Override public String toPlainText(){return text;}
-		@Override public String toString(){return new StringBuilder().append('"').append(TextUtils.escape(text, "\"")).append('"').toString();}
-		@Override public String toStringKV(){return new StringBuilder().append("\"text\":\"").append(TextUtils.escape(text, "\"")).append('"').toString();}
+		@Override public String toString(){return new StringBuilder().append('"').append(TextUtils.escape(text, "\"\n")).append('"').toString();}
+		@Override public String toStringKV(){return new StringBuilder().append("\"text\":\"").append(TextUtils.escape(text, "\"\n")).append('"').toString();}
 	}
 	public final static class SelectorComponent extends Component{
 //		final Selector selector;
@@ -103,7 +103,7 @@ public class TellrawUtils{
 			return String.join(ChatColor.GRAY+", "+ChatColor.RESET, names);
 		}
 		@Override public String toString(){
-			return new StringBuilder().append("{\"selector\":\"").append(TextUtils.escape(selector.toString(), "\"")).append("\"}").toString();
+			return new StringBuilder().append("{\"selector\":\"").append(TextUtils.escape(selector.toString(), "\"\n")).append("\"}").toString();
 		}
 	}
 	public final static class ScoreComponent extends ComputedTextComponent{
@@ -136,7 +136,7 @@ public class TellrawUtils{
 		@Override public String toStringKV(){
 			StringBuilder builder = new StringBuilder().append("\"score\":{\"name\":\"")
 					.append(selector.toString()).append("\",\"objective\":\"").append(objective.getName()).append('"');
-			if(value != null) builder.append(",\"value\":\"").append(TextUtils.escape(value, "\"")).append('"');
+			if(value != null) builder.append(",\"value\":\"").append(TextUtils.escape(value, "\"\n")).append('"');
 			return builder.append("}").toString();
 		}
 		@Override public String toString(){return new StringBuilder().append('{').append(toStringKV()).append('}').toString();}
@@ -209,9 +209,9 @@ public class TellrawUtils{
 		@Override public String toString(){
 			StringBuilder builder = new StringBuilder().append('{').append(component.toStringKV());
 			if(clickAction != null) builder.append(",\"clickEvent\":{\"action\":\"").append(clickAction.event)
-									.append("\",\"value\":\"").append(TextUtils.escape(clickAction.value, "\"")).append("\"}");
+									.append("\",\"value\":\"").append(TextUtils.escape(clickAction.value, "\"\n")).append("\"}");
 			if(hoverAction != null) builder.append(",\"hoverEvent\":{\"action\":\"").append(hoverAction.event)
-									.append("\",\"value\":\"").append(TextUtils.escape(hoverAction.value, "\"")).append("\"}");
+									.append("\",\"value\":\"").append(TextUtils.escape(hoverAction.value, "\"\n")).append("\"}");
 			return builder.append('}').toString();
 		}
 	}
@@ -293,7 +293,7 @@ public class TellrawUtils{
 				RawTextComponent txComp = (RawTextComponent) comp;
 				if(txComp.toPlainText().contains(textToReplace) == false) continue;
 				if(replacement instanceof RawTextComponent){
-					txComp.setText(txComp.toPlainText().replace(textToReplace, ((RawTextComponent)replacement).toPlainText()));
+					txComp.setText(txComp.toPlainText().replaceAll(textToReplace, ((RawTextComponent)replacement).toPlainText()));
 					continue;
 				}
 				int matchIdx = txComp.toPlainText().indexOf(textToReplace);
