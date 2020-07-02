@@ -261,6 +261,7 @@ public class HeadUtils {
 		else if(mhfCompact.equals("golem")) return "Iron Golem";
 		else if(mhfCompact.equals("pigzombie")) return "Zombie Pigman";
 		else if(mhfCompact.equals("mushroomcow")) return "Mooshroom";
+		else if(mhfName.isEmpty()) return "";
 		else{
 			char[] chars = mhfName.toCharArray();
 			StringBuilder name = new StringBuilder("").append(chars[0]);
