@@ -3,7 +3,6 @@ package net.evmodder.EvLib.extras;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import net.evmodder.EvLib.extras.TextUtils.StrAndPxLen;
 
@@ -46,13 +45,19 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 		setText(multilineString);
 	}
 
+	static int countMatches(String str, char ch){
+		int count = 0;
+		for(char c : str.toCharArray()) if(c == ch) ++count;
+		return count;
+	}
+
 	// "tabs" = columns. Specify a width for each.
 	// If flexFill=true, each column will grow evenly to fill any extra width.
 	public static String parse(String str){return parse(str, false, false);}
 	public static String parse(String str, boolean mono, boolean flexFill){
 		int newLine = str.indexOf('\n');
 		// Create a column for each '`' in the top line
-		int numTabs = StringUtils.countMatches(newLine == -1 ? str : str.substring(0, newLine), "`");
+		int numTabs = countMatches(newLine == -1 ? str : str.substring(0, newLine), '`');
 		return parse(str, mono, flexFill, new double[Math.max(numTabs, 1)]);
 	}
 	public static String parse(String str, boolean mono, boolean flexFill, int[] tabs){
@@ -79,10 +84,10 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 			}
 			int missingTabs = tt.tabs.length - fields.length;
 			if(missingTabs > 0) fields[fields.length-1] += repeat(missingTabs, '`');
-			tt.lines[i] = StringUtils.join(fields, '`');
+			tt.lines[i] = String.join("`", fields);
 		}
 		for(int i=0; i<fixI; ++i){
-			int missingTabs = tt.tabs.length - (StringUtils.countMatches(tt.lines[i], "`")+1);
+			int missingTabs = tt.tabs.length - (countMatches(tt.lines[i], '`')+1);
 			tt.lines[i] += repeat(missingTabs, '`');
 		}
 		if(flexFill){
