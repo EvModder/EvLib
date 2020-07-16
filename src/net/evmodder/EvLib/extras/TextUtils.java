@@ -442,11 +442,11 @@ public class TextUtils{
 
 	public static String capitalizeAndSpacify(String str, char toSpace){
 		StringBuilder builder = new StringBuilder("");
-		boolean upper = true;
-		for(char ch : str.toCharArray()){
-			if(ch == toSpace){builder.append(' '); upper=true;}
-			else if(upper){builder.append(Character.toUpperCase(ch)); upper=false;}
-			else{builder.append(Character.toLowerCase(ch));}
+		boolean lower = false;
+		for(char c : str.toCharArray()){
+			if(c == toSpace){builder.append(' '); lower = false;}
+			else if(lower){builder.append(Character.toLowerCase(c));}
+			else{builder.append(Character.toUpperCase(c)); lower = true;}
 		}
 		return builder.toString();
 	}
