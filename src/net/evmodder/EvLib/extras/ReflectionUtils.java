@@ -18,7 +18,7 @@ public class ReflectionUtils{// version = X1.0
 	/**  prefix of bukkit classes */
 	private static String preClassB = "org.bukkit.craftbukkit";
 	/** prefix of minecraft classes */
-	private static String preClassM = "net.minecraft.server";
+	private static String preClassM = "net.minecraft.server";// + ".v1_13_R2"
 	/** boolean value, TRUE if server uses forge or MCPC+ */
 	private static boolean forge = false;
 	/** vX_XX_RX server version string (e.g.: v1_13_R2) */
