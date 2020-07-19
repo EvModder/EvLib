@@ -19,10 +19,9 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class FileIO{// version = X1.0
-	static final String EV_DIR = "./plugins/EvFolder/";
-	public static String DIR = EV_DIR;//TODO: remove public? (only user: EvLib/extras/WebUtils.java)
-	static boolean FORCE_CUSTOM_DIR = true;
-	public static String getEvFolder(){return EV_DIR;}
+	static private final String EV_DIR = "./plugins/EvFolder/";
+	static public String DIR = EV_DIR;//TODO: remove public? (only user: EvLib/extras/WebUtils.java)
+	static final int MERGE_EV_DIR_THRESHOLD = 3;
 
 	public static void moveDirectoryContents(File srcDir, File destDir){
 		if(srcDir.isDirectory()){
@@ -56,7 +55,7 @@ public class FileIO{// version = X1.0
 
 	static void verifyDir(JavaPlugin evPl){
 		final String CUSTOM_DIR = "./plugins/"+evPl.getName()+"/";
-		if(!new File(EV_DIR).exists() && (FORCE_CUSTOM_DIR || FileIO.installedEvPlugins().size() < 2)){
+		if(!new File(EV_DIR).exists() && FileIO.installedEvPlugins().size() < MERGE_EV_DIR_THRESHOLD){
 			DIR = CUSTOM_DIR;
 		}
 		else if(new File(CUSTOM_DIR).exists()){//merge with EvFolder
@@ -148,14 +147,17 @@ public class FileIO{// version = X1.0
 		return file.length() == 0 ? "" : file.substring(1);//Hmm; return "" or defaultContent
 	}
 
-	public static boolean saveFile(String filename, String content){
+	public static boolean saveFile(String filename, String content, boolean append){
 		if(content == null || content.isEmpty()) return new File(DIR+filename).delete();
 		try{
-			BufferedWriter writer = new BufferedWriter(new FileWriter(DIR+filename));
+			BufferedWriter writer = new BufferedWriter(new FileWriter(DIR+filename, append));
 			writer.write(content); writer.close();
 			return true;
 		}
 		catch(IOException e){return false;}
+	}
+	public static boolean saveFile(String filename, String content){
+		return saveFile(filename, content, /*append=*/false);
 	}
 
 	public static boolean deleteFile(String filename){
