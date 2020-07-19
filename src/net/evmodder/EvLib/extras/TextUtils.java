@@ -226,7 +226,7 @@ public class TextUtils{
 	public static String translateAlternateColorCodes(char altColorChar, String textToTranslate){
 		char[] msg = textToTranslate.toCharArray();
 		for(int i=1; i<msg.length; ++i){
-			if(msg[i-1] == altColorChar && isColorOrFormat(msg[i]) && !isEscaped(msg, i-1)){
+			if(msg[i-1] == altColorChar && !isEscaped(msg, i-1) && (isColorOrFormat(msg[i]) || msg[i] == '#')){
 				msg[i-1] = ChatColor.COLOR_CHAR;
 				++i;
 			}
