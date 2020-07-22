@@ -10,8 +10,6 @@ import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 
 public class TextUtils{
-	//static final char COLOR_SYMBOL = ChatColor.WHITE.toString().charAt(0);
-	static final char RESET = ChatColor.RESET.toString().charAt(0);
 	public static final char[] COLOR_CHARS = new char[]
 			{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 	public static final char[] FORMAT_CHARS = new char[]{'k', 'l', 'm', 'n', 'o'};
@@ -223,29 +221,109 @@ public class TextUtils{
 		return builder.toString();
 	}
 
-	public static String translateAlternateColorCodes(char altColorChar, String textToTranslate){
+	private static boolean isHex(char ch){return  ('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F');}
+
+	/*public static String translateAlternateColorCodes(char altColorChar, String textToTranslate){
 		char[] msg = textToTranslate.toCharArray();
+		StringBuilder builder = new StringBuilder();
 		for(int i=1; i<msg.length; ++i){
-			if(msg[i-1] == altColorChar && !isEscaped(msg, i-1) && (isColorOrFormat(msg[i]) || msg[i] == '#')){
-				msg[i-1] = ChatColor.COLOR_CHAR;
-				++i;
+			if(msg[i-1] == altColorChar && !isEscaped(msg, i-1)){
+				if(isColorOrFormat(msg[i])){
+					msg[i-1] = ChatColor.COLOR_CHAR;
+					++i;
+				}
+				if(msg[i] == '#' || msg[i] == 'x' && i+3 < msg.length){//§x§0§0§9§9§0§0
+					if(msg[i+1] == altColorChar){
+						if(i+6 < msg.length && isHex(msg[i+2]) && isHex(msg[i+4]) && isHex(msg[i+6])){//&#&r&r&g&g&b&b or &#&r&g&b
+							if(i+12 < msg.length && isHex(msg[i+8]) && isHex(msg[i+10]) && isHex(msg[i+12])){//&#&r&r&g&g&b&b
+								msg[i-1] = msg[i+1] = msg[i+3] = msg[i+5] = msg[i+7] = msg[i+9] = msg[i+11] = ChatColor.COLOR_CHAR;
+							}
+							else{//&#&r&g&b
+								//
+							}
+						}
+					}
+					else{
+						if(isHex(msg[i+1]) && isHex(msg[i+2]) && isHex(msg[i+3])){//&#rrggbb or //&#rgb
+							if(i+6 < msg.length && isHex(msg[i+4]) && isHex(msg[i+5]) && isHex(msg[i+6])){//&#rrggbb
+								//
+							}
+							else{//&#rgb
+								//
+							}
+						}
+					}
+				}
 			}
 		}
 		return new String(msg);
-	}
-	public static String translateAlternateColorCodes(char altColorChar, String textToTranslate, String reset){
-		char[] msg = textToTranslate.toCharArray();
+	}*/
+	public static String translateAlternateColorCodes(char altColorChar, String textToTranslate){
 		StringBuilder builder = new StringBuilder("");
+		char[] msg = textToTranslate.toCharArray();
+		boolean colorPending = false;
+		for(int i=0; i<msg.length; ++i){
+			if(msg[i] == altColorChar && !isEscaped(msg, i)){
+				if(colorPending) builder.append(altColorChar); // &&&ctest => &&<red>test
+				colorPending = true;
+			}
+			else if(!colorPending) builder.append(msg[i]);
+			else{
+				if(isColorOrFormat(msg[i])){
+					builder.append(ChatColor.COLOR_CHAR).append(msg[i]);
+				}
+				else if(msg[i] == '#' || msg[i] == 'x' && i+3 < msg.length){//§x§0§0§9§9§0§0
+					if(msg[i+1] == altColorChar){
+						if(i+6 < msg.length && isHex(msg[i+2]) && isHex(msg[i+4]) && isHex(msg[i+6])){//&#&r&r&g&g&b&b or &#&r&g&b
+							if(i+12 < msg.length && isHex(msg[i+8]) && isHex(msg[i+10]) && isHex(msg[i+12])){//&#&r&r&g&g&b&b
+								builder.append(ChatColor.COLOR_CHAR).append('x')
+									.append(ChatColor.COLOR_CHAR).append(msg[i+2]).append(ChatColor.COLOR_CHAR).append(msg[i+4])//r
+									.append(ChatColor.COLOR_CHAR).append(msg[i+6]).append(ChatColor.COLOR_CHAR).append(msg[i+8])//g
+									.append(ChatColor.COLOR_CHAR).append(msg[i+10]).append(ChatColor.COLOR_CHAR).append(msg[i+12]);//b
+								i += 12;
+							}
+							else{//&#&r&g&b
+								builder.append(ChatColor.COLOR_CHAR).append('x')
+									.append(ChatColor.COLOR_CHAR).append(msg[i+2]).append(ChatColor.COLOR_CHAR).append(msg[i+2])//r
+									.append(ChatColor.COLOR_CHAR).append(msg[i+4]).append(ChatColor.COLOR_CHAR).append(msg[i+4])//g
+									.append(ChatColor.COLOR_CHAR).append(msg[i+6]).append(ChatColor.COLOR_CHAR).append(msg[i+6]);//b
+								i += 6;
+							}
+						}
+					}
+					else{
+						if(isHex(msg[i+1]) && isHex(msg[i+2]) && isHex(msg[i+3])){//&#rrggbb or //&#rgb
+							if(i+6 < msg.length && isHex(msg[i+4]) && isHex(msg[i+5]) && isHex(msg[i+6])){//&#rrggbb
+								builder.append(ChatColor.COLOR_CHAR).append('x')
+									.append(ChatColor.COLOR_CHAR).append(msg[i+1]).append(ChatColor.COLOR_CHAR).append(msg[i+2])//r
+									.append(ChatColor.COLOR_CHAR).append(msg[i+3]).append(ChatColor.COLOR_CHAR).append(msg[i+4])//g
+									.append(ChatColor.COLOR_CHAR).append(msg[i+5]).append(ChatColor.COLOR_CHAR).append(msg[i+6]);//b
+								i += 6;
+							}
+							else{//&#rgb
+								builder.append(ChatColor.COLOR_CHAR).append('x')
+									.append(ChatColor.COLOR_CHAR).append(msg[i+1]).append(ChatColor.COLOR_CHAR).append(msg[i+1])//r
+									.append(ChatColor.COLOR_CHAR).append(msg[i+2]).append(ChatColor.COLOR_CHAR).append(msg[i+2])//g
+									.append(ChatColor.COLOR_CHAR).append(msg[i+3]).append(ChatColor.COLOR_CHAR).append(msg[i+3]);//b
+								i += 3;
+							}
+						}
+					}
+				}
+			}
+		}
+		if(colorPending) builder.append(altColorChar);
+		return builder.toString();
+	}
+	public static String translateAlternateColorCodes(char altColorChar, String textToTranslate, char resetColor){//TODO: doesn't support hex colors
+		char[] msg = textToTranslate.toCharArray();
 		for(int i=1; i<msg.length; ++i){
 			if(msg[i-1] == altColorChar && isColorOrFormat(msg[i]) && !isEscaped(msg, i-1)){
-				if(msg[i] == RESET){builder.append(RESET); continue;}
-				builder.append(ChatColor.COLOR_CHAR);
-				++i;
+				msg[i-1] = ChatColor.COLOR_CHAR;
+				if(msg[i] == ChatColor.RESET.getChar()) msg[i] = resetColor;
 			}
-			builder.append(msg[i-1]);
 		}
-		if(msg.length != 0) builder.append(msg[msg.length-1]);
-		return builder.toString();
+		return new String(msg);
 	}
 
 	public static String stripColorsOnly(String str){return stripColorsOnly(str, ChatColor.COLOR_CHAR);}
