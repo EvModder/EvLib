@@ -19,7 +19,7 @@ public abstract class EvPlugin extends JavaPlugin{
 		InputStream defaultConfig = getClass().getResourceAsStream("/config.yml");
 		if(defaultConfig != null){
 			FileIO.verifyDir(this);
-			config = FileIO.loadConfig(this, "config-"+getName()+".yml", defaultConfig);
+			config = FileIO.loadConfig(this, "config-"+getName()+".yml", defaultConfig, /*notifyIfNew=*/true);
 		}
 	}
 

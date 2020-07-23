@@ -164,7 +164,7 @@ public class FileIO{// version = X1.0
 		return new File(DIR+filename).delete();
 	}
 
-	public static YamlConfiguration loadConfig(JavaPlugin pl, String configName,InputStream defaultConfig){
+	public static YamlConfiguration loadConfig(JavaPlugin pl, String configName, InputStream defaultConfig, boolean notifyIfNew){
 		if(!configName.endsWith(".yml")){
 			pl.getLogger().severe("Invalid config file!");
 			pl.getLogger().severe("Configuation files must end in .yml");
@@ -193,8 +193,8 @@ public class FileIO{// version = X1.0
 				pl.getLogger().severe("Unable to locate a default config!");
 				pl.getLogger().severe("Could not find /config.yml in plugin's .jar");
 			}
-			pl.getLogger().info("Could not locate configuration file!");
-			pl.getLogger().info("Generating a new one with default settings.");
+			if(notifyIfNew) pl.getLogger().info("Could not locate configuration file!");
+			if(notifyIfNew) pl.getLogger().info("Generating a new one with default settings.");
 		}
 		return YamlConfiguration.loadConfiguration(file);
 	}
