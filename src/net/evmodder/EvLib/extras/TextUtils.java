@@ -66,6 +66,7 @@ public class TextUtils{
 			}
 			else if(!colorPending) builder.append(msg[i]);
 			else{
+				colorPending = false;
 				if(isColorOrFormat(msg[i])){
 					builder.append(ChatColor.COLOR_CHAR).append(msg[i]);
 				}
@@ -87,6 +88,7 @@ public class TextUtils{
 								i += 6;
 							}
 						}
+						else builder.append(altColorChar).append(msg[i]);
 					}
 					else{
 						if(isHex(msg[i+1]) && isHex(msg[i+2]) && isHex(msg[i+3])){//&#rrggbb or //&#rgb
@@ -105,8 +107,10 @@ public class TextUtils{
 								i += 3;
 							}
 						}
+						else builder.append(altColorChar).append(msg[i]);
 					}
 				}
+				else builder.append(altColorChar).append(msg[i]);
 			}
 		}
 		if(colorPending) builder.append(altColorChar);
