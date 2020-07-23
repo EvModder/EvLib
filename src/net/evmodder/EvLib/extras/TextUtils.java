@@ -422,7 +422,6 @@ public class TextUtils{
 		return 6;
 	}
 	public static boolean isHalfPixel(char ch){
-		//Note: Italicizing can make chars "half-pixel-y", but won't ever change their width.
 		switch(ch){
 			case '´': case '¸'://2
 			case 'ˆ': case '¨'://3
@@ -446,6 +445,7 @@ public class TextUtils{
 			if(colorPick){
 				colorPick = false;
 				switch(ch){
+					//Note: Italicizing can make chars "half-pixel-y", but won't ever change their width, unlike bolding.
 					case '0': case '1': case '2': case '3': case '4':
 					case '5': case '6': case '7': case '8': case '9':
 					case 'a': case 'b': case 'c': case 'd': case 'e':
