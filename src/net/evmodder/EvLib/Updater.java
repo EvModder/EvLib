@@ -458,7 +458,7 @@ public class Updater {
 	 * @return true if Updater should consider the remote version an update, false if not.
 	 */
 	public boolean shouldUpdate(String localVersion, String remoteVersion){
-		return !localVersion.equalsIgnoreCase(remoteVersion);
+		return localVersion.compareTo(remoteVersion) < 0; // TODO: <eg: 1.11 vs 1.9> returns incorrect result
 	}
 	/**
 	 * Evaluate whether the version number is marked showing that it should not be updated by this program.

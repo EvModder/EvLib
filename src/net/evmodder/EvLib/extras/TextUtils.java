@@ -55,6 +55,37 @@ public class TextUtils{
 	}
 
 	private static boolean isHex(char ch){return  ('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F');}
+	/*public static String createColorCode(char altColorChar, String colorId){
+		switch(colorId.length()){
+			case 1:
+				if(isColorOrFormat(colorId.charAt(0))) return altColorChar+colorId;
+				break;
+			case 3:
+				if(isHex(colorId.charAt(0)) && isHex(colorId.charAt(1)) && isHex(colorId.charAt(2))){
+					return new StringBuilder("").append(altColorChar).append('x')
+							.append(altColorChar).append(colorId.charAt(0))
+							.append(altColorChar).append(colorId.charAt(0))
+							.append(altColorChar).append(colorId.charAt(1))
+							.append(altColorChar).append(colorId.charAt(1))
+							.append(altColorChar).append(colorId.charAt(2))
+							.append(altColorChar).append(colorId.charAt(2)).toString();
+				}
+				break;
+			case 6:
+				if(isHex(colorId.charAt(0)) && isHex(colorId.charAt(1)) && isHex(colorId.charAt(2))
+				&& isHex(colorId.charAt(3)) && isHex(colorId.charAt(4)) && isHex(colorId.charAt(5))){
+					return new StringBuilder("").append(altColorChar).append('x')
+							.append(altColorChar).append(colorId.charAt(0))
+							.append(altColorChar).append(colorId.charAt(1))
+							.append(altColorChar).append(colorId.charAt(2))
+							.append(altColorChar).append(colorId.charAt(3))
+							.append(altColorChar).append(colorId.charAt(4))
+							.append(altColorChar).append(colorId.charAt(5)).toString();
+				}
+		}
+		return null;
+	}*/
+
 	public static String translateAlternateColorCodes(char altColorChar, String textToTranslate){
 		StringBuilder builder = new StringBuilder("");
 		char[] msg = textToTranslate.toCharArray();

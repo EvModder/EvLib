@@ -21,7 +21,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class FileIO{// version = X1.0
 	static private final String EV_DIR = "./plugins/EvFolder/";
 	static public String DIR = EV_DIR;//TODO: remove public? (only user: EvLib/extras/WebUtils.java)
-	static final int MERGE_EV_DIR_THRESHOLD = 3;
+	static final int MERGE_EV_DIR_THRESHOLD = 4;
 
 	public static void moveDirectoryContents(File srcDir, File destDir){
 		if(srcDir.isDirectory()){
@@ -44,22 +44,24 @@ public class FileIO{// version = X1.0
 		for(Plugin pl : Bukkit.getServer().getPluginManager().getPlugins()){
 			try{
 				@SuppressWarnings("unused")
-				String ver = pl.getClass().getField("EvLib_ver").get(null).toString();
+				String ver = pl.getClass().getDeclaredField("EvLib_ver").get(null).toString();
 				evPlugins.add(pl.getName());
 				//TODO: potentially return list of different EvLib versions being used
 			}
-			catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e){}
+			catch(NoClassDefFoundError | IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e){}
 		}
 		return evPlugins;
 	}
 
 	static void verifyDir(JavaPlugin evPl){
+		Vector<String> evPlugins = FileIO.installedEvPlugins();
 		final String CUSTOM_DIR = "./plugins/"+evPl.getName()+"/";
-		if(!new File(EV_DIR).exists() && FileIO.installedEvPlugins().size() < MERGE_EV_DIR_THRESHOLD){
+		if(!new File(EV_DIR).exists() && evPlugins.size() < MERGE_EV_DIR_THRESHOLD){
 			DIR = CUSTOM_DIR;
 		}
 		else if(new File(CUSTOM_DIR).exists()){//merge with EvFolder
-			Bukkit.getLogger().warning("Relocating data in "+CUSTOM_DIR+", this might take a minute..");
+			//Bukkit.getLogger().info("EvPlugins installed: "+String.join(", ", evPlugins));
+			evPl.getLogger().warning("Relocating data in "+CUSTOM_DIR+", this might take a minute..");
 			File evFolder = new File(EV_DIR);
 			if(!evFolder.exists()) evFolder.mkdir();
 			moveDirectoryContents(new File(CUSTOM_DIR), evFolder);
