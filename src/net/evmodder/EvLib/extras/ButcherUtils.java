@@ -9,7 +9,6 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
-import net.evmodder.EvLib.EvUtils;
 
 public class ButcherUtils{
 	public enum KillFlag{ANIMALS, TILE, NAMED, NEARBY, EQUIPPED, UNIQUE};
@@ -77,9 +76,10 @@ public class ButcherUtils{
 				: world.getEntitiesByClass(Monster.class);
 		for(Entity entity : entitiesToScan){
 			if(!nearby){
+				final long NEAR_DIST = 20*20;
 				boolean near = false;
 				for(Player p : Bukkit.getServer().getOnlinePlayers()){
-					if(EvUtils.notFar(p.getLocation(), entity.getLocation())){
+					if(p.getWorld().getUID().equals(entity.getWorld().getUID()) && p.getLocation().distanceSquared(entity.getLocation()) < NEAR_DIST){
 						near = true;
 						break;
 					}

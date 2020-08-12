@@ -4,15 +4,18 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -26,50 +29,35 @@ public class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,WebUti
 	public static Collection<ItemStack> getEquipmentGuaranteedToDrop(LivingEntity entity){//TODO: move to EntityUtils
 		ArrayList<ItemStack> itemsThatWillDrop = new ArrayList<>();
 		EntityEquipment equipment = entity.getEquipment();
-		if(equipment.getItemInMainHandDropChance() >= 1) itemsThatWillDrop.add(equipment.getItemInMainHand());
-		if(equipment.getItemInOffHandDropChance() >= 1) itemsThatWillDrop.add(equipment.getItemInOffHand());
-		if(equipment.getChestplateDropChance() >= 1) itemsThatWillDrop.add(equipment.getChestplate());
-		if(equipment.getLeggingsDropChance() >= 1) itemsThatWillDrop.add(equipment.getLeggings());
-		if(equipment.getHelmetDropChance() >= 1) itemsThatWillDrop.add(equipment.getHelmet());
-		if(equipment.getBootsDropChance() >= 1) itemsThatWillDrop.add(equipment.getBoots());
+		if(equipment.getItemInMainHandDropChance() >= 1f) itemsThatWillDrop.add(equipment.getItemInMainHand());
+		if(equipment.getItemInOffHandDropChance() >= 1f) itemsThatWillDrop.add(equipment.getItemInOffHand());
+		if(equipment.getChestplateDropChance() >= 1f) itemsThatWillDrop.add(equipment.getChestplate());
+		if(equipment.getLeggingsDropChance() >= 1f) itemsThatWillDrop.add(equipment.getLeggings());
+		if(equipment.getHelmetDropChance() >= 1f) itemsThatWillDrop.add(equipment.getHelmet());
+		if(equipment.getBootsDropChance() >= 1f) itemsThatWillDrop.add(equipment.getBoots());
 		return itemsThatWillDrop;
 	}
 
 	public static Collection<Advancement> getVanillaAdvancements(Player p){
-		Vector<Advancement> advs = new Vector<Advancement>();
-		Iterator<Advancement> it = Bukkit.getServer().advancementIterator();
-		while(it.hasNext()){
-			Advancement adv = it.next();
-			if(adv.getKey().getNamespace().equals(NamespacedKey.MINECRAFT) 
-					&& p.getAdvancementProgress(adv).isDone())
-				advs.add(adv);
-		}
-		return advs;
-	}
-	public static Collection<Advancement> getVanillaAdvancements(Player p, Collection<String> include){
-		Vector<Advancement> advs = new Vector<Advancement>();
-		Iterator<Advancement> it = Bukkit.getServer().advancementIterator();
-		while(it.hasNext()){
-			Advancement adv = it.next();
-			int i = adv.getKey().getKey().indexOf('/');
-			if(adv.getKey().getNamespace().equals(NamespacedKey.MINECRAFT) && i != -1
-					&& include.contains(adv.getKey().getKey().substring(0, i))
-					&& p.getAdvancementProgress(adv).isDone())
-				advs.add(adv);
-		}
-		return advs;
+		return StreamSupport
+				.stream(Spliterators.spliteratorUnknownSize(p.getServer().advancementIterator(), Spliterator.IMMUTABLE),
+						/*parallel=*/true)
+				.filter(adv -> adv.getKey().getNamespace().equals(NamespacedKey.MINECRAFT) && p.getAdvancementProgress(adv).isDone())
+				.collect(Collectors.toList());
 	}
 	public static Collection<Advancement> getVanillaAdvancements(Collection<String> include){
-		Vector<Advancement> advs = new Vector<Advancement>();
-		Iterator<Advancement> it = Bukkit.getServer().advancementIterator();
-		while(it.hasNext()){
-			Advancement adv = it.next();
+		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(Bukkit.getServer().advancementIterator(), Spliterator.IMMUTABLE),
+				/*parallel=*/true).filter(adv -> {
+					int i = adv.getKey().getKey().indexOf('/');
+					return i != -1 && adv.getKey().getNamespace().equals(NamespacedKey.MINECRAFT)
+							&& include.contains(adv.getKey().getKey().substring(0, i));
+				}).collect(Collectors.toList());
+	}
+	public static Collection<Advancement> getVanillaAdvancements(Player p, Collection<String> include){
+		return getVanillaAdvancements(p).stream().filter(adv -> {
 			int i = adv.getKey().getKey().indexOf('/');
-			if(adv.getKey().getNamespace().equals(NamespacedKey.MINECRAFT) && i != -1
-					&& include.contains(adv.getKey().getKey().substring(0, i)))
-				advs.add(adv);
-		}
-		return advs;
+			return i != -1 && include.contains(adv.getKey().getKey().substring(0, i));
+		}).collect(Collectors.toList());
 	}
 
 	public static int maxCapacity(Inventory inv, Material item){
@@ -94,6 +82,17 @@ public class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,WebUti
 		}
 	}
 
+	public static double crossDimensionalDistanceSquared(Location a, Location b){
+		if(a == null || b == null) return Double.MAX_VALUE;
+		if(a.getWorld().getUID().equals(b.getWorld().getUID())) return a.distanceSquared(b);
+		if(a.getWorld().getEnvironment() == Environment.THE_END || b.getWorld().getEnvironment() == Environment.THE_END) return Double.MAX_VALUE;
+		if(!a.getWorld().getName().startsWith(b.getWorld().getName()) && !b.getWorld().getName().startsWith(a.getWorld().getName())) return Double.MAX_VALUE;
+		// By this point, we have overworld & nether (for the same world)
+		if(a.getWorld().getEnvironment() == Environment.NETHER) return new Location(b.getWorld(), a.getX()*8, a.getY(), a.getZ()*8).distanceSquared(b);
+		else return new Location(a.getWorld(), b.getX()*8, b.getY(), b.getZ()*8).distanceSquared(a);
+	}
+
+	@Deprecated
 	public static boolean notFar(Location from, Location to){
 		int x1 = from.getBlockX(), y1 = from.getBlockY(), z1 = from.getBlockZ(),
 			x2 = to.getBlockX(), y2 = to.getBlockY(), z2 = to.getBlockZ();
@@ -104,11 +103,13 @@ public class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,WebUti
 				from.getWorld().getName().equals(to.getWorld().getName()));
 	}
 
-	public static ArrayList<Player> getNearbyPlayers(Location loc, int max_dist){//+
-		max_dist = max_dist*max_dist;
+	public static ArrayList<Player> getNearbyPlayers(Location loc, int max_dist, boolean allowCrossDimension){//+
+		max_dist = max_dist * max_dist;
 		ArrayList<Player> ppl = new ArrayList<Player>();
 		for(Player p : Bukkit.getServer().getOnlinePlayers()){
-			if(p.getWorld().getUID().equals(loc.getWorld().getUID()) && p.getLocation().distanceSquared(loc) < max_dist) ppl.add(p);
+			double dist = allowCrossDimension ? crossDimensionalDistanceSquared(p.getLocation(), loc)
+					: p.getWorld().getUID().equals(loc.getWorld().getUID()) ? p.getLocation().distanceSquared(loc) : Double.MAX_VALUE;
+			if(dist < max_dist) ppl.add(p);
 		}
 		return ppl;
 	}
