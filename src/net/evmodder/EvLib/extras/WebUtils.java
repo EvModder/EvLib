@@ -265,9 +265,7 @@ public class WebUtils {
 		System.out.println("token = "+token);
 
 		String[] targetHeads = new String[]{
-				"HOGLIN:", "PIGLIN:",
-				"STRIDER:", "STRIDER|COLD:", "STRIDER|WARM:",
-				"ZOMBIFIED_PIGLIN:"
+//				"BOAT", "LEASH_HITCH",
 		};
 		String[] headsData = FileIO.loadFile("head-textures.txt", "").split("\n");
 		String[] headsToFlip = new String[targetHeads.length];
@@ -304,9 +302,11 @@ public class WebUtils {
 			missingTxr.add(type.name()); missingDrpC.add(type.name());
 		}
 		for(String headData : FileIO.loadFile("head-textures.txt", "").split("\n")){
-			int i = headData.indexOf(':'), j = headData.indexOf('|');
-			if(i != -1 && j == -1){
-				if(!missingTxr.remove(headData.substring(0, i))) extraTxr.add(headData.substring(0, i));
+			int i = headData.indexOf(':');
+			if(i != -1 && headData.indexOf('|') == -1){
+				String headName = headData.substring(0, i);
+				if(headData.substring(i+1).replace("xxx", "").trim().isEmpty()) continue;
+				if(!missingTxr.remove(headName)) extraTxr.add(headName);
 			}
 		}
 		System.out.println("Missing textures for: "+missingTxr);
@@ -315,7 +315,8 @@ public class WebUtils {
 		for(String headData : FileIO.loadFile("head-drop-rates.txt", "").split("\n")){
 			int i = headData.indexOf(':');
 			if(i != -1){
-				if(!missingDrpC.remove(headData.substring(0, i))) extraDrpC.add(headData.substring(0, i));
+				String headKey = headData.substring(0, i);
+				if(!missingDrpC.remove(headKey) && !extraTxr.contains(headKey)) extraDrpC.add(headData.substring(0, i));
 			}
 		}
 		System.out.println("Missing drop rates for: "+missingDrpC);
@@ -327,14 +328,20 @@ public class WebUtils {
 		for(String headData : FileIO.loadFile("head-textures.txt", "").split("\n")){
 			int i = headData.indexOf(':'), j = headData.indexOf('|');
 			if(i != -1){
+				if(headData.substring(i + 1).replace("xxx", "").trim().isEmpty()) continue;
 				String headName = headData.substring(0, i);
+				if(headName.equals("LEASH_HITCH")) continue;
+				if(headName.equals("UNKNOWN")) continue;
+				if(headName.equals("PLAYER|ALEX")) continue;
+				if(headName.equals("PLAYER|STEVE")) continue;
+
 				if(j != -1 && headName.endsWith("GRUMM")) grummTxtrs.add(headName.substring(0, headName.length()-6));
 				else regularTxtrs.add(headName);
 			}
 		}
 		TreeSet<String> missingGrumms = new TreeSet<String>();
 		for(String headName : regularTxtrs) if(!grummTxtrs.contains(headName)) missingGrumms.add(headName);
-		System.out.println("Missing Grumms for: "+missingGrumms);
+		System.out.println("Missing Grumms for: \""+String.join("\", \"", missingGrumms)+"\"");
 	}
 
 	public static void main(String... args){
@@ -342,6 +349,7 @@ public class WebUtils {
 		FileIO.DIR = "./";
 		checkMissingTextures();
 		checkMissingGrummTextures();
-		//runGrumm();
+		runGrumm();
+//		System.out.println("Test: "+Vehicle.class.isAssignableFrom(EntityType.PLAYER.getEntityClass()));
 	}
 }
