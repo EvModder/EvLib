@@ -92,17 +92,6 @@ public class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,WebUti
 		else return new Location(a.getWorld(), b.getX()*8, b.getY(), b.getZ()*8).distanceSquared(a);
 	}
 
-	@Deprecated
-	public static boolean notFar(Location from, Location to){
-		int x1 = from.getBlockX(), y1 = from.getBlockY(), z1 = from.getBlockZ(),
-			x2 = to.getBlockX(), y2 = to.getBlockY(), z2 = to.getBlockZ();
-
-		return (Math.abs(x1 - x2) < 20 &&
-				Math.abs(y1 - y2) < 15 &&
-				Math.abs(z1 - z2) < 20 &&
-				from.getWorld().getName().equals(to.getWorld().getName()));
-	}
-
 	public static ArrayList<Player> getNearbyPlayers(Location loc, int max_dist, boolean allowCrossDimension){//+
 		max_dist = max_dist * max_dist;
 		ArrayList<Player> ppl = new ArrayList<Player>();
