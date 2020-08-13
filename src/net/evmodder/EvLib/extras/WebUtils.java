@@ -19,6 +19,7 @@ import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Scanner;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -260,8 +261,16 @@ public class WebUtils {
 	}
 
 	static void runGrumm(){
-		String token = authenticateMojang("nateleake@nateleake.com", "whys0pa1nful");
-		String uuid = "0e314b6029c74e35bef33c652c8fb467";
+		Scanner scanner = new Scanner(System.in); 
+		System.out.print("Enter account email: ");
+		String email = scanner.nextLine();
+		System.out.print("Enter account passw: ");
+		String passw = scanner.nextLine();
+		System.out.print("Enter account uuid: ");
+		String uuid = scanner.nextLine();
+		scanner.close();
+
+		String token = authenticateMojang(email, passw);
 		System.out.println("token = "+token);
 
 		String[] targetHeads = new String[]{
