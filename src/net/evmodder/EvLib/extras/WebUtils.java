@@ -262,12 +262,9 @@ public class WebUtils {
 
 	static void runGrumm(){
 		Scanner scanner = new Scanner(System.in); 
-		System.out.print("Enter account email: ");
-		String email = scanner.nextLine();
-		System.out.print("Enter account passw: ");
-		String passw = scanner.nextLine();
-		System.out.print("Enter account uuid: ");
-		String uuid = scanner.nextLine();
+		System.out.print("Enter account email: "); String email = scanner.nextLine();
+		System.out.print("Enter account passw: "); String passw = scanner.nextLine();
+		System.out.print("Enter account uuid: "); String uuid = scanner.nextLine();//0e314b6029c74e35bef33c652c8fb467
 		scanner.close();
 
 		String token = authenticateMojang(email, passw);
