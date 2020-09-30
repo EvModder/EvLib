@@ -103,7 +103,7 @@ public class SelectorUtils{
 		public Collection<Entity> resolve(){
 			final ArrayList<Entity> entities = new ArrayList<>();
 			@SuppressWarnings("unchecked")
-			Collection<Entity> onlinePlayers = (Collection<Entity>)Bukkit.getServer().getOnlinePlayers();
+			Collection<? extends Player> onlinePlayers = Bukkit.getServer().getOnlinePlayers();
 			switch(type){
 				case ALL_ENTITIES:
 					entities.addAll(origin.getWorld().getEntities());
