@@ -1,5 +1,6 @@
 package net.evmodder.EvLib.extras;
 
+import java.util.AbstractList;
 import java.util.HashMap;
 import org.bukkit.inventory.ItemStack;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
@@ -56,7 +57,8 @@ public final class NBTTagUtils{// version = X1.0
 	static final RefConstructor cnstrNBTTagList = classNBTTagList.findConstructor(0);
 //	static final Class<?> realNBTBaseClass = classNBTBase.getRealClass();
 	static final Class<?> realNBTTagListClass = classNBTTagList.getRealClass();
-	static final RefMethod methodAdd = classNBTTagList.getMethod("add", realNBTBaseClass);
+	static final RefMethod methodAdd = ReflectionUtils.getRefClass(AbstractList.class).findMethodByName("add");
+//	static final RefMethod methodAdd = classNBTTagList.getMethod("add", realNBTBaseClass); //TODO: use this pre-1.16!!
 	static final RefMethod methodGet = classNBTTagList.getMethod("get", int.class);
 
 	interface RefNBTBase{}

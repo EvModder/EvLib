@@ -48,7 +48,7 @@ public class FileIO{// version = X1.0
 				evPlugins.add(pl.getName());
 				//TODO: potentially return list of different EvLib versions being used
 			}
-			catch(Exception e){}
+			catch(Throwable e){}
 		}
 		return evPlugins;
 	}
