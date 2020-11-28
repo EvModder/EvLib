@@ -121,18 +121,6 @@ public class HeadUtils {
 		return getPlayerHead(profile);
 	}
 
-	/*static boolean isSkeletal(EntityType type){
-		switch(type){
-			case SKELETON:
-			case SKELETON_HORSE:
-			case WITHER_SKELETON:
-			case STRAY:
-				return true;
-			default:
-				return false;
-		}
-	}*/
-
 	// TODO: Move to TypeUtils perhaps?
 	public static boolean isHead(Material type){
 		switch(type){
@@ -152,6 +140,10 @@ public class HeadUtils {
 			default:
 				return false;
 		}
+	}
+
+	public static boolean isPlayerHead(Material type){
+		return type == Material.PLAYER_HEAD || type == Material.PLAYER_WALL_HEAD;
 	}
 
 	public static EntityType getEntityFromHead(Material type){
@@ -179,11 +171,7 @@ public class HeadUtils {
 		}
 	}
 
-	public static boolean isPlayerHead(Material type){
-		return type == Material.PLAYER_HEAD || type == Material.PLAYER_WALL_HEAD;
-	}
-
-	public static String getDroppedHeadTypeName(EntityType eType){
+	public static String getDroppedHeadTypeName(EntityType eType){  // Replaces `isSkeletal()`, which is now in DropHeads>JunkUtils
 		switch(eType){
 			case SKELETON:
 			case SKELETON_HORSE:

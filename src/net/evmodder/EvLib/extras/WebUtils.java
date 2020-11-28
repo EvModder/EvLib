@@ -261,6 +261,12 @@ public class WebUtils {
 	}
 
 	static void runGrumm(){
+		String[] targetHeads = new String[]{
+//				"BOAT", "LEASH_HITCH",
+//				"SKELETON_HORSE|HOLLOW", "SKELETON|HOLLOW", "STRAY|HOLLOW", "WITHER_SKELETON|HOLLOW"  // Need to be uploaded manually to edu.mc
+		};
+		System.out.print("runGrumm() auth for "+targetHeads.length+" heads...\n"); 
+
 		Scanner scanner = new Scanner(System.in); 
 		System.out.print("Enter account email: "); String email = scanner.nextLine();
 		System.out.print("Enter account passw: "); String passw = scanner.nextLine();
@@ -270,9 +276,7 @@ public class WebUtils {
 		String token = authenticateMojang(email, passw);
 		System.out.println("token = "+token);
 
-		String[] targetHeads = new String[]{
-//				"BOAT", "LEASH_HITCH",
-		};
+
 		String[] headsData = FileIO.loadFile("head-textures.txt", "").split("\n");
 		String[] headsToFlip = new String[targetHeads.length];
 		for(int i=0; i<targetHeads.length; ++i){
@@ -287,7 +291,7 @@ public class WebUtils {
 
 		System.out.println(StringUtils.join(headsToFlip, "\n"));
 		System.out.println("Beginning conversion...");
-		System.out.println("Approximate duration in minutes: "+(40*headsToFlip.length)/60);// 40s/head
+		System.out.println("Approximate duration in minutes: "+(40F*headsToFlip.length)/60F);// 40s/head
 		TreeMap<String, String> newHeads = makeUpsideDownCopies(headsToFlip, "tmp_textures", uuid, token);
 
 		System.out.println("Results: ");
