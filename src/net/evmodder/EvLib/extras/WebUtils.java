@@ -139,19 +139,20 @@ public class WebUtils {
 	}
 
 	static BufferedImage upsideDownHead(BufferedImage img){
+		int w = img.getWidth(), h = img.getHeight();
 		AffineTransform at = new AffineTransform();
 		at.concatenate(AffineTransform.getScaleInstance(1, -1));
-		at.concatenate(AffineTransform.getTranslateInstance(0, -img.getHeight()));
-		BufferedImage newImg = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		at.concatenate(AffineTransform.getTranslateInstance(0, -h));
+		BufferedImage newImg = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = newImg.createGraphics();
 		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC));
 		g.drawImage(img, 0, 0, null);
-		g.drawImage(img.getSubimage(8, 0, 8, 8), 16, 0, null);
-		g.drawImage(img.getSubimage(16, 0, 8, 8), 8, 0, null);
-		g.drawImage(img.getSubimage(40, 0, 8, 8), 48, 0, null);
-		g.drawImage(img.getSubimage(48, 0, 8, 8), 40, 0, null);
+		g.drawImage(img.getSubimage(w/8, 0, w/8, w/8), w/4, 0, null); // 8, 0, 8, 8
+		g.drawImage(img.getSubimage(w/4, 0, w/8, w/8), w/8, 0, null); //16, 0, 8, 8
+		g.drawImage(img.getSubimage((5*w)/8, 0, w/8, w/8), (3*w)/4, 0, null);//40, 0, 8, 8
+		g.drawImage(img.getSubimage((3*w)/4, 0, w/8, w/8), (5*w)/8, 0, null);//48, 0, 8, 8
 		g.transform(at);
-		g.drawImage(img.getSubimage(0, 8, 64, 8), 0, img.getHeight()-16, null);
+		g.drawImage(img.getSubimage(0, w/8, w, w/8), 0, h-w/4, null);//0,8,64,8 | 0, height-16
 		g.dispose();
 		return newImg;
 	}
@@ -184,6 +185,7 @@ public class WebUtils {
 
 					ImageIO.write(image, "png", outfile);
 					System.out.println("2. Saved upside down img: "+url+" ("+name+")");
+//					if(null == null) continue;// Uncomment to generate grumm image file only
 
 					//===========================================================================================
 					try{Thread.sleep(8000);}catch(InterruptedException e1){e1.printStackTrace();}//8s
@@ -263,13 +265,12 @@ public class WebUtils {
 	static void runGrumm(){
 		String[] targetHeads = new String[]{
 //				"BOAT", "LEASH_HITCH",
-//				"SKELETON_HORSE|HOLLOW", "SKELETON|HOLLOW", "STRAY|HOLLOW", "WITHER_SKELETON|HOLLOW"  // Need to be uploaded manually to edu.mc
 		};
 		System.out.print("runGrumm() auth for "+targetHeads.length+" heads...\n"); 
 
 		Scanner scanner = new Scanner(System.in); 
-		System.out.print("Enter account email: "); String email = scanner.nextLine();
-		System.out.print("Enter account passw: "); String passw = scanner.nextLine();
+		System.out.print("Enter account email: "); String email = scanner.nextLine();//nl@nl.com
+		System.out.print("Enter account passw: "); String passw = scanner.nextLine();//y
 		System.out.print("Enter account uuid: "); String uuid = scanner.nextLine();//0e314b6029c74e35bef33c652c8fb467
 		scanner.close();
 
