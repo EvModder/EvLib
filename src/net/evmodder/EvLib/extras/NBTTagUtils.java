@@ -18,6 +18,7 @@ public final class NBTTagUtils{// version = X1.0
 	static final RefMethod methodGetTag = classItemStack.getMethod("getTag");
 	static final RefMethod methodSetTag = classItemStack.getMethod("setTag", classNBTTagCompound);
 	static final RefMethod methodTagRemove = classNBTTagCompound.getMethod("remove", String.class);
+	static final RefMethod methodHasKey = classNBTTagCompound.getMethod("hasKey", String.class);
 	static final RefMethod methodTagIsEmpty = classNBTTagCompound.getMethod("isEmpty");
 	static final HashMap<Class<?>, RefMethod> tagSetters = new HashMap<Class<?>, RefMethod>();
 	static final HashMap<Class<?>, RefMethod> tagGetters = new HashMap<Class<?>, RefMethod>();
@@ -116,6 +117,7 @@ public final class NBTTagUtils{// version = X1.0
 		public String getString		(String key){return (String)	getFromTag(key, String.class);}
 		//
 		public void remove(String key){methodTagRemove.of(nmsTag).call(key);}
+		public boolean hasKey(String key){return (boolean)methodHasKey.of(nmsTag).call(key);}
 	}
 
 	// For ItemStacks ----------------------------------------------------
