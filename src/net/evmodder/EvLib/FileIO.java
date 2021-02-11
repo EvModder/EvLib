@@ -201,7 +201,7 @@ public class FileIO{// version = X1.0
 		return YamlConfiguration.loadConfiguration(file);
 	}
 
-	public static String loadResource(Object pl, String filename){
+	public static String loadResource(Object pl, String filename/*, boolean keepComments*/){
 		try{
 			BufferedReader reader = new BufferedReader(
 					new InputStreamReader(pl.getClass().getResourceAsStream("/"+filename)));
@@ -210,7 +210,7 @@ public class FileIO{// version = X1.0
 			String line;
 			while((line = reader.readLine()) != null){
 				line = line.trim().replace("//", "#");
-				int cut = line.indexOf('#');
+				int cut = /*keepComments ? -1 :*/ line.indexOf('#');
 				if(cut == -1) file.append('\n').append(line);
 				else if(cut > 0) file.append('\n').append(line.substring(0, cut).trim());
 			}
