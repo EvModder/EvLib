@@ -104,31 +104,52 @@ public class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,WebUti
 	}
 
 	public static Location getClosestBlock(Location start, int MAX_DIST, Function<Block, Boolean> test){
-		if(test.apply(start.getBlock())) return start;
+		if(test.apply(start.getBlock())) return start/*.clone()*/;
+		if(test.apply(start.getBlock().getRelative(BlockFace.UP))) return start.clone().add(0, 1, 0);
+		if(test.apply(start.getBlock().getRelative(BlockFace.NORTH))) return start.clone().add(0, 0, -1);
+		if(test.apply(start.getBlock().getRelative(BlockFace.EAST))) return start.clone().add(1, 0, 0);
+		if(test.apply(start.getBlock().getRelative(BlockFace.SOUTH))) return start.clone().add(0, 0, 1);
+		if(test.apply(start.getBlock().getRelative(BlockFace.WEST))) return start.clone().add(-1, 0, 0);
 		World w  = start.getWorld();
 		int cX = start.getBlockX(), cY = start.getBlockY(), cZ = start.getBlockZ();
+		Location closestLoc = null;
+		double closestDistSq = Double.MAX_VALUE;
 		for(int dist = 1; dist <= MAX_DIST; ++dist){
 			int mnX = cX-dist, mxX = cX+dist;
 			int mnZ = cZ-dist, mxZ = cZ+dist;
 			int mnY = Math.max(cY-dist, 0), mxY = Math.min(cY+dist, 256);
+			Location l;
+			double d;
 			for(int y=mxY; y>=mnY; --y) for(int z=mnZ; z<=mxZ; ++z){
-				if(test.apply(w.getBlockAt(mnX, y, z))) return new Location(w, mnX, y, z);
-				if(test.apply(w.getBlockAt(mxX, y, z))) return new Location(w, mxX, y, z);
+				if(test.apply(w.getBlockAt(mnX, y, z)) && (d = (l = new Location(w, mnX, y, z)).distanceSquared(start)) < closestDistSq){
+					closestDistSq = d; closestLoc = l;
+				}
+				if(test.apply(w.getBlockAt(mxX, y, z)) && (d = (l = new Location(w, mxX, y, z)).distanceSquared(start)) < closestDistSq){
+					closestDistSq = d; closestLoc = l;
+				}
 			}
 			for(int x=mnX; x<=mxX; ++x) for(int z=mnZ; z<=mxZ; ++z){
-				if(test.apply(w.getBlockAt(x, mnY, z))) return new Location(w, x, mnY, z);
-				if(test.apply(w.getBlockAt(x, mxY, z))) return new Location(w, x, mxY, z);
+				if(test.apply(w.getBlockAt(x, mnY, z)) && (d = (l = new Location(w, x, mnY, z)).distanceSquared(start)) < closestDistSq){
+					closestDistSq = d; closestLoc = l;
+				}
+				if(test.apply(w.getBlockAt(x, mxY, z)) && (d = (l = new Location(w, x, mxY, z)).distanceSquared(start)) < closestDistSq){
+					closestDistSq = d; closestLoc = l;
+				}
 			}
 			for(int x=mnX; x<=mxX; ++x) for(int y=mxY; y>=mnY; --y){
-				if(test.apply(w.getBlockAt(x, y, mnZ))) return new Location(w, x, y, mnZ);
-				if(test.apply(w.getBlockAt(x, y, mxZ))) return new Location(w, x, y, mxZ);
+				if(test.apply(w.getBlockAt(x, y, mnZ)) && (d = (l = new Location(w, x, y, mnZ)).distanceSquared(start)) < closestDistSq){
+					closestDistSq = d; closestLoc = l;
+				}
+				if(test.apply(w.getBlockAt(x, y, mxZ)) && (d = (l = new Location(w, x, y, mxZ)).distanceSquared(start)) < closestDistSq){
+					closestDistSq = d; closestLoc = l;
+				}
 			}
+			if(closestLoc != null/* && closestDistSq <= MAX_DIST*MAX_DIST*/) return closestLoc;
 		}
 		return null;
 	}
 
-	public static List<Block> getConnectedBlocks(Block block0, Function<Block, Boolean> test, 
-			List<BlockFace> dirs, int MAX_SIZE){//+
+	public static List<Block> getConnectedBlocks(Block block0, Function<Block, Boolean> test, List<BlockFace> dirs, int MAX_SIZE){//+
 		HashSet<Block> visited = new HashSet<Block>();
 		List<Block> results = new ArrayList<Block>();
 		ArrayDeque<Block> toProcess = new ArrayDeque<Block>();
