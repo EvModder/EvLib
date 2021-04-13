@@ -3,8 +3,11 @@ package net.evmodder.EvLib.extras;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.bukkit.Bukkit;
@@ -54,23 +57,77 @@ public class TellrawUtils{
 		@Override public String toString(){return toString;}
 	};
 
+	public enum FormatFlag{
+		BOLD_TRUE, BOLD_FALSE,
+		ITALIC_TRUE, ITALIC_FALSE,
+		UNDERLINED_TRUE, UNDERLINED_FALSE,
+		STRIKETHROUGH_TRUE, STRIKETHROUGH_FALSE,
+		OBFUSCATED_TRUE, OBFUSCATED_FALSE;
+
+		@Override public String toString(){
+			String lowername = name().toLowerCase();
+			int underscore = lowername.indexOf('_');
+			return '"'+lowername.substring(0, underscore)+"\":"+lowername.substring(underscore+1);
+		}
+	}
+
 	// TellrawBlob stuff
 	public static abstract class Component{
 		abstract public String toPlainText();
 	};
+	// ComputedTextComponents can be used in a hoverEvent or clickEvent
 	public static abstract class ComputedTextComponent extends Component{
-		abstract public String toStringKV();
+		abstract public String toStringKV();// Returns a list of '"key1":"value1","key2":"value2",...'
 	};
 	public final static class RawTextComponent extends ComputedTextComponent{
-		String text;
-		public RawTextComponent(@Nonnull String text){this.text = text;}
-		public void setText(@Nonnull String text){this.text = text;}
+		final String text;
+		final String insertion; // Optional. When the text is shift-clicked by a player, this string is inserted in their chat input.
+		final String color;
+		final FormatFlag[] formats;
+		public RawTextComponent(@Nonnull String text){this.text = text; insertion = null; color = null; formats = null;}
+		public RawTextComponent(@Nonnull String text, @Nonnull String insertion){this.text = text; this.insertion = insertion; color = null; formats = null;}
+		public RawTextComponent(@Nonnull String text, @Nonnull String insertion, @Nonnull String color){
+			this.text = text; this.insertion = null; this.color = color; formats = null;}
+		public RawTextComponent(@Nonnull String text, @Nonnull String insertion, @Nonnull String color, FormatFlag... formats){
+			this.text = text; this.insertion = null; this.color = color; this.formats = formats;}
+//		public void setText(@Nonnull String text){this.text = text;}
 		//tellraw @a "test"
 		//tellraw @a {"text":"test"}
+		//tellraw @a {"text":"test","insertion":"hi there"}
 
+		
+
+		
+		
+		
+		
+		
+		// they all inherit color/format/selector etc from the 1st element in the list
+		///tellraw EvDoc ["",{"text":"E","bold":true},"e",{"text":"1343","bold":false},"23"]
+		
+		
+		
+		
+		
+		
+		
+		
 		@Override public String toPlainText(){return text;}
-		@Override public String toString(){return new StringBuilder().append('"').append(TextUtils.escape(text, "\"","\n")).append('"').toString();}
-		@Override public String toStringKV(){return new StringBuilder().append("\"text\":\"").append(TextUtils.escape(text, "\"","\n")).append('"').toString();}
+		@Override public String toStringKV(){
+			StringBuilder builder = new StringBuilder().append("\"text\":\"").append(TextUtils.escape(text, "\"","\n")).append('"');
+			if(insertion != null) builder.append(",\"insertion\":\"").append(TextUtils.escape(insertion, "\"","\n")).append('"');
+			if(color != null) builder.append(",\"color\":\"").append(color).append('"');
+			if(formats != null && formats.length > 0){
+				builder.append(',').append(Arrays.stream(formats).map(FormatFlag::toString).collect(Collectors.joining(",")));
+			}
+			return builder.toString();
+		}
+		@Override public String toString(){
+			return insertion == null && color == null && (formats == null || formats.length == 0)
+				// Note: enclosing "" quotes aren't technically required if text is just a number or boolean (true/false), but we add them anyway.
+				? new StringBuilder().append('"').append(TextUtils.escape(text, "\"","\n")).append('"').toString()
+				: new StringBuilder().append('{').append(toStringKV()).append('}').toString();
+		}
 	}
 	public final static class SelectorComponent extends Component{
 //		final Selector selector;
@@ -81,6 +138,7 @@ public class TellrawUtils{
 		public SelectorComponent(@Nonnull Object selector, boolean useDisplayName){this.selector = selector; this.useDisplayName = useDisplayName;}
 		public SelectorComponent(@Nonnull UUID uuid, boolean useDisplayName){this.selector = uuid; this.useDisplayName = useDisplayName;}
 //		public SelectorComponent(@Nonnull SelectorType type, @Nonnull SelectorArgument...arguments){this.selector = new Selector(type, arguments);}
+		//tellraw @a {"selector":"@a"}
 
 		private static String getNormalizedName(Entity entity, boolean useDisplayName){
 			if(entity instanceof Player && useDisplayName) return ((Player)entity).getDisplayName();
@@ -105,6 +163,25 @@ public class TellrawUtils{
 		@Override public String toString(){
 			return new StringBuilder().append("{\"selector\":\"").append(TextUtils.escape(selector.toString(), "\"","\n")).append("\"}").toString();
 		}
+	}
+	public final static class TranslationComponent extends ComputedTextComponent{
+		final String jsonKey;
+		final Component[] with; // Used to replace "%s" placeholders in the translation text.
+		public TranslationComponent(@Nonnull String jsonKey){this.jsonKey = jsonKey; with = null;} //TODO: validate json key?
+		public TranslationComponent(@Nonnull String jsonKey, @Nonnull Component... with){this.jsonKey = jsonKey; this.with = with;}
+		//tellraw @a {"translate":"multiplayer.player.joined","with":["EvDoc", "unused"]} -> en_us.json: "%s joined the game"
+
+		@Override public String toPlainText(){
+			return jsonKey; // This is ONLY correct when the key is invalid/unknown to the client!
+			//TODO: EN_US.json(or server default) -> LOOKUP ASSOCIATED VALUE and return that instead!
+		}
+		@Override public String toStringKV(){
+			StringBuilder builder = new StringBuilder().append("\"translate\":\"").append(jsonKey).append('"');
+			if(with != null && with.length > 0) builder.append(",\"with\":[").append(
+					Arrays.stream(with).map(Component::toString).collect(Collectors.joining(","))).append(']');
+			return builder.toString();
+		}
+		@Override public String toString(){return new StringBuilder().append('{').append(toStringKV()).append('}').toString();}
 	}
 	public final static class ScoreComponent extends ComputedTextComponent{
 		final Object selector;
@@ -231,23 +308,14 @@ public class TellrawUtils{
 		}
 
 		// TODO: make this an attribute of abstract Component class instead?
-		private boolean hasModifiableText(Component comp){
+		private boolean hasSimpleRawText(Component comp){
 			return comp instanceof RawTextComponent || (comp instanceof ActionComponent
 					&& ((ActionComponent)comp).getComputedText() instanceof RawTextComponent);
 		}
-		private String getModifiableText(Component comp){
+		private String getSimpleRawText(Component comp){
 			return comp instanceof RawTextComponent ? ((RawTextComponent)comp).toPlainText() :
 					comp instanceof ActionComponent && ((ActionComponent)comp).getComputedText() instanceof RawTextComponent
 					? ((RawTextComponent)((ActionComponent)comp).getComputedText()).toPlainText() : null;
-		}
-		private void setModifiableText(Component comp, String text){
-			if(comp instanceof RawTextComponent){
-				((RawTextComponent)comp).setText(text);
-			}
-			else if(comp instanceof ActionComponent && ((ActionComponent)comp).getComputedText() instanceof RawTextComponent){
-				((RawTextComponent)((ActionComponent)comp).getComputedText()).setText(text);
-			}
-			// else throw error?
 		}
 		private Component copyWithNewText(Component comp, String text){
 			if(comp instanceof RawTextComponent){
@@ -274,12 +342,13 @@ public class TellrawUtils{
 				}
 				return components.add(last = component);
 			}
-			String compText = getModifiableText(component);
+			String compText = getSimpleRawText(component);
 			if(compText != null){
 				if(compText.isEmpty()) return false;
 				boolean isEmpty = ChatColor.stripColor(compText).isEmpty();
-				if(last != null && hasModifiableText(last) && (isEmpty || canSafelyMergeText(component, last))){
-					setModifiableText(last, getModifiableText(last) + compText);
+				if(last != null && hasSimpleRawText(last) && (isEmpty || canSafelyMergeText(component, last))){
+					components.remove(components.size()-1);
+					components.add(last = copyWithNewText(component, getSimpleRawText(last) + compText));
 					return true;
 				}
 				else if(isEmpty) return components.add(last = new RawTextComponent(compText));
@@ -292,26 +361,32 @@ public class TellrawUtils{
 //		public void addComponent(@Nonnull String txt, @Nonnull ClickEvent evt, @Nonnull String val){addComponent(new ActionComponent(txt, evt, val));}
 //		public void addComponent(@Nonnull String txt, @Nonnull HoverEvent evt, @Nonnull String val){addComponent(new ActionComponent(txt, evt, val));}
 
-		public boolean replaceRawTextWithComponent(@Nonnull final String textToReplace, @Nonnull final Component replacement){
+		/**
+		 * Loops through all RawTextComponents in this instance and replaces all occurances of @textToReplace with the @replacement component
+		 * @param textToReplace The simple text from inside a RawTextComponent to search for
+		 * @param replacement The component substituted in place of each instance of matching text
+		 * @return true if one or more replacements occurred
+		 */
+		public boolean replaceRawDisplayTextWithComponent(@Nonnull final String textToReplace, @Nonnull final Component replacement){
 			if(textToReplace.isEmpty()) return false;
 			boolean updated = false;
 			for(int i=0; i<components.size(); ++i){
 				Component comp = components.get(i);
 				if(comp instanceof TellrawBlob){
-					if(((TellrawBlob)comp).replaceRawTextWithComponent(textToReplace, replacement)) updated = true;
+					if(((TellrawBlob)comp).replaceRawDisplayTextWithComponent(textToReplace, replacement)) updated = true;
 				}
 				if(comp instanceof RawTextComponent == false) continue;
 				RawTextComponent txComp = (RawTextComponent) comp;
 				final String text = txComp.toPlainText();
 				if(text.contains(textToReplace) == false) continue;
 				if(replacement instanceof RawTextComponent){
-					txComp.setText(text.replaceAll(textToReplace, ((RawTextComponent)replacement).toPlainText()));
+					components.set(i, new RawTextComponent(text.replace(textToReplace, ((RawTextComponent)replacement).toPlainText())));
 					continue;
 				}
 				int matchIdx = text.indexOf(textToReplace);
 				String textBefore = text.substring(0, matchIdx);
 				String textAfter = text.substring(matchIdx+textToReplace.length());
-				boolean replacementHasText = hasModifiableText(replacement);
+				boolean replacementHasText = hasSimpleRawText(replacement);
 				boolean canBeEmptyBefore = (replacementHasText ? ChatColor.stripColor(textBefore) : textBefore).isEmpty();
 				boolean canBeEmptyAfter = (replacementHasText ? ChatColor.stripColor(textAfter) : textAfter).isEmpty();
 				// Necessary to prevent accidentally creating a global selector
@@ -319,7 +394,7 @@ public class TellrawUtils{
 
 				Component replacementInst = replacement;
 				if(replacementHasText){
-					String replacementText = getModifiableText(replacement);
+					String replacementText = getSimpleRawText(replacement);
 					if(canBeEmptyBefore) replacementInst = copyWithNewText(replacement, textBefore + replacementText);
 					if(canBeEmptyAfter) replacementInst = copyWithNewText(replacement, replacementText + textAfter);
 				}
@@ -328,16 +403,16 @@ public class TellrawUtils{
 					components.set(i, replacementInst);
 				}
 				else if(canBeEmptyBefore){
-					txComp.setText(textAfter);
+					components.set(i, new RawTextComponent(textAfter));
 					components.add(i, replacementInst);
 				}
 				else if(canBeEmptyAfter){
-					txComp.setText(textBefore);
+					components.set(i, new RawTextComponent(textBefore));
 					if(++i == components.size()) components.add(last = replacementInst);
 					else components.add(i, replacementInst);
 				}
 				else{
-					txComp.setText(textBefore);
+					components.set(i, new RawTextComponent(textBefore));
 					RawTextComponent textAfterComp = new RawTextComponent(textAfter);
 					if(++i == components.size()){components.add(replacementInst); components.add(last = textAfterComp);}
 					else{components.add(i, textAfterComp); components.add(i, replacementInst);}
@@ -353,19 +428,89 @@ public class TellrawUtils{
 			return builder.toString();
 		}
 		@Override public String toString(){
-			String lastText = getModifiableText(last);
+			String lastText = getSimpleRawText(last);
 			while(lastText != null && ChatColor.stripColor(lastText).isEmpty()){
 				components.remove(components.size()-1);
 				last = components.isEmpty() ? null : components.get(components.size()-1);
-				if(last != null) lastText = getModifiableText(last);
+				if(last != null) lastText = getSimpleRawText(last);
 			}
 			switch(components.size()){
 				case 0: return "\"\"";
 				case 1: return components.get(0).toString();
 				default: return new StringBuilder().append('[').append(
-							components.stream().map(cmp -> cmp.toString()).collect(Collectors.joining(","))
+							components.stream().map(Component::toString).collect(Collectors.joining(","))
 						).append(']').toString();
 			}
 		}
+	}
+
+	private final static String getColorName(char[] msg, int i){
+		switch(msg[i]){
+			case '0': return "black";
+			case '1': return "dark_blue";
+			case '2': return "dark_green";
+			case '3': return "dark_aqua";
+			case '4': return "dark_red";
+			case '5': return "dark_purple";
+			case '6': return "gold";
+			case '7': return "gray";
+			case '8': return "dark_gray";
+			case '9': return "blue";
+			case 'a': return "green";
+			case 'b': return "aqua";
+			case 'c': return "red";
+			case 'd': return "light_purple";
+			case 'e': return "yellow";
+			case 'f': return "white";
+			case 'r': return "white";
+			case 'x': return "#"+msg[i+2]+msg[i+4]+msg[i+6]+msg[i+8]+msg[i+10]+msg[i+12];
+			default: return null;
+		}
+	}
+	private final static FormatFlag getFormat(char ch){
+		switch(ch){
+			case 'l': return FormatFlag.BOLD_TRUE;
+			case 'o': return FormatFlag.ITALIC_TRUE;
+			case 'n': return FormatFlag.UNDERLINED_TRUE;
+			case 'm': return FormatFlag.STRIKETHROUGH_TRUE;
+			case 'k': return FormatFlag.OBFUSCATED_TRUE;
+			default: return null;
+		}
+	}
+	public final static TellrawBlob translateSpigotColorCodesToComponents(String textToTranslate){
+		TellrawBlob blob = new TellrawBlob();
+		String currentColor = "r"; // 
+		HashSet<FormatFlag> currentFormats = new HashSet<>();// We can simplify by only storing <FORMAT>_TRUE values (if not-contains, assume false)
+
+		Pattern pattern = Pattern.compile("§(?:[0-9a-fA-Fk-oK-O]|x(?:§[0-9a-fA-F]){6})");// Matches only valid colors, formats, and hex colors
+		Matcher matcher = pattern.matcher(textToTranslate);
+		int lastTextStart = 0;
+		while(matcher.find()){
+			String lastText = textToTranslate.substring(lastTextStart, matcher.start());
+			FormatFlag newFormat = getFormat(matcher.group().charAt(1));
+			if(newFormat != null){
+				if(currentFormats.contains(newFormat))
+				if(lastText.trim().isEmpty());
+			}
+			switch(matcher.group(1)){
+				
+			}
+		}
+		
+//		char[] msg = textToTranslate.toCharArray();
+//		for(int i=0; i<msg.length-1; ++i){
+//			if(msg[i] != ChatColor.COLOR_CHAR) currentText.append(msg[i]);
+//			else switch(msg[i+1]){
+//				case 'l': bold = true;
+//			}
+//			if(colorPick){
+//				String newColor = getColorName(msg, i);
+//				String newFormat;
+//				if(newColor == null)
+//			}
+//			else if(!(colorPick=(ch == ChatColor.COLOR_CHAR))) currentText.append(ch);
+//			
+//		}
+		return blob;
 	}
 }
