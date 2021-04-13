@@ -104,10 +104,10 @@ public class WebUtils {
 		if(matbeg.find()) resbeg = matbeg.end();
 
 		Pattern patend = Pattern.compile(Pattern.quote(end));
-		Matcher matend = patend.matcher(base);
+		Matcher matend = patend.matcher(base.substring(resbeg));
 		if(matend.find()) resend = matend.start();
 
-		return base.substring(resbeg, resend);
+		return base.substring(resbeg, resbeg+resend);
 	}
 
 	static String authenticateMojang(String username, String password){
@@ -120,7 +120,7 @@ public class WebUtils {
 		String output = postReadURL(payload, authserver + "/authenticate");
 
 		// Setting up patterns
-		String authBeg = "{\"accessToken\":\"";
+		String authBeg = "\"accessToken\":\"";
 		String authEnd = "\",\"";
 
 		return getStringBetween(output, authBeg, authEnd);
@@ -190,22 +190,22 @@ public class WebUtils {
 					//===========================================================================================
 					try{Thread.sleep(8000);}catch(InterruptedException e1){e1.printStackTrace();}//8s
 					//https://api.mojang.com/user/profile/0e314b6029c74e35bef33c652c8fb467/skin
-					conn = (HttpURLConnection)new URL("https://api.mojang.com/user/profile/" + uuid + "/skin")
-							.openConnection();
+					conn = (HttpURLConnection)new URL("https://api.minecraftservices.com/minecraft/profile/skins").openConnection();
+//					conn = (HttpURLConnection)new URL("https://api.mojang.com/user/profile/" + uuid + "/skin").openConnection();
 					conn.setRequestProperty("Authorization", "Bearer "+token);
-					conn.setRequestProperty("Content-Length", "6000");
-					String boundary = "-----------------------------5754010136459630501171145765";//"someArbitraryText";
+					conn.setRequestProperty("Content-Length", "15000");
+					String boundary = "---------------------------398324416436304970652995196601";//"someArbitraryText";
 					conn.setRequestProperty("Content-Type", "multipart/form-data; boundary="+boundary);
 					conn.setDoInput(true);
 					conn.setDoOutput(true);
-					conn.setRequestMethod("PUT");
+					conn.setRequestMethod("POST");
 					OutputStream conn_out = conn.getOutputStream();
 					BufferedWriter conn_out_writer = new BufferedWriter(new OutputStreamWriter(conn_out));
 
 					conn_out_writer.write("\r\n--"+boundary+"\r\n");
-					conn_out_writer.write("Content-Disposition: form-data; name=\"model\"\r\n\r\nclassic");
+					conn_out_writer.write("Content-Disposition: form-data; name=\"variant\"\r\n\r\nclassic");
 					conn_out_writer.write("\r\n--"+boundary+"\r\n");
-					conn_out_writer.write("Content-Disposition: form-data; name=\"file\"; filename=\"yeet.png"+"\"\r\n");
+					conn_out_writer.write("Content-Disposition: form-data; name=\"file\"; filename=\"yeet_grumm.png"+"\"\r\n");
 					conn_out_writer.write("Content-Type: image/png\r\n\r\n");
 					conn_out_writer.flush();
 
@@ -264,6 +264,10 @@ public class WebUtils {
 
 	static void runGrumm(){
 		String[] targetHeads = new String[]{
+				"SHULKER|BLACK|CLOSED", "SHULKER|BLUE|CLOSED", "SHULKER|BROWN|CLOSED", "SHULKER|CLOSED", "SHULKER|CYAN|CLOSED",
+				"SHULKER|GRAY|CLOSED", "SHULKER|GREEN|CLOSED", "SHULKER|LIGHT_BLUE|CLOSED", "SHULKER|LIGHT_GRAY|CLOSED",
+				"SHULKER|LIME|CLOSED", "SHULKER|MAGENTA|CLOSED", "SHULKER|ORANGE|CLOSED", "SHULKER|PINK|CLOSED", "SHULKER|PURPLE|CLOSED",
+				"SHULKER|RED|CLOSED", "SHULKER|WHITE|CLOSED", "SHULKER|YELLOW|CLOSED"
 //				"BOAT", "LEASH_HITCH",
 		};
 		System.out.print("runGrumm() auth for "+targetHeads.length+" heads...\n"); 
