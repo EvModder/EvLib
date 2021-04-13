@@ -28,6 +28,7 @@ import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.session.ClipboardHolder;
 
+@SuppressWarnings("deprecation")
 public class WorldEditHook{
 	static WorldEditPlugin wep = null;
 	static WorldEdit we = null;
