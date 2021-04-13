@@ -104,15 +104,10 @@ public class HeadUtils {
 		return item;
 	}
 
-	public static String getPlayerHeadName(String playerName){return ChatColor.YELLOW+playerName+" Head";}
 	public static ItemStack getPlayerHead(GameProfile profile){
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
 		setGameProfile(meta, profile);
-		if(profile.getName() != null){
-			if(profile.getName().startsWith("MHF_")) meta.setDisplayName(ChatColor.YELLOW+profile.getName());
-			else meta.setDisplayName(getPlayerHeadName(profile.getName()));
-		}
 		head.setItemMeta(meta);
 		return head;
 	}
@@ -171,17 +166,18 @@ public class HeadUtils {
 		}
 	}
 
-	public static String getDroppedHeadTypeName(EntityType eType){  // Replaces `isSkeletal()`, which is now in DropHeads>JunkUtils
+	public enum HeadType{HEAD, SKULL, TOE}
+	public static HeadType getDroppedHeadType(EntityType eType){  // Replaces `isSkeletal()`, which is now in DropHeads>JunkUtils
 		switch(eType){
 			case SKELETON:
 			case SKELETON_HORSE:
 			case WITHER_SKELETON:
 			case STRAY:
-				return "Skull";
+				return HeadType.SKULL;
 			case GIANT:
-				return "Toe";
+				return HeadType.TOE;
 			default:
-				return "Head";
+				return HeadType.HEAD;
 		}
 	}
 
@@ -211,7 +207,9 @@ public class HeadUtils {
 		else{
 			GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(entity.name().getBytes()), entity.name());
 			HeadUtils.setGameProfile(meta, profile);
-			meta.setDisplayName(ChatColor.YELLOW+TextUtils.getNormalizedName(entity)+" "+getDroppedHeadTypeName(entity));
+			String headTypeName = getDroppedHeadType(entity).toString();
+			headTypeName = headTypeName.charAt(0) + headTypeName.substring(1).toLowerCase();
+			meta.setDisplayName(ChatColor.YELLOW+TextUtils.getNormalizedName(entity)+" "+headTypeName);
 		}
 		head.setItemMeta(meta);
 		return head;
