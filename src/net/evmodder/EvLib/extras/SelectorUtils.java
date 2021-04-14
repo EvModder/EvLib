@@ -56,7 +56,7 @@ public class SelectorUtils{
 		@Override public String toString(){return new StringBuilder(type.toString()).append("=").append(value).toString();}
 	}
 
-	enum SelectorType{
+	public enum SelectorType{
 		YOURSELF("@s"/* '*' also works */), NEAREST_PLAYER("@p"), RANDOM_PLAYER("@r"), ALL_PLAYERS("@a"), ALL_ENTITIES("@e"), UUID("");
 		String toString;
 		SelectorType(String toString){this.toString = toString;}

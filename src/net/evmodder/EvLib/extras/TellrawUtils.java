@@ -120,14 +120,33 @@ public class TellrawUtils{
 									.append("\",\"value\":\"").append(TextUtils.escape(hoverAction.value, "\"","\n")).append("\"}");
 			return builder.toString();// Starts with a comma, formerly was builder.substring(1);
 		}
+		// Returns null if this component could NOT possibly be a Selector matching exactly 1 target
+		UUID potentialSingleMatchSelector(){
+			if(this instanceof SelectorComponent == false) return null;
+			Object selector = ((SelectorComponent)this).selector;
+			try{
+				UUID uuid = selector instanceof UUID ? (UUID)selector : UUID.fromString(selector.toString());
+				if(Bukkit.getEntity(uuid) != null) return uuid;
+			}
+			catch(IllegalArgumentException ex){};
+			try{
+				Class<?> clazz = Class.forName("net.evmodder.EvLib.extras.SelectorUtils.Selector");
+				@SuppressWarnings("unchecked")
+				Collection<Entity> entities = (Collection<Entity>)clazz.getMethod("resolve").invoke(selector);
+				entities.removeIf(e -> e == null);
+				if(entities.size() == 1) return entities.iterator().next().getUniqueId();
+			}
+			catch(Exception ex){return UUID.randomUUID();}// assume this matches an unknown single entity
+			return null;
+		}
 		boolean samePropertiesAs(Component other){
 			return (getInsertion() == null ? other.getInsertion() == null : getInsertion().equals(other.getInsertion())) &&
 					(getClickAction() == null ? other.getClickAction() == null : getClickAction().equals(other.getClickAction())) &&
 					(getHoverAction() == null ? other.getHoverAction() == null : getHoverAction().equals(other.getHoverAction())) &&
 					(getColor() == null ? other.getColor() == null : getColor().equals(other.getColor())) &&
 					(getFormats() == null ? other.getFormats() == null : (other.getFormats() != null && Arrays.equals(getFormats(), other.getFormats()))) &&
-					(this instanceof SelectorComponent == other instanceof SelectorComponent) &&
-					(!(this instanceof SelectorComponent) || ((SelectorComponent)this).selector.equals(((SelectorComponent)other).selector));
+					(potentialSingleMatchSelector() == null ? other.potentialSingleMatchSelector() == null
+						: potentialSingleMatchSelector().equals(other.potentialSingleMatchSelector()));
 		}
 		// True if @other doesn't override any of the properties of this component
 		boolean noOverridingProperties(Component other){
@@ -137,8 +156,7 @@ public class TellrawUtils{
 					other.getColor() == null || other.getColor().equals(getColor()) &&
 					(other.getFormats() == null || other.getFormats().length == 0 ||
 						(getFormats() != null && Arrays.asList(getFormats()).containsAll(Arrays.asList(other.getFormats())))) &&
-					(this instanceof SelectorComponent == other instanceof SelectorComponent) &&
-					(!(this instanceof SelectorComponent) || ((SelectorComponent)this).selector.equals(((SelectorComponent)other).selector));
+					(other.potentialSingleMatchSelector() == null || other.potentialSingleMatchSelector().equals(potentialSingleMatchSelector()));
 		}
 
 		public abstract String toString();
@@ -150,6 +168,12 @@ public class TellrawUtils{
 		public RawTextComponent(@Nonnull String text, String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
 			super(insert, click, hover, color, formats);
 			this.text = text;
+		}
+		public RawTextComponent(@Nonnull String text, @Nonnull TextClickAction click){
+			this(text, /*insert=*/null, click, /*hover=*/null, /*color=*/null, /*formats=*/null);
+		}
+		public RawTextComponent(@Nonnull String text, @Nonnull TextHoverAction hover){
+			this(text, /*insert=*/null, /*click=*/null, hover, /*color=*/null, /*formats=*/null);
 		}
 		//tellraw @a "test"
 		//tellraw @a {"text":"test"}
@@ -247,7 +271,8 @@ public class TellrawUtils{
 			Collection<String> names = null;
 			try{
 				UUID uuid = selector instanceof UUID ? (UUID)selector : UUID.fromString(selector.toString());
-				names = Arrays.asList(getNormalizedName(Bukkit.getEntity(uuid), useDisplayName));
+				Entity entity = Bukkit.getEntity(uuid);
+				if(entity != null) names = Arrays.asList(getNormalizedName(entity, useDisplayName));
 			}
 			catch(IllegalArgumentException ex){};
 			if(names == null) try{
