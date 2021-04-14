@@ -3,11 +3,8 @@ package net.evmodder.EvLib.extras;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.bukkit.Bukkit;
@@ -39,6 +36,24 @@ public class TellrawUtils{
 
 		@Override public String toString(){return name().toLowerCase();}
 	}
+	public final static class TextClickAction{
+		final ClickEvent event;
+		final String value;
+		public TextClickAction(@Nonnull ClickEvent event, @Nonnull String value){this.event = event; this.value = value;}
+		@Override public boolean equals(Object other){
+			return other != null && other instanceof TextClickAction
+					&& ((TextClickAction)other).event.equals(event) && ((TextClickAction)other).value.equals(value);
+		}
+	}
+	public final static class TextHoverAction{
+		final HoverEvent event;
+		final String value;
+		public TextHoverAction(@Nonnull HoverEvent event, @Nonnull String value){this.event = event; this.value = value;}
+		@Override public boolean equals(Object other){
+			return other != null && other instanceof TextHoverAction
+					&& ((TextHoverAction)other).event.equals(event) && ((TextHoverAction)other).value.equals(value);
+		}
+	}
 
 	public enum Keybind{
 		ATTACK("key.attack"), USE("key.use"),
@@ -57,76 +72,160 @@ public class TellrawUtils{
 		@Override public String toString(){return toString;}
 	};
 
-	public enum FormatFlag{
-		BOLD_TRUE, BOLD_FALSE,
-		ITALIC_TRUE, ITALIC_FALSE,
-		UNDERLINED_TRUE, UNDERLINED_FALSE,
-		STRIKETHROUGH_TRUE, STRIKETHROUGH_FALSE,
-		OBFUSCATED_TRUE, OBFUSCATED_FALSE;
-
-		@Override public String toString(){
-			String lowername = name().toLowerCase();
-			int underscore = lowername.indexOf('_');
-			return '"'+lowername.substring(0, underscore)+"\":"+lowername.substring(underscore+1);
+	public enum Format{BOLD, ITALIC, UNDERLINED, STRIKETHROUGH, OBFUSCATED}
+	public final static class FormatFlag{
+		final Format format;
+		final boolean value;
+		public FormatFlag(@Nonnull Format format, boolean value){this.format = format; this.value = value;}
+		@Override public String toString(){return new StringBuilder('"').append(format.toString().toLowerCase()).append("\":").append(value).toString();}
+		@Override public boolean equals(Object other){
+			return other != null && other instanceof FormatFlag && ((FormatFlag)other).format.equals(format) && ((FormatFlag)other).value == value;
 		}
 	}
 
-	// TellrawBlob stuff
+	// From wiki: Content tags are checked in the order: text, translate, score, selector, keybind, nbt.
 	public static abstract class Component{
-		abstract public String toPlainText();
+		final private String insertion; // When the text is shift-clicked by a player, this string is inserted in their chat input.
+		final private TextClickAction clickAction;
+		final private TextHoverAction hoverAction;
+		final private String color;
+		final private FormatFlag[] formats;
+		final boolean hasProperties;
+
+		String getInsertion(){return insertion;}
+		TextClickAction getClickAction(){return clickAction;}
+		TextHoverAction getHoverAction(){return hoverAction;}
+		String getColor(){return color;}
+		FormatFlag[] getFormats(){return formats;}
+
+		private Component(String insertion, TextClickAction clickAction, TextHoverAction hoverAction, String color, FormatFlag... formats){
+			this.insertion = insertion; this.clickAction = clickAction; this.hoverAction = hoverAction; this.color = color; this.formats = formats;
+			hasProperties = insertion != null || clickAction != null || hoverAction != null || color != null || (formats != null && formats.length > 0);
+			if(Arrays.stream(formats).map(formatFlag -> formatFlag.format).distinct().count() < formats.length){
+				throw new IllegalArgumentException("Multiple FormatFlags in a Component cannot reference the same Format type");
+			}
+		}
+		private Component(){this(/*insertion=*/null, /*clickAction=*/null, /*hoverAction=*/null, /*color=*/null, /*formats=*/null);}
+
+		String getProperties(){
+			if(!hasProperties) return "";
+			StringBuilder builder = new StringBuilder();
+			if(insertion != null) builder.append(",\"insertion\":\"").append(TextUtils.escape(insertion, "\"","\n")).append('"');
+			if(color != null) builder.append(",\"color\":\"").append(color).append('"');
+			if(formats != null && formats.length > 0) builder.append(',')
+									.append(Arrays.stream(formats).map(FormatFlag::toString).collect(Collectors.joining(",")));
+			if(clickAction != null) builder.append(",\"clickEvent\":{\"action\":\"").append(clickAction.event)
+									.append("\",\"value\":\"").append(TextUtils.escape(clickAction.value, "\"","\n")).append("\"}");
+			if(hoverAction != null) builder.append(",\"hoverEvent\":{\"action\":\"").append(hoverAction.event)
+									.append("\",\"value\":\"").append(TextUtils.escape(hoverAction.value, "\"","\n")).append("\"}");
+			return builder.toString();// Starts with a comma, formerly was builder.substring(1);
+		}
+		boolean samePropertiesAs(Component other){
+			return (getInsertion() == null ? other.getInsertion() == null : getInsertion().equals(other.getInsertion())) &&
+					(getClickAction() == null ? other.getClickAction() == null : getClickAction().equals(other.getClickAction())) &&
+					(getHoverAction() == null ? other.getHoverAction() == null : getHoverAction().equals(other.getHoverAction())) &&
+					(getColor() == null ? other.getColor() == null : getColor().equals(other.getColor())) &&
+					(getFormats() == null ? other.getFormats() == null : (other.getFormats() != null && Arrays.equals(getFormats(), other.getFormats()))) &&
+					(this instanceof SelectorComponent == other instanceof SelectorComponent) &&
+					(!(this instanceof SelectorComponent) || ((SelectorComponent)this).selector.equals(((SelectorComponent)other).selector));
+		}
+		// True if @other doesn't override any of the properties of this component
+		boolean noOverridingProperties(Component other){
+			return (other.getInsertion() == null || other.getInsertion().equals(getInsertion())) &&
+					other.getClickAction() == null || other.getClickAction().equals(getClickAction()) &&
+					other.getHoverAction() == null || other.getHoverAction().equals(getHoverAction()) &&
+					other.getColor() == null || other.getColor().equals(getColor()) &&
+					(other.getFormats() == null || other.getFormats().length == 0 ||
+						(getFormats() != null && Arrays.asList(getFormats()).containsAll(Arrays.asList(other.getFormats())))) &&
+					(this instanceof SelectorComponent == other instanceof SelectorComponent) &&
+					(!(this instanceof SelectorComponent) || ((SelectorComponent)this).selector.equals(((SelectorComponent)other).selector));
+		}
+
+		public abstract String toString();
+		public abstract String toPlainText();
 	};
-	// ComputedTextComponents can be used in a hoverEvent or clickEvent
-	public static abstract class ComputedTextComponent extends Component{
-		abstract public String toStringKV();// Returns a list of '"key1":"value1","key2":"value2",...'
-	};
-	public final static class RawTextComponent extends ComputedTextComponent{
+	public final static class RawTextComponent extends Component{
 		final String text;
-		final String insertion; // Optional. When the text is shift-clicked by a player, this string is inserted in their chat input.
-		final String color;
-		final FormatFlag[] formats;
-		public RawTextComponent(@Nonnull String text){this.text = text; insertion = null; color = null; formats = null;}
-		public RawTextComponent(@Nonnull String text, @Nonnull String insertion){this.text = text; this.insertion = insertion; color = null; formats = null;}
-		public RawTextComponent(@Nonnull String text, @Nonnull String insertion, @Nonnull String color){
-			this.text = text; this.insertion = null; this.color = color; formats = null;}
-		public RawTextComponent(@Nonnull String text, @Nonnull String insertion, @Nonnull String color, FormatFlag... formats){
-			this.text = text; this.insertion = null; this.color = color; this.formats = formats;}
-//		public void setText(@Nonnull String text){this.text = text;}
+		public RawTextComponent(@Nonnull String text){this.text = text;}
+		public RawTextComponent(@Nonnull String text, String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+			super(insert, click, hover, color, formats);
+			this.text = text;
+		}
 		//tellraw @a "test"
 		//tellraw @a {"text":"test"}
 		//tellraw @a {"text":"test","insertion":"hi there"}
 
-		
-
-		
-		
-		
-		
-		
-		// they all inherit color/format/selector etc from the 1st element in the list
-		///tellraw EvDoc ["",{"text":"E","bold":true},"e",{"text":"1343","bold":false},"23"]
-		
-		
-		
-		
-		
-		
-		
-		
 		@Override public String toPlainText(){return text;}
-		@Override public String toStringKV(){
-			StringBuilder builder = new StringBuilder().append("\"text\":\"").append(TextUtils.escape(text, "\"","\n")).append('"');
-			if(insertion != null) builder.append(",\"insertion\":\"").append(TextUtils.escape(insertion, "\"","\n")).append('"');
-			if(color != null) builder.append(",\"color\":\"").append(color).append('"');
-			if(formats != null && formats.length > 0){
-				builder.append(',').append(Arrays.stream(formats).map(FormatFlag::toString).collect(Collectors.joining(",")));
-			}
-			return builder.toString();
+		@Override public String toString(){
+			String escapedText = TextUtils.escape(text, "\"","\n");
+			return !hasProperties
+					? new StringBuilder().append('"').append(escapedText).append('"').toString()
+					: new StringBuilder("{\"text\":\"").append(escapedText).append('"').append(getProperties()).append('}').toString();
+		}
+	}
+	public final static class TranslationComponent extends Component{
+		final String jsonKey;
+		final Component[] with; // Used to replace "%s" placeholders in the translation text.
+		public TranslationComponent(@Nonnull String jsonKey){this.jsonKey = jsonKey; with = null;} //TODO: validate json key?
+		public TranslationComponent(@Nonnull String jsonKey, @Nonnull Component... with){this.jsonKey = jsonKey; this.with = with;}
+		public TranslationComponent(@Nonnull String jsonKey, Component[] with,
+				String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+			super(insert, click, hover, color, formats);
+			this.jsonKey = jsonKey;
+			this.with = with;
+		}
+		//tellraw @a {"translate":"multiplayer.player.joined","with":["EvDoc", "unused"]} -> en_us.json: "%s joined the game"
+
+		@Override public String toPlainText(){
+			// This is ONLY correct when the key is invalid/unknown to the client!
+			return String.format(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
+			//TODO: EN_US.json(or server default) -> LOOKUP ASSOCIATED VALUE and return that instead!
 		}
 		@Override public String toString(){
-			return insertion == null && color == null && (formats == null || formats.length == 0)
-				// Note: enclosing "" quotes aren't technically required if text is just a number or boolean (true/false), but we add them anyway.
-				? new StringBuilder().append('"').append(TextUtils.escape(text, "\"","\n")).append('"').toString()
-				: new StringBuilder().append('{').append(toStringKV()).append('}').toString();
+			StringBuilder builder = new StringBuilder().append("{\"translate\":\"").append(jsonKey).append('"');
+			if(with != null && with.length > 0) builder.append(",\"with\":[").append(
+					Arrays.stream(with).map(Component::toString).collect(Collectors.joining(","))).append(']');
+			return builder.append(getProperties()).append('}').toString();
+		}
+	}
+	public final static class ScoreComponent extends Component{
+		final Object selector;
+		final Objective objective;
+		String value; // Optional; overwrites output of score selector
+		public ScoreComponent(@Nonnull Object selector, @Nonnull Objective objective){this.selector = selector; this.objective = objective;}
+		public ScoreComponent(@Nonnull String name, @Nonnull Objective objective){this.selector = name; this.objective = objective;}
+		public ScoreComponent(@Nonnull Object selector, @Nonnull Objective objective,
+				String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+			super(insert, click, hover, color, formats);
+			this.selector = selector;
+			this.objective = objective;
+		}
+		//tellraw @a {"score":{"name":"@p","objective":"levels","value":"3333"}}
+
+		@Override public String toPlainText(){
+			String name = null;
+			try{
+				UUID uuid = UUID.fromString(selector.toString());
+				name = Bukkit.getEntity(uuid).getName();
+			}
+			catch(IllegalArgumentException ex){};
+			try{
+				Class<?> clazz = Class.forName("net.evmodder.EvLib.extras.SelectorUtils.Selector");
+				@SuppressWarnings("unchecked")
+				Collection<Entity> entities = (Collection<Entity>)clazz.getMethod("resolve").invoke(selector);
+				if(entities.size() > 1) return "ERROR: more than 1 entity matched with score selector!";
+				if(entities.isEmpty()) return "";
+				name = entities.iterator().next().getName();
+			}
+			catch(Exception ex){name = selector.toString();}
+			if(name == null) return "";
+			return ""+objective.getScore(name).getScore();
+		}
+		@Override public String toString(){
+			StringBuilder builder = new StringBuilder().append("\"score\":{\"name\":\"")
+					.append(selector.toString()).append("\",\"objective\":\"").append(objective.getName()).append('"');
+			if(value != null) builder.append(",\"value\":\"").append(TextUtils.escape(value, "\"","\n")).append('"');
+			return builder.append('}').append(getProperties()).append('}').toString();
 		}
 	}
 	public final static class SelectorComponent extends Component{
@@ -161,205 +260,59 @@ public class TellrawUtils{
 			return String.join(ChatColor.GRAY+", "+ChatColor.RESET, names);
 		}
 		@Override public String toString(){
-			return new StringBuilder().append("{\"selector\":\"").append(TextUtils.escape(selector.toString(), "\"","\n")).append("\"}").toString();
+			return new StringBuilder().append("{\"selector\":\"").append(TextUtils.escape(selector.toString(), "\"","\n"))
+					.append(getProperties()).append("\"}").toString();
 		}
 	}
-	public final static class TranslationComponent extends ComputedTextComponent{
-		final String jsonKey;
-		final Component[] with; // Used to replace "%s" placeholders in the translation text.
-		public TranslationComponent(@Nonnull String jsonKey){this.jsonKey = jsonKey; with = null;} //TODO: validate json key?
-		public TranslationComponent(@Nonnull String jsonKey, @Nonnull Component... with){this.jsonKey = jsonKey; this.with = with;}
-		//tellraw @a {"translate":"multiplayer.player.joined","with":["EvDoc", "unused"]} -> en_us.json: "%s joined the game"
-
-		@Override public String toPlainText(){
-			return jsonKey; // This is ONLY correct when the key is invalid/unknown to the client!
-			//TODO: EN_US.json(or server default) -> LOOKUP ASSOCIATED VALUE and return that instead!
-		}
-		@Override public String toStringKV(){
-			StringBuilder builder = new StringBuilder().append("\"translate\":\"").append(jsonKey).append('"');
-			if(with != null && with.length > 0) builder.append(",\"with\":[").append(
-					Arrays.stream(with).map(Component::toString).collect(Collectors.joining(","))).append(']');
-			return builder.toString();
-		}
-		@Override public String toString(){return new StringBuilder().append('{').append(toStringKV()).append('}').toString();}
-	}
-	public final static class ScoreComponent extends ComputedTextComponent{
-		final Object selector;
-		final Objective objective;
-		String value; // Optional; overwrites output of score selector
-		public ScoreComponent(@Nonnull Object selector, @Nonnull Objective objective){this.selector = selector; this.objective = objective;}
-		public ScoreComponent(@Nonnull String name, @Nonnull Objective objective){this.selector = name; this.objective = objective;}
-		//tellraw @a {"score":{"name":"@p","objective":"levels","value":"3333"}}
-
-		@Override public String toPlainText(){
-			String name = null;
-			try{
-				UUID uuid = UUID.fromString(selector.toString());
-				name = Bukkit.getEntity(uuid).getName();
-			}
-			catch(IllegalArgumentException ex){};
-			try{
-				Class<?> clazz = Class.forName("net.evmodder.EvLib.extras.SelectorUtils.Selector");
-				@SuppressWarnings("unchecked")
-				Collection<Entity> entities = (Collection<Entity>)clazz.getMethod("resolve").invoke(selector);
-				if(entities.size() > 1) return "ERROR: more than 1 entity matched with score selector!";
-				if(entities.isEmpty()) return "";
-				name = entities.iterator().next().getName();
-			}
-			catch(Exception ex){name = selector.toString();}
-			if(name == null) return "";
-			return ""+objective.getScore(name).getScore();
-		}
-		@Override public String toStringKV(){
-			StringBuilder builder = new StringBuilder().append("\"score\":{\"name\":\"")
-					.append(selector.toString()).append("\",\"objective\":\"").append(objective.getName()).append('"');
-			if(value != null) builder.append(",\"value\":\"").append(TextUtils.escape(value, "\"","\n")).append('"');
-			return builder.append("}").toString();
-		}
-		@Override public String toString(){return new StringBuilder().append('{').append(toStringKV()).append('}').toString();}
-	}
-	public final static class KeybindComponent extends ComputedTextComponent{
+	public final static class KeybindComponent extends Component{
 		final Keybind keybind;
-		public KeybindComponent(Keybind keybind){this.keybind = keybind;}
+		public KeybindComponent(@Nonnull Keybind keybind){this.keybind = keybind;}
 		//tellraw @a {"keybind":"of.key.zoom"}
-		@Override public String toPlainText(){return "TODO: KEY SETTING NAME HERE";}//TODO: resolve
-		@Override public String toStringKV(){return new StringBuilder().append("\"keybind\":\"").append(keybind).append('"').toString();}
-		@Override public String toString(){return new StringBuilder().append('{').append(toStringKV()).append('}').toString();}
-	}
-	public final static class TextClickAction{
-		final ClickEvent event;
-		final String value;
-		public TextClickAction(@Nonnull ClickEvent event, @Nonnull String value){this.event = event; this.value = value;}
-		@Override public boolean equals(Object other){
-			return other != null && other instanceof TextClickAction
-					&& ((TextClickAction)other).event.equals(event) && ((TextClickAction)other).value.equals(value);
-		}
-	}
-	public final static class TextHoverAction{
-		final HoverEvent event;
-		final String value;
-		public TextHoverAction(@Nonnull HoverEvent event, @Nonnull String value){this.event = event; this.value = value;}
-		@Override public boolean equals(Object other){
-			return other != null && other instanceof TextHoverAction
-					&& ((TextHoverAction)other).event.equals(event) && ((TextHoverAction)other).value.equals(value);
-		}
-	}
-	public final static class ActionComponent extends Component{
-		final ComputedTextComponent component;
-		final TextClickAction clickAction;
-		final TextHoverAction hoverAction;
-		public ComputedTextComponent getComputedText(){return component;}
-		public TextClickAction getClickAction(){return clickAction;}
-		public TextHoverAction getHoverAction(){return hoverAction;}
-
-		public ActionComponent(@Nonnull ComputedTextComponent component, @Nonnull TextClickAction clickAction, @Nonnull TextHoverAction hoverAction){
-			this.component = component;
-			this.clickAction = clickAction;
-			this.hoverAction = hoverAction;
-		}
-		public ActionComponent(@Nonnull ComputedTextComponent component, @Nonnull TextClickAction clickAction){
-			this(component, clickAction, null);
-		}
-		public ActionComponent(@Nonnull ComputedTextComponent component, @Nonnull TextHoverAction hoverAction){
-			this(component, null, hoverAction);
-		}
-		public ActionComponent(@Nonnull String text, @Nonnull TextClickAction clickAction, @Nonnull TextHoverAction hoverAction){
-			this(new RawTextComponent(text), clickAction, hoverAction);
-		}
-		public ActionComponent(@Nonnull String text, @Nonnull TextClickAction clickAction){
-			this(new RawTextComponent(text), clickAction, null);
-		}
-		public ActionComponent(@Nonnull String text, @Nonnull TextHoverAction hoverAction){
-			this(new RawTextComponent(text), null, hoverAction);
-		}
-		public ActionComponent(@Nonnull String text, @Nonnull ClickEvent clickEvent, @Nonnull String actionValue){
-			this(new RawTextComponent(text), new TextClickAction(clickEvent, actionValue), null);
-		}
-		public ActionComponent(@Nonnull String text, @Nonnull HoverEvent hoverEvent, @Nonnull String actionValue){
-			this(new RawTextComponent(text), null, new TextHoverAction(hoverEvent, actionValue));
-		}
-
-		boolean sameActionsAs(ActionComponent other){
-			return clickAction == null ? other.clickAction == null : clickAction.equals(other.clickAction)
-				&& hoverAction == null ? other.hoverAction == null : hoverAction.equals(other.hoverAction);
-		}
-
-		//minecraft:tellraw @a {"text":"[iron_hoe]","hoverEvent":{"action":"show_item","value":"{id:\"minecraft:iron_hoe\",Count:1b,tag:{Damage:2}}"}}
-		@Override public String toPlainText(){return component.toPlainText();}
+		@Override public String toPlainText(){return keybind.toString();}//TODO: KEY SETTING NAME HERE if possible?
 		@Override public String toString(){
-			StringBuilder builder = new StringBuilder().append('{').append(component.toStringKV());
-			if(clickAction != null) builder.append(",\"clickEvent\":{\"action\":\"").append(clickAction.event)
-									.append("\",\"value\":\"").append(TextUtils.escape(clickAction.value, "\"","\n")).append("\"}");
-			if(hoverAction != null) builder.append(",\"hoverEvent\":{\"action\":\"").append(hoverAction.event)
-									.append("\",\"value\":\"").append(TextUtils.escape(hoverAction.value, "\"","\n")).append("\"}");
-			return builder.append('}').toString();
+			return new StringBuilder().append("{\"keybind\":\"").append(keybind).append('"').append(getProperties()).append('}').toString();
 		}
 	}
-	public final static class TellrawBlob extends Component{
+
+	public final static class ListComponent extends Component{
+		@Override String getInsertion(){return components.isEmpty() ? null : components.get(0).getInsertion();}
+		@Override TextClickAction getClickAction(){return components.isEmpty() ? null : components.get(0).getClickAction();}
+		@Override TextHoverAction getHoverAction(){return components.isEmpty() ? null : components.get(0).getHoverAction();}
+		@Override String getColor(){return components.isEmpty() ? null : components.get(0).getColor();}
+		@Override FormatFlag[] getFormats(){return components.isEmpty() ? null : components.get(0).getFormats();}
 		Component last = null;
 		List<Component> components;
-		public TellrawBlob(Component...components){
+		public ListComponent(@Nonnull Component...components){
 			this.components = new ArrayList<>();
 			for(Component comp : components) addComponent(comp);
 		}
 		//TODO: make this NOT public?
-		public List<Component> getComponents(){
-			return components;
-		}
+		public List<Component> getComponents(){return components;}
 
-		// TODO: make this an attribute of abstract Component class instead?
-		private boolean hasSimpleRawText(Component comp){
-			return comp instanceof RawTextComponent || (comp instanceof ActionComponent
-					&& ((ActionComponent)comp).getComputedText() instanceof RawTextComponent);
-		}
-		private String getSimpleRawText(Component comp){
-			return comp instanceof RawTextComponent ? ((RawTextComponent)comp).toPlainText() :
-					comp instanceof ActionComponent && ((ActionComponent)comp).getComputedText() instanceof RawTextComponent
-					? ((RawTextComponent)((ActionComponent)comp).getComputedText()).toPlainText() : null;
-		}
-		private Component copyWithNewText(Component comp, String text){
-			if(comp instanceof RawTextComponent){
-				return new RawTextComponent(text);
-			}
-			else if(comp instanceof ActionComponent && ((ActionComponent)comp).getComputedText() instanceof RawTextComponent){
-				return new ActionComponent(text, ((ActionComponent)comp).getClickAction(), ((ActionComponent)comp).getHoverAction());
-			}
-			// else throw error?
-			return null;
-		}
-		private boolean canSafelyMergeText(Component comp1, Component comp2){
-			return (comp1 instanceof RawTextComponent && comp2 instanceof RawTextComponent) ||
-				(comp1 instanceof ActionComponent && comp2 instanceof ActionComponent && ((ActionComponent)comp1).sameActionsAs((ActionComponent)comp2));
+		private RawTextComponent copyWithNewText(@Nonnull RawTextComponent comp, @Nonnull String text){
+			return new RawTextComponent(text, comp.getInsertion(), comp.getClickAction(), comp.getHoverAction(), comp.getColor(), comp.getFormats());
 		}
 		public boolean addComponent(@Nonnull Component component){
-			if(component instanceof TellrawBlob){
-				TellrawBlob blob = (TellrawBlob) component;
-				if(blob.getComponents().isEmpty()) return false;
-				// We can safely flatten TellrawBlobs, UNLESS they start with a selector component
-				if(blob.getComponents().get(0) instanceof SelectorComponent == false){
-					for(Component comp : blob.getComponents()) addComponent(comp);
+			if(component.toPlainText().isEmpty()) return false;
+			if(component instanceof RawTextComponent){
+				if(ChatColor.stripColor(component.toPlainText()).isEmpty()) return false;
+				if(last != null && last instanceof RawTextComponent && last.noOverridingProperties(component)){
+					components.remove(components.size()-1);
+					components.add(last = copyWithNewText((RawTextComponent)last, last.toPlainText() + component.toPlainText()));
+					return true;
+				}
+			}
+			if(component instanceof ListComponent){
+				// We can safely flatten nested TellrawBlobs IFF they don't override any of the parent's "group properties"
+				if(noOverridingProperties(component)){
+					for(Component comp : ((ListComponent)component).getComponents()) addComponent(comp);
 					return true;
 				}
 				return components.add(last = component);
 			}
-			String compText = getSimpleRawText(component);
-			if(compText != null){
-				if(compText.isEmpty()) return false;
-				boolean isEmpty = ChatColor.stripColor(compText).isEmpty();
-				if(last != null && hasSimpleRawText(last) && (isEmpty || canSafelyMergeText(component, last))){
-					components.remove(components.size()-1);
-					components.add(last = copyWithNewText(component, getSimpleRawText(last) + compText));
-					return true;
-				}
-				else if(isEmpty) return components.add(last = new RawTextComponent(compText));
-			}
 			return components.add(last = component);
 		}
 		public void addComponent(@Nonnull String text){addComponent(new RawTextComponent(text));}
-//		public void addComponent(@Nonnull Keybind keybind){addComponent(new KeybindComponent(keybind));}
-//		public void addComponent(@Nonnull Selector selector){addComponent(new SelectorComponent(selector));}
-//		public void addComponent(@Nonnull String txt, @Nonnull ClickEvent evt, @Nonnull String val){addComponent(new ActionComponent(txt, evt, val));}
-//		public void addComponent(@Nonnull String txt, @Nonnull HoverEvent evt, @Nonnull String val){addComponent(new ActionComponent(txt, evt, val));}
 
 		/**
 		 * Loops through all RawTextComponents in this instance and replaces all occurances of @textToReplace with the @replacement component
@@ -372,48 +325,49 @@ public class TellrawUtils{
 			boolean updated = false;
 			for(int i=0; i<components.size(); ++i){
 				Component comp = components.get(i);
-				if(comp instanceof TellrawBlob){
-					if(((TellrawBlob)comp).replaceRawDisplayTextWithComponent(textToReplace, replacement)) updated = true;
+				if(comp instanceof ListComponent){
+					if(((ListComponent)comp).replaceRawDisplayTextWithComponent(textToReplace, replacement)) updated = true;
 				}
 				if(comp instanceof RawTextComponent == false) continue;
 				RawTextComponent txComp = (RawTextComponent) comp;
 				final String text = txComp.toPlainText();
 				if(text.contains(textToReplace) == false) continue;
-				if(replacement instanceof RawTextComponent){
-					components.set(i, new RawTextComponent(text.replace(textToReplace, ((RawTextComponent)replacement).toPlainText())));
+				boolean replacementIsRawText = replacement instanceof RawTextComponent;
+
+				if(replacementIsRawText && txComp.noOverridingProperties(replacement)){
+					components.set(i, copyWithNewText(txComp, text.replace(textToReplace, ((RawTextComponent)replacement).toPlainText())));
 					continue;
 				}
 				int matchIdx = text.indexOf(textToReplace);
 				String textBefore = text.substring(0, matchIdx);
 				String textAfter = text.substring(matchIdx+textToReplace.length());
-				boolean replacementHasText = hasSimpleRawText(replacement);
-				boolean canBeEmptyBefore = (replacementHasText ? ChatColor.stripColor(textBefore) : textBefore).isEmpty();
-				boolean canBeEmptyAfter = (replacementHasText ? ChatColor.stripColor(textAfter) : textAfter).isEmpty();
-				// Necessary to prevent accidentally creating a global selector
-				if(i == 0 && replacement instanceof SelectorComponent && canBeEmptyBefore){components.add(0, new RawTextComponent("")); i = 1;}
+				boolean emptyBefore = (replacementIsRawText ? ChatColor.stripColor(textBefore) : textBefore).isEmpty();
+				boolean emptyAfter = (replacementIsRawText ? ChatColor.stripColor(textAfter) : textAfter).isEmpty();
+				// Necessary to prevent overriding this ListComponent's group properties
+				if(i == 0 && emptyBefore && !this.samePropertiesAs(replacement)){components.add(0, copyWithNewText(txComp, "")); i = 1;}
 
 				Component replacementInst = replacement;
-				if(replacementHasText){
-					String replacementText = getSimpleRawText(replacement);
-					if(canBeEmptyBefore) replacementInst = copyWithNewText(replacement, textBefore + replacementText);
-					if(canBeEmptyAfter) replacementInst = copyWithNewText(replacement, replacementText + textAfter);
+				if(replacementIsRawText){
+					String replacementText = replacement.toPlainText();
+					if(emptyBefore) replacementInst = copyWithNewText((RawTextComponent)replacement, textBefore + replacementText);
+					if(emptyAfter) replacementInst = copyWithNewText((RawTextComponent)replacement, replacementText + textAfter);
 				}
-				if(canBeEmptyBefore && canBeEmptyAfter){
+				if(emptyBefore && emptyAfter){
 					if(i == components.size()-1) last = replacementInst;
 					components.set(i, replacementInst);
 				}
-				else if(canBeEmptyBefore){
-					components.set(i, new RawTextComponent(textAfter));
+				else if(emptyBefore){
+					components.set(i, copyWithNewText(txComp, textAfter));
 					components.add(i, replacementInst);
 				}
-				else if(canBeEmptyAfter){
+				else if(emptyAfter){
 					components.set(i, new RawTextComponent(textBefore));
 					if(++i == components.size()) components.add(last = replacementInst);
 					else components.add(i, replacementInst);
 				}
 				else{
-					components.set(i, new RawTextComponent(textBefore));
-					RawTextComponent textAfterComp = new RawTextComponent(textAfter);
+					components.set(i, copyWithNewText(txComp, textBefore));
+					RawTextComponent textAfterComp = copyWithNewText(txComp, textAfter);
 					if(++i == components.size()){components.add(replacementInst); components.add(last = textAfterComp);}
 					else{components.add(i, textAfterComp); components.add(i, replacementInst);}
 				}
@@ -428,11 +382,9 @@ public class TellrawUtils{
 			return builder.toString();
 		}
 		@Override public String toString(){
-			String lastText = getSimpleRawText(last);
-			while(lastText != null && ChatColor.stripColor(lastText).isEmpty()){
+			while(last instanceof RawTextComponent && ChatColor.stripColor(last.toPlainText()).isEmpty()){
 				components.remove(components.size()-1);
 				last = components.isEmpty() ? null : components.get(components.size()-1);
-				if(last != null) lastText = getSimpleRawText(last);
 			}
 			switch(components.size()){
 				case 0: return "\"\"";
@@ -443,7 +395,7 @@ public class TellrawUtils{
 			}
 		}
 	}
-
+/*
 	private final static String getColorName(char[] msg, int i){
 		switch(msg[i]){
 			case '0': return "black";
@@ -512,5 +464,5 @@ public class TellrawUtils{
 //			
 //		}
 		return blob;
-	}
+	}*/
 }

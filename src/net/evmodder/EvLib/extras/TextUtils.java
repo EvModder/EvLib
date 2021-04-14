@@ -237,7 +237,7 @@ public class TextUtils{
 	public static String escape(String str, String... thingsToEscape){
 		str = str.replace("\\", "\\\\");//Escape escapes first!
 		for(String item : thingsToEscape){
-			//TODO: special handling for special characters
+			//TODO: special handling for more special characters
 			if(item.equals("\n")) str = str.replace("\n", "\\n");
 			else str = str.replace(item, "\\"+item);
 		}

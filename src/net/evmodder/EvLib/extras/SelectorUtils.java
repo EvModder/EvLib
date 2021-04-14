@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -33,7 +34,7 @@ public class SelectorUtils{
 	}
 	enum SortType{NEAREST, FURTHEST, RANDOM, ARBITRARY};
 
-	public static class SelectorArgument{
+	public final static class SelectorArgument{
 		final String/*SelectorArgumentType*/ type;
 		final String value;
 		public SelectorArgument(SelectorArgumentType argumentType, String value){
@@ -65,21 +66,14 @@ public class SelectorUtils{
 			throw new IllegalArgumentException("Unable to parse SelectorType from string: "+str);
 		}
 	}
-	public static class Selector{
+	public final static class Selector{
 		final SelectorType type;
-		final List<SelectorArgument> arguments;
+		final List<SelectorArgument> arguments;//can be null
 //		final UUID uuid;
 		final CommandSender executer;
-		final Location origin;
+		final Location origin;//can be null
 
-		public Selector(UUID uuid){
-			this.type = SelectorType.UUID;
-//			this.uuid = uuid;
-			this.executer = Bukkit.getEntity(uuid);
-			this.origin = null;
-			this.arguments = null;
-		}
-		private Location getOrigin(CommandSender sender){
+		private Location getOrigin(@Nonnull CommandSender sender){
 			return
 					executer instanceof Entity ? ((Entity)executer).getLocation() :
 					executer instanceof BlockCommandSender ? ((BlockCommandSender)executer).getBlock().getLocation() :
@@ -89,7 +83,7 @@ public class SelectorUtils{
 					new Location(Bukkit.getWorlds().get(0), 0, 0, 0);// No joke, this is actually what it does (checked 2020-04-22)
 //					null;
 		}
-		public Selector(SelectorType type, CommandSender executer, SelectorArgument...arguments){
+		public Selector(@Nonnull SelectorType type, @Nonnull CommandSender executer, @Nonnull SelectorArgument...arguments){
 			if(type == SelectorType.UUID) throw new IllegalArgumentException("Please provide just the UUID of the entity to select");
 			this.type = type;
 			this.arguments = Arrays.asList(arguments);
@@ -97,8 +91,15 @@ public class SelectorUtils{
 			this.origin = getOrigin(executer);
 //			this.uuid = null;
 		}
+		public Selector(@Nonnull UUID uuid){
+			this.type = SelectorType.UUID;
+//			this.uuid = uuid;
+			this.executer = Bukkit.getEntity(uuid);
+			this.origin = null;
+			this.arguments = null;
+		}
 
-		public void addArgument(SelectorArgument argument){arguments.add(argument);}
+		public void addArgument(@Nonnull SelectorArgument argument){arguments.add(argument);}
 
 		public Collection<Entity> resolve(){
 			final ArrayList<Entity> entities = new ArrayList<>();
@@ -321,7 +322,7 @@ public class SelectorUtils{
 			return 0 < limit && limit < entities.size() ? entities.subList(0, limit) : entities;
 		}
 
-		public static Selector fromString(CommandSender sender, String str){
+		public static Selector fromString(@Nonnull CommandSender sender, @Nonnull String str){
 			// Attempt to parse as UUID selector
 			try{return new Selector(UUID.fromString(str));}
 			catch(IllegalArgumentException ex){}
@@ -365,6 +366,13 @@ public class SelectorUtils{
 			return new StringBuilder(type.toString()).append('[').append(
 					arguments.stream().map(arg -> arg.toString()).collect(Collectors.joining(","))
 			).append(']').toString();
+		}
+		@Override public boolean equals(Object other){
+			return other != null && other instanceof Selector &&
+					((Selector)other).type.equals(type) &&
+					((Selector)other).executer.equals(executer) &&
+					((Selector)other).arguments == null ? arguments == null : ((Selector)other).arguments.equals(arguments) &&
+					((Selector)other).origin == null ? origin == null : ((Selector)other).origin.equals(origin);
 		}
 	}
 
