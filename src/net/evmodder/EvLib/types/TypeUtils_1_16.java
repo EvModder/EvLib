@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.extras;
+package net.evmodder.EvLib.types;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,25 +10,21 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 
-public class TypeUtils{EntityType s;
-	final static HashMap<Material, EntityType> eggToEntity = new HashMap<Material, EntityType>();
-	final static HashMap<EntityType, Material> entityToEgg = new HashMap<EntityType, Material>();
-	static{
+class TypeUtils_1_16 extends TypeUtils_1_15{
+	final HashMap<Material, EntityType> eggToEntity = new HashMap<Material, EntityType>();
+	final HashMap<EntityType, Material> entityToEgg = new HashMap<EntityType, Material>();
+	TypeUtils_1_16(){
 		for(EntityType eType : EntityType.values()){
 			Material eggType = Material.getMaterial(eType.name()+"_SPAWN_EGG");
 			if(eggType != null) eggToEntity.put(eggType, eType);
 		}
 		eggToEntity.put(Material.MOOSHROOM_SPAWN_EGG, EntityType.MUSHROOM_COW);
-		//eggToEntity.put(Material.ZOMBIE_PIGMAN_SPAWN_EGG, EntityType.PIG_ZOMBIE); //TODO: add bkwards compatibility here!!
 		for(Entry<Material, EntityType> e : eggToEntity.entrySet()) entityToEgg.put(e.getValue(), e.getKey());
 	}
 
-	public static boolean isSpawnEgg(Material mat){return eggToEntity.keySet().contains(mat);}
-	public static EntityType getSpawnedMob(Material spawnEggType){return eggToEntity.get(spawnEggType);}
-	public static Material getSpawnEgg(EntityType eType){return entityToEgg.get(eType);}
-
-	public static boolean isOre(Material mat){
+	@Override public boolean isOre(Material mat){
 		switch(mat){
+			case NETHER_GOLD_ORE:
 			case NETHER_QUARTZ_ORE:
 			case COAL_ORE:
 			case IRON_ORE:
@@ -43,21 +39,7 @@ public class TypeUtils{EntityType s;
 		}
 	}
 
-	public static boolean isInfested(Material mat){
-		switch(mat){
-			case INFESTED_CHISELED_STONE_BRICKS:
-			case INFESTED_COBBLESTONE:
-			case INFESTED_CRACKED_STONE_BRICKS:
-			case INFESTED_MOSSY_STONE_BRICKS:
-			case INFESTED_STONE:
-			case INFESTED_STONE_BRICKS:
-				return true;
-			default:
-				return false;
-		}
-	}
-
-	public static ChatColor getRarityColor(ItemStack item, boolean checkCustomName){
+	@Override public ChatColor getRarityColor(ItemStack item, boolean checkCustomName){
 		if(checkCustomName && item.hasItemMeta() && item.getItemMeta().hasDisplayName()){
 			String displayName = item.getItemMeta().getDisplayName();
 			ChatColor color = null;
@@ -100,309 +82,7 @@ public class TypeUtils{EntityType s;
 		}
 	}
 
-	public static boolean isDye(Material mat){
-		switch(mat){
-			case BLACK_DYE:
-			case BLUE_DYE:
-			case BROWN_DYE:
-			case CYAN_DYE:
-			case GRAY_DYE:
-			case GREEN_DYE:
-			case LIGHT_BLUE_DYE:
-			case LIME_DYE:
-			case MAGENTA_DYE:
-			case ORANGE_DYE:
-			case PINK_DYE:
-			case PURPLE_DYE:
-			case RED_DYE:
-			case LIGHT_GRAY_DYE:
-			case WHITE_DYE:
-			case YELLOW_DYE:
-				return true;
-			default:
-				return false;
-		}
-	}
-	public static boolean isBed(Material mat){
-		switch(mat){
-			case BLACK_BED:
-			case BLUE_BED:
-			case BROWN_BED:
-			case CYAN_BED:
-			case GRAY_BED:
-			case GREEN_BED:
-			case LIGHT_BLUE_BED:
-			case LIME_BED:
-			case MAGENTA_BED:
-			case ORANGE_BED:
-			case PINK_BED:
-			case PURPLE_BED:
-			case RED_BED:
-			case LIGHT_GRAY_BED:
-			case WHITE_BED:
-			case YELLOW_BED:
-				return true;
-			default:
-				return false;
-		}
-	}
-	public static boolean isWool(Material mat){
-		switch(mat){
-			case BLACK_WOOL:
-			case BLUE_WOOL:
-			case BROWN_WOOL:
-			case CYAN_WOOL:
-			case GRAY_WOOL:
-			case GREEN_WOOL:
-			case LIGHT_BLUE_WOOL:
-			case LIME_WOOL:
-			case MAGENTA_WOOL:
-			case ORANGE_WOOL:
-			case PINK_WOOL:
-			case PURPLE_WOOL:
-			case RED_WOOL:
-			case LIGHT_GRAY_WOOL:
-			case WHITE_WOOL:
-			case YELLOW_WOOL:
-				return true;
-			default:
-				return false;
-		}
-	}
-	public static boolean isShulkerBox(Material mat){
-		switch(mat){
-			case SHULKER_BOX:
-			case BLACK_SHULKER_BOX:
-			case BLUE_SHULKER_BOX:
-			case BROWN_SHULKER_BOX:
-			case CYAN_SHULKER_BOX:
-			case GRAY_SHULKER_BOX:
-			case GREEN_SHULKER_BOX:
-			case LIGHT_BLUE_SHULKER_BOX:
-			case LIME_SHULKER_BOX:
-			case MAGENTA_SHULKER_BOX:
-			case ORANGE_SHULKER_BOX:
-			case PINK_SHULKER_BOX:
-			case PURPLE_SHULKER_BOX:
-			case RED_SHULKER_BOX:
-			case LIGHT_GRAY_SHULKER_BOX:
-			case WHITE_SHULKER_BOX:
-			case YELLOW_SHULKER_BOX:
-				return true;
-			default:
-				return false;
-		}
-	}
-	public static boolean isConcrete(Material mat){
-		switch(mat){
-			case BLACK_CONCRETE:
-			case BLUE_CONCRETE:
-			case BROWN_CONCRETE:
-			case CYAN_CONCRETE:
-			case GRAY_CONCRETE:
-			case GREEN_CONCRETE:
-			case LIGHT_BLUE_CONCRETE:
-			case LIGHT_GRAY_CONCRETE:
-			case LIME_CONCRETE:
-			case MAGENTA_CONCRETE:
-			case ORANGE_CONCRETE:
-			case PINK_CONCRETE:
-			case PURPLE_CONCRETE:
-			case RED_CONCRETE:
-			case WHITE_CONCRETE:
-			case YELLOW_CONCRETE:
-				return true;
-			default:
-				return false;
-		}
-	}
-	public static boolean isConcretePowder(Material mat){
-		switch(mat){
-			case BLACK_CONCRETE_POWDER:
-			case BLUE_CONCRETE_POWDER:
-			case BROWN_CONCRETE_POWDER:
-			case CYAN_CONCRETE_POWDER:
-			case GRAY_CONCRETE_POWDER:
-			case GREEN_CONCRETE_POWDER:
-			case LIGHT_BLUE_CONCRETE_POWDER:
-			case LIGHT_GRAY_CONCRETE_POWDER:
-			case LIME_CONCRETE_POWDER:
-			case MAGENTA_CONCRETE_POWDER:
-			case ORANGE_CONCRETE_POWDER:
-			case PINK_CONCRETE_POWDER:
-			case PURPLE_CONCRETE_POWDER:
-			case RED_CONCRETE_POWDER:
-			case WHITE_CONCRETE_POWDER:
-			case YELLOW_CONCRETE_POWDER:
-				return true;
-			default:
-				return false;
-		}
-	}
-	public static boolean isStainedGlass(Material mat){
-		switch(mat){
-			case BLACK_STAINED_GLASS:
-			case BLUE_STAINED_GLASS:
-			case BROWN_STAINED_GLASS:
-			case CYAN_STAINED_GLASS:
-			case GRAY_STAINED_GLASS:
-			case GREEN_STAINED_GLASS:
-			case LIGHT_BLUE_STAINED_GLASS:
-			case LIGHT_GRAY_STAINED_GLASS:
-			case LIME_STAINED_GLASS:
-			case MAGENTA_STAINED_GLASS:
-			case ORANGE_STAINED_GLASS:
-			case PINK_STAINED_GLASS:
-			case PURPLE_STAINED_GLASS:
-			case RED_STAINED_GLASS:
-			case WHITE_STAINED_GLASS:
-			case YELLOW_STAINED_GLASS:
-				return true;
-			default:
-				return false;
-		}
-	}
-	public static boolean isStainedGlassPane(Material mat){
-		switch(mat){
-			case BLACK_STAINED_GLASS_PANE:
-			case BLUE_STAINED_GLASS_PANE:
-			case BROWN_STAINED_GLASS_PANE:
-			case CYAN_STAINED_GLASS_PANE:
-			case GRAY_STAINED_GLASS_PANE:
-			case GREEN_STAINED_GLASS_PANE:
-			case LIGHT_BLUE_STAINED_GLASS_PANE:
-			case LIGHT_GRAY_STAINED_GLASS_PANE:
-			case LIME_STAINED_GLASS_PANE:
-			case MAGENTA_STAINED_GLASS_PANE:
-			case ORANGE_STAINED_GLASS_PANE:
-			case PINK_STAINED_GLASS_PANE:
-			case PURPLE_STAINED_GLASS_PANE:
-			case RED_STAINED_GLASS_PANE:
-			case WHITE_STAINED_GLASS_PANE:
-			case YELLOW_STAINED_GLASS_PANE:
-				return true;
-			default:
-				return false;
-		}
-	}
-	public static boolean isTerracotta(Material mat){
-		switch(mat){
-			case TERRACOTTA:
-			case BLACK_TERRACOTTA:
-			case BLUE_TERRACOTTA:
-			case BROWN_TERRACOTTA:
-			case CYAN_TERRACOTTA:
-			case GRAY_TERRACOTTA:
-			case GREEN_TERRACOTTA:
-			case LIGHT_BLUE_TERRACOTTA:
-			case LIGHT_GRAY_TERRACOTTA:
-			case LIME_TERRACOTTA:
-			case MAGENTA_TERRACOTTA:
-			case ORANGE_TERRACOTTA:
-			case PINK_TERRACOTTA:
-			case PURPLE_TERRACOTTA:
-			case RED_TERRACOTTA:
-			case WHITE_TERRACOTTA:
-			case YELLOW_TERRACOTTA:
-				return true;
-			default:
-				return false;
-		}
-	}
-	public static boolean isGlazedTerracotta(Material mat){
-		switch(mat){
-			case BLACK_GLAZED_TERRACOTTA:
-			case BLUE_GLAZED_TERRACOTTA:
-			case BROWN_GLAZED_TERRACOTTA:
-			case CYAN_GLAZED_TERRACOTTA:
-			case GRAY_GLAZED_TERRACOTTA:
-			case GREEN_GLAZED_TERRACOTTA:
-			case LIGHT_BLUE_GLAZED_TERRACOTTA:
-			case LIGHT_GRAY_GLAZED_TERRACOTTA:
-			case LIME_GLAZED_TERRACOTTA:
-			case MAGENTA_GLAZED_TERRACOTTA:
-			case ORANGE_GLAZED_TERRACOTTA:
-			case PINK_GLAZED_TERRACOTTA:
-			case PURPLE_GLAZED_TERRACOTTA:
-			case RED_GLAZED_TERRACOTTA:
-			case WHITE_GLAZED_TERRACOTTA:
-			case YELLOW_GLAZED_TERRACOTTA:
-				return true;
-			default:
-				return false;
-		}
-	}
-	public static boolean isCarpet(Material mat){
-		switch(mat){
-			case BLACK_CARPET:
-			case BLUE_CARPET:
-			case BROWN_CARPET:
-			case CYAN_CARPET:
-			case GRAY_CARPET:
-			case GREEN_CARPET:
-			case LIGHT_BLUE_CARPET:
-			case LIGHT_GRAY_CARPET:
-			case LIME_CARPET:
-			case MAGENTA_CARPET:
-			case ORANGE_CARPET:
-			case PINK_CARPET:
-			case PURPLE_CARPET:
-			case RED_CARPET:
-			case WHITE_CARPET:
-			case YELLOW_CARPET:
-				return true;
-			default:
-				return false;
-		}
-	}
-	public static boolean isBanner(Material mat){
-		switch(mat){
-			case BLACK_BANNER:
-			case BLUE_BANNER:
-			case BROWN_BANNER:
-			case CYAN_BANNER:
-			case GRAY_BANNER:
-			case GREEN_BANNER:
-			case LIGHT_BLUE_BANNER:
-			case LIGHT_GRAY_BANNER:
-			case LIME_BANNER:
-			case MAGENTA_BANNER:
-			case ORANGE_BANNER:
-			case PINK_BANNER:
-			case PURPLE_BANNER:
-			case RED_BANNER:
-			case WHITE_BANNER:
-			case YELLOW_BANNER:
-				return true;
-			default:
-				return false;
-		}
-	}
-	public static boolean isWallBanner(Material mat){
-		switch(mat){
-			case BLACK_WALL_BANNER:
-			case BLUE_WALL_BANNER:
-			case BROWN_WALL_BANNER:
-			case CYAN_WALL_BANNER:
-			case GRAY_WALL_BANNER:
-			case GREEN_WALL_BANNER:
-			case LIGHT_BLUE_WALL_BANNER:
-			case LIGHT_GRAY_WALL_BANNER:
-			case LIME_WALL_BANNER:
-			case MAGENTA_WALL_BANNER:
-			case ORANGE_WALL_BANNER:
-			case PINK_WALL_BANNER:
-			case PURPLE_WALL_BANNER:
-			case RED_WALL_BANNER:
-			case WHITE_WALL_BANNER:
-			case YELLOW_WALL_BANNER:
-				return true;
-			default:
-				return false;
-		}
-	}
-
-	public static DyeColor getDyeColor(Material mat){
+	@Override public DyeColor getDyeColor(Material mat){
 		switch(mat){
 			case BLACK_DYE: case BLACK_BED:
 			case BLACK_WOOL: case BLACK_SHULKER_BOX: case BLACK_CONCRETE: case BLACK_CONCRETE_POWDER:
@@ -526,7 +206,7 @@ public class TypeUtils{EntityType s;
 		}
 	}*/
 
-	public static boolean isFlowerPot(Material mat){
+	@Override public boolean isFlowerPot(Material mat){
 		switch(mat){
 			case FLOWER_POT:
 			case POTTED_ACACIA_SAPLING:
@@ -550,13 +230,16 @@ public class TypeUtils{EntityType s;
 			case POTTED_RED_TULIP:
 			case POTTED_SPRUCE_SAPLING:
 			case POTTED_WHITE_TULIP:
+			case POTTED_BAMBOO:
+			case POTTED_WARPED_ROOTS:
+			case POTTED_CRIMSON_ROOTS:
 				return true;
 			default:
 				return false;
 		}
 	}
 
-	public static boolean isSign(Material mat){
+	@Override public boolean isSign(Material mat){
 		switch(mat){
 			//case SIGN:
 			case ACACIA_SIGN:
@@ -565,13 +248,15 @@ public class TypeUtils{EntityType s;
 			case JUNGLE_SIGN:
 			case OAK_SIGN:
 			case SPRUCE_SIGN:
+			case WARPED_SIGN:
+			case CRIMSON_SIGN:
 				return true;
 			default:
 				return false;
 		}
 	}
 
-	public static boolean isWallSign(Material mat){
+	@Override public boolean isWallSign(Material mat){
 		switch(mat){
 			//case WALL_SIGN:
 			case ACACIA_WALL_SIGN:
@@ -580,13 +265,15 @@ public class TypeUtils{EntityType s;
 			case JUNGLE_WALL_SIGN:
 			case OAK_WALL_SIGN:
 			case SPRUCE_WALL_SIGN:
+			case WARPED_WALL_SIGN:
+			case CRIMSON_WALL_SIGN:
 				return true;
 			default:
 				return false;
 		}
 	}
 
-	public static boolean isDoublePlant(Material mat){
+	@Override public boolean isDoublePlant(Material mat){
 		switch(mat){
 			case SUNFLOWER:
 			case LILAC:
@@ -600,7 +287,7 @@ public class TypeUtils{EntityType s;
 		}
 	}
 
-	public static boolean isRail(Material mat){
+	@Override public boolean isRail(Material mat){
 		switch(mat){
 			case RAIL:
 			case ACTIVATOR_RAIL:
@@ -612,7 +299,7 @@ public class TypeUtils{EntityType s;
 		}
 	}
 
-	public static boolean isSapling(Material mat){
+	@Override public boolean isSapling(Material mat){
 		switch(mat){
 			case ACACIA_SAPLING:
 			case BIRCH_SAPLING:
@@ -626,7 +313,7 @@ public class TypeUtils{EntityType s;
 		}
 	}
 
-	public static boolean isButton(Material mat){
+	@Override public boolean isButton(Material mat){
 		switch(mat){
 			case ACACIA_BUTTON:
 			case BIRCH_BUTTON:
@@ -635,13 +322,15 @@ public class TypeUtils{EntityType s;
 			case OAK_BUTTON:
 			case SPRUCE_BUTTON:
 			case STONE_BUTTON:
+			case WARPED_BUTTON:
+			case CRIMSON_BUTTON:
 				return true;
 			default:
 				return false;
 		}
 	}
 
-	public static boolean isPressurePlate(Material mat){
+	@Override public boolean isPressurePlate(Material mat){
 		switch(mat){
 			case ACACIA_PRESSURE_PLATE:
 			case BIRCH_PRESSURE_PLATE:
@@ -652,13 +341,15 @@ public class TypeUtils{EntityType s;
 			case STONE_PRESSURE_PLATE:
 			case HEAVY_WEIGHTED_PRESSURE_PLATE:
 			case LIGHT_WEIGHTED_PRESSURE_PLATE:
+			case WARPED_PRESSURE_PLATE:
+			case CRIMSON_PRESSURE_PLATE:
 				return true;
 			default:
 				return false;
 		}
 	}
 
-	public static boolean isDoor(Material mat){
+	@Override public boolean isDoor(Material mat){
 		switch(mat){
 			case ACACIA_DOOR:
 			case BIRCH_DOOR:
@@ -666,13 +357,15 @@ public class TypeUtils{EntityType s;
 			case JUNGLE_DOOR:
 			case OAK_DOOR:
 			case SPRUCE_DOOR:
+			case WARPED_DOOR:
+			case CRIMSON_DOOR:
 				return true;
 			default:
 				return false;
 		}
 	}
 
-	public static boolean isPlanks(Material mat){
+	@Override public boolean isPlanks(Material mat){
 		switch(mat){//TODO: update with new nether logs
 			case ACACIA_PLANKS:
 			case BIRCH_PLANKS:
@@ -680,14 +373,17 @@ public class TypeUtils{EntityType s;
 			case JUNGLE_PLANKS:
 			case OAK_PLANKS:
 			case SPRUCE_PLANKS:
+			case WARPED_PLANKS:
+			case CRIMSON_PLANKS:
 				return true;
 			default:
 				return false;
 		}
 	}
 
-	public static boolean isSword(Material mat){
-		switch(mat){//TODO: netherrite swords/tools
+	@Override public boolean isSword(Material mat){
+		switch(mat){
+			case NETHERITE_SWORD:
 			case DIAMOND_SWORD:
 			case IRON_SWORD:
 			case STONE_SWORD:
@@ -698,8 +394,9 @@ public class TypeUtils{EntityType s;
 				return false;
 		}
 	}
-	public static boolean isAxe(Material mat){
+	@Override public boolean isAxe(Material mat){
 		switch(mat){
+			case NETHERITE_AXE:
 			case DIAMOND_AXE:
 			case IRON_AXE:
 			case STONE_AXE:
@@ -710,8 +407,9 @@ public class TypeUtils{EntityType s;
 				return false;
 		}
 	}
-	public static boolean isPickaxe(Material mat){
+	@Override public boolean isPickaxe(Material mat){
 		switch(mat){
+			case NETHERITE_PICKAXE:
 			case DIAMOND_PICKAXE:
 			case IRON_PICKAXE:
 			case STONE_PICKAXE:
@@ -722,8 +420,9 @@ public class TypeUtils{EntityType s;
 				return false;
 		}
 	}
-	public static boolean isShovel(Material mat){
+	@Override public boolean isShovel(Material mat){
 		switch(mat){
+			case NETHERITE_SHOVEL:
 			case DIAMOND_SHOVEL:
 			case IRON_SHOVEL:
 			case STONE_SHOVEL:
@@ -734,8 +433,9 @@ public class TypeUtils{EntityType s;
 				return false;
 		}
 	}
-	public static boolean isHoe(Material mat){
+	@Override public boolean isHoe(Material mat){
 		switch(mat){
+			case NETHERITE_HOE:
 			case DIAMOND_HOE:
 			case IRON_HOE:
 			case STONE_HOE:
@@ -747,8 +447,10 @@ public class TypeUtils{EntityType s;
 		}
 	}
 
-	private static byte pickaxeNumber(Material pickType){
-		switch(pickType){//TODO: netherite pickaxe
+	@Override protected byte pickaxeNumber(Material pickType){
+		switch(pickType){
+			case NETHERITE_PICKAXE:
+				return 5;
 			case DIAMOND_PICKAXE:
 				return 4;
 			case IRON_PICKAXE:
@@ -765,11 +467,13 @@ public class TypeUtils{EntityType s;
 				return 0;
 		}
 	}
-	public static boolean pickIsAtLeast(Material pickType, Material needPick){//+
+	@Override public boolean pickIsAtLeast(Material pickType, Material needPick){//+
 		return pickaxeNumber(pickType) >= pickaxeNumber(needPick);
 	}
-	private static byte swordNumber(Material swordType){
-		switch(swordType){//TODO: netherite sword
+	@Override protected byte swordNumber(Material swordType){
+		switch(swordType){
+			case NETHERITE_SWORD:
+				return 5;
 			case DIAMOND_SWORD:
 				return 4;
 			case IRON_SWORD:
@@ -786,18 +490,11 @@ public class TypeUtils{EntityType s;
 				return 0;
 		}
 	}
-	public static boolean swordIsAtLeast(Material swordType, Material needSword){//+
+	@Override public boolean swordIsAtLeast(Material swordType, Material needSword){//+
 		return swordNumber(swordType) >= swordNumber(needSword);
 	}
 
-
-	enum ObtainableOptions{
-		SILK_SPAWNERS, SILK_INFESTED, MOB_EGGS, CMD_BLOCKS,
-		BEDROCK, END_PORTAL_FRAMES, BARRIERS, STRUCTURE_BLOCKS, PETRIFIED_SLABS,
-		ITEM_LORE, ITEM_NAME_COLOR, CONFLICTING_ENCHANTS, ABOVE_MAX_ENCHANTS, OVERSTACKED,
-		PLAYER_HEADS, TATTERED_BOOKS
-	};
-	public static boolean isObtainable(Material mat, ObtainableOptions... opts){
+	@Override public boolean isObtainable(Material mat, ObtainableOptions... opts){
 		HashSet<ObtainableOptions> canObtain = new HashSet<>();
 		for(ObtainableOptions opt : opts) canObtain.add(opt);
 		// Can't determine:
@@ -875,8 +572,7 @@ public class TypeUtils{EntityType s;
 		}
 	}
 
-	// Broken if the block relative to a given BlockFace is removed
-	public static BlockFace getFragileFace(Material mat, BlockFace facing){
+	@Override public BlockFace getFragileFace(Material mat, BlockFace facing){
 		switch(mat){
 //			case WATER:
 //			case STATIONARY_WATER:
@@ -910,9 +606,26 @@ public class TypeUtils{EntityType s;
 			case POTATO:
 			case CHORUS_PLANT:
 			case CHORUS_FLOWER:
+			case BAMBOO:
+			case SWEET_BERRY_BUSH:
+			case SCAFFOLDING:
+			case CORNFLOWER:
+			case LILY_OF_THE_VALLEY:
+			case WITHER_ROSE:
+			case NETHER_SPROUTS:
+			case CRIMSON_ROOTS:
+			case WARPED_ROOTS:
+			case CRIMSON_FUNGUS:
+			case WARPED_FUNGUS:
 				return BlockFace.DOWN;
 			//case VINE:
+			//case TWISTING_VINES:
+			//case WEEPING_VINES:
 				//TODO: BlockFace.UP, but only if nothing behind this block! :o
+			//case BELL://TODO: or getOppositeFace()
+			//case LANTERN:
+			//case SOUL_LANTERN:
+				//TODO: BlockFace.UP if hanging, otherwise BlockFace.DOWN
 			case LADDER:
 			case REDSTONE_WALL_TORCH:
 			case WALL_TORCH:
