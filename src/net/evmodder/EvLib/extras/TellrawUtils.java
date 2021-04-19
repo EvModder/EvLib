@@ -1,5 +1,8 @@
 package net.evmodder.EvLib.extras;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,9 +12,20 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Server;
+import org.bukkit.block.Banner;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Skull;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TropicalFish;
+import org.bukkit.entity.Villager;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Objective;
+import net.evmodder.EvLib.extras.EntityUtils.CCP;
 
 public class TellrawUtils{
 	public enum ClickEvent{// Descriptions below are from https://minecraft.gamepedia.com/Raw_JSON_text_format
@@ -77,7 +91,9 @@ public class TellrawUtils{
 		final Format format;
 		final boolean value;
 		public FormatFlag(@Nonnull Format format, boolean value){this.format = format; this.value = value;}
-		@Override public String toString(){return new StringBuilder('"').append(format.toString().toLowerCase()).append("\":").append(value).toString();}
+		@Override public String toString(){
+			return new StringBuilder().append('"').append(format.toString().toLowerCase()).append("\":").append(value).toString();
+		}
 		@Override public boolean equals(Object other){
 			return other != null && other instanceof FormatFlag && ((FormatFlag)other).format.equals(format) && ((FormatFlag)other).value == value;
 		}
@@ -101,7 +117,7 @@ public class TellrawUtils{
 		private Component(String insertion, TextClickAction clickAction, TextHoverAction hoverAction, String color, FormatFlag... formats){
 			this.insertion = insertion; this.clickAction = clickAction; this.hoverAction = hoverAction; this.color = color; this.formats = formats;
 			hasProperties = insertion != null || clickAction != null || hoverAction != null || color != null || (formats != null && formats.length > 0);
-			if(Arrays.stream(formats).map(formatFlag -> formatFlag.format).distinct().count() < formats.length){
+			if(formats != null && Arrays.stream(formats).map(formatFlag -> formatFlag.format).distinct().count() < formats.length){
 				throw new IllegalArgumentException("Multiple FormatFlags in a Component cannot reference the same Format type");
 			}
 		}
@@ -149,11 +165,11 @@ public class TellrawUtils{
 						: potentialSingleMatchSelector().equals(other.potentialSingleMatchSelector()));
 		}
 		// True if @other doesn't override any of the properties of this component
-		boolean noOverridingProperties(Component other){
+		boolean noOverridingProperties(@Nonnull Component other){
 			return (other.getInsertion() == null || other.getInsertion().equals(getInsertion())) &&
-					other.getClickAction() == null || other.getClickAction().equals(getClickAction()) &&
-					other.getHoverAction() == null || other.getHoverAction().equals(getHoverAction()) &&
-					other.getColor() == null || other.getColor().equals(getColor()) &&
+					(other.getClickAction() == null || other.getClickAction().equals(getClickAction())) &&
+					(other.getHoverAction() == null || other.getHoverAction().equals(getHoverAction())) &&
+					(other.getColor() == null || other.getColor().equals(getColor())) &&
 					(other.getFormats() == null || other.getFormats().length == 0 ||
 						(getFormats() != null && Arrays.asList(getFormats()).containsAll(Arrays.asList(other.getFormats())))) &&
 					(other.potentialSingleMatchSelector() == null || other.potentialSingleMatchSelector().equals(potentialSingleMatchSelector()));
@@ -190,7 +206,7 @@ public class TellrawUtils{
 	public final static class TranslationComponent extends Component{
 		final String jsonKey;
 		final Component[] with; // Used to replace "%s" placeholders in the translation text.
-		public TranslationComponent(@Nonnull String jsonKey){this.jsonKey = jsonKey; with = null;} //TODO: validate json key?
+		public TranslationComponent(@Nonnull String jsonKey){this.jsonKey = jsonKey; with = null;}
 		public TranslationComponent(@Nonnull String jsonKey, @Nonnull Component... with){this.jsonKey = jsonKey; this.with = with;}
 		public TranslationComponent(@Nonnull String jsonKey, Component[] with,
 				String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
@@ -200,10 +216,29 @@ public class TellrawUtils{
 		}
 		//tellraw @a {"translate":"multiplayer.player.joined","with":["EvDoc", "unused"]} -> en_us.json: "%s joined the game"
 
+		private static Constructor<?> chatMessageConstructor, chatMessageConstructorWith;
+		private static Method chatMessageGetString;
+		private boolean callNMS = true;
 		@Override public String toPlainText(){
+			if(callNMS) try{
+				if(chatMessageGetString == null){
+					try{
+						Server server = Bukkit.getServer();
+						String nmsVersion  = server.getClass().getDeclaredMethod("getHandle").invoke(server).getClass().getName().split("\\.")[3];
+						Class<?> clazz = Class.forName("net.minecraft.server."+nmsVersion+".ChatMessage");
+						chatMessageConstructor = clazz.getConstructor(String.class);
+						chatMessageConstructorWith = clazz.getConstructor(String.class, Object[].class);
+						chatMessageGetString = clazz.getMethod("getString");
+					}
+					catch(NoSuchMethodException | SecurityException | ClassNotFoundException e){callNMS = false; throw new InstantiationException();}
+				}
+				return (String)chatMessageGetString.invoke(with == null
+						? chatMessageConstructor.newInstance(jsonKey)
+						: chatMessageConstructorWith.newInstance(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray()));
+			}
+			catch(InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e){}
 			// This is ONLY correct when the key is invalid/unknown to the client!
-			return String.format(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
-			//TODO: EN_US.json(or server default) -> LOOKUP ASSOCIATED VALUE and return that instead!
+			return with == null ? jsonKey.replace("%s", "") : String.format(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
 		}
 		@Override public String toString(){
 			StringBuilder builder = new StringBuilder().append("{\"translate\":\"").append(jsonKey).append('"');
@@ -212,6 +247,111 @@ public class TellrawUtils{
 			return builder.append(getProperties()).append('}').toString();
 		}
 	}
+
+	final static String tropicalFishLocaleCCP = /*custom.tropical_fish.ccp*/"%s-%s %s";
+	final static String tropicalFishLocaleCP = /*custom.tropical_fish.cp*/"%s %s";
+	public static Component getLocalizedDisplayName(@Nonnull CCP ccp){
+		Integer id = EntityUtils.commonTropicalFishIds.get(ccp);
+		if(id != null) return new TranslationComponent("entity.minecraft.tropical_fish.predefined."+id);
+		return ccp.bodyColor != ccp.patternColor
+			? new TranslationComponent(tropicalFishLocaleCCP, new Component[]{
+				new TranslationComponent("color.minecraft."+ccp.bodyColor.name().toLowerCase()),
+				new TranslationComponent("color.minecraft."+ccp.patternColor.name().toLowerCase()),
+				new TranslationComponent("entity.minecraft.tropical_fish.type."+ccp.pattern.name().toLowerCase())})
+			: new TranslationComponent(tropicalFishLocaleCP, new Component[]{
+					new TranslationComponent("color.minecraft."+ccp.bodyColor.name().toLowerCase()),
+					new TranslationComponent("entity.minecraft.tropical_fish.type."+ccp.pattern.name().toLowerCase())});
+	}
+	public static Component getLocalizedDisplayName(@Nonnull Entity entity, boolean useDisplayName){
+		if(entity.getName() != null) return new RawTextComponent(
+				(entity instanceof Player && useDisplayName) ? ((Player)entity).getDisplayName() : entity.getName());
+		switch(entity.getType()){
+			case VILLAGER:
+				return new TranslationComponent("entity.minecraft."+entity.getType().name().toLowerCase()+"."
+						+((Villager)entity).getProfession().name().toLowerCase());
+			case TROPICAL_FISH:
+				return getLocalizedDisplayName(EntityUtils.getCCP((TropicalFish)entity));
+			default:
+				return new TranslationComponent("entity.minecraft."+entity.getType().name().toLowerCase());
+		}
+	}
+	static String getVanillaPotionEffectTypeName(@Nonnull PotionEffectType type){
+		switch(type.getName()){
+			case "AWKWARD": return "awkward";
+			case "FIRE_RESISTANCE": return "fire_resistance";
+			case "INSTANT_DAMAGE": return "harming";
+			case "INSTANT_HEAL": return "healing";
+			case "INVISIBILITY": return "invisibility";
+			case "JUMP": return "leaping";
+			case "LEVITATION": return "levitation";
+			case "LUCK": return "luck";
+			case "MUNDANE": return "mundane";
+			case "NIGHT_VISION": return "night_vision";
+			case "POISON": return "poison";
+			case "REGEN": return "regeneration";
+			case "SLOWNESS": return "slowness";
+			case "SLOW_FALLING": return "slow_falling";
+			case "SPEED": return "swiftness";
+			case "STRENGTH": return "strength";
+			case "THICK": return "thick";
+			case "TURTLE_MASTER": return "turtle_master";
+			case "WATER": return "water";
+			case "WATER_BREATHING": return "water_breathing";
+			case "WEAKNESS": return "weakness";
+			case "UNCRAFTABLE": default: return "empty";
+		}
+	}
+	public static Component getLocalizedDisplayName(@Nonnull BlockState block){
+		switch(block.getType()){
+			case PLAYER_HEAD:
+			case PLAYER_WALL_HEAD:
+				return new TranslationComponent("block.minecraft.player_head.named",
+						new RawTextComponent(HeadUtils.getGameProfile((Skull)block).getName()));
+			case BLACK_BANNER:
+			case BLUE_BANNER:
+			case BROWN_BANNER:
+			case CYAN_BANNER:
+			case GRAY_BANNER:
+			case GREEN_BANNER:
+			case LIGHT_BLUE_BANNER:
+			case LIGHT_GRAY_BANNER:
+			case LIME_BANNER:
+			case MAGENTA_BANNER:
+			case ORANGE_BANNER:
+			case PINK_BANNER:
+			case PURPLE_BANNER:
+			case RED_BANNER:
+			case WHITE_BANNER:
+			case YELLOW_BANNER:
+				return new TranslationComponent("block.minecraft.banner"+((Banner)block).getPattern(0).getPattern().name().toLowerCase()
+						+"."+((Banner)block).getBaseColor().name().toLowerCase());
+			default:
+				return new TranslationComponent("block.minecraft."+block.getType().name().toLowerCase()); 
+		}
+	}
+	public static Component getLocalizedDisplayName(@Nonnull ItemStack item){
+		if(item.hasItemMeta() && item.getItemMeta().hasDisplayName()) return new RawTextComponent(item.getItemMeta().getDisplayName());
+		if(item.getType().isBlock()){
+			if(item.hasItemMeta()) return getLocalizedDisplayName(((BlockStateMeta)item.getItemMeta()).getBlockState());
+			return new TranslationComponent("block.minecraft."+item.getType().name().toLowerCase()); 
+		}
+		switch(item.getType()){
+			case POTION:
+			case SPLASH_POTION:
+			case LINGERING_POTION:
+			case TIPPED_ARROW:
+				return new TranslationComponent("item.minecraft."+item.getType().name().toLowerCase()+".effect."+(item.hasItemMeta()
+								? getVanillaPotionEffectTypeName(((PotionMeta)item.getItemMeta()).getBasePotionData().getType().getEffectType())
+								: "empty"
+							));
+			case SHIELD:
+				if(item.hasItemMeta()) return new TranslationComponent("item.minecraft.shield."
+						+((Banner)((BlockStateMeta)item.getItemMeta()).getBlockState()).getBaseColor().name().toLowerCase());
+			default:
+				return new TranslationComponent("item.minecraft."+item.getType().name().toLowerCase()); 
+		}
+	}
+
 	public final static class ScoreComponent extends Component{
 		final Object selector;
 		final Objective objective;
@@ -263,23 +403,20 @@ public class TellrawUtils{
 //		public SelectorComponent(@Nonnull SelectorType type, @Nonnull SelectorArgument...arguments){this.selector = new Selector(type, arguments);}
 		//tellraw @a {"selector":"@a"}
 
-		private static String getNormalizedName(Entity entity, boolean useDisplayName){
-			if(entity instanceof Player && useDisplayName) return ((Player)entity).getDisplayName();
-			return entity.getName() != null ? entity.getName() : TextUtils.getNormalizedName(entity.getType());
-		}
 		@Override public String toPlainText(){
 			Collection<String> names = null;
 			try{
 				UUID uuid = selector instanceof UUID ? (UUID)selector : UUID.fromString(selector.toString());
 				Entity entity = Bukkit.getEntity(uuid);
-				if(entity != null) names = Arrays.asList(getNormalizedName(entity, useDisplayName));
+				if(entity != null) names = Arrays.asList(getLocalizedDisplayName(entity, useDisplayName).toPlainText());
 			}
 			catch(IllegalArgumentException ex){};
 			if(names == null) try{
 				Class<?> clazz = Class.forName("net.evmodder.EvLib.extras.SelectorUtils.Selector");
 				@SuppressWarnings("unchecked")
 				Collection<Entity> entities = (Collection<Entity>)clazz.getMethod("resolve").invoke(selector);
-				names = entities.stream().filter(e -> e != null).map(e -> getNormalizedName(e, useDisplayName)).collect(Collectors.toList());
+				names = entities.stream().filter(e -> e != null)
+						.map(e -> getLocalizedDisplayName(e, useDisplayName).toPlainText()).collect(Collectors.toList());
 			}
 			catch(Exception ex){names = Arrays.asList(selector.toString());}
 			return String.join(ChatColor.GRAY+", "+ChatColor.RESET, names);
@@ -311,8 +448,7 @@ public class TellrawUtils{
 			this.components = new ArrayList<>();
 			for(Component comp : components) addComponent(comp);
 		}
-		//TODO: make this NOT public?
-		public List<Component> getComponents(){return components;}
+		public boolean isEmpty(){return components.isEmpty();}
 
 		private RawTextComponent copyWithNewText(@Nonnull RawTextComponent comp, @Nonnull String text){
 			return new RawTextComponent(text, comp.getInsertion(), comp.getClickAction(), comp.getHoverAction(), comp.getColor(), comp.getFormats());
@@ -329,11 +465,10 @@ public class TellrawUtils{
 			}
 			if(component instanceof ListComponent){
 				// We can safely flatten nested TellrawBlobs IFF they don't override any of the parent's "group properties"
-				if(noOverridingProperties(component)){
-					for(Component comp : ((ListComponent)component).getComponents()) addComponent(comp);
+				if(((ListComponent)component).components.size() <= 1 || noOverridingProperties(component)){
+					for(Component comp : ((ListComponent)component).components) addComponent(comp);
 					return true;
 				}
-				return components.add(last = component);
 			}
 			return components.add(last = component);
 		}
@@ -420,74 +555,4 @@ public class TellrawUtils{
 			}
 		}
 	}
-/*
-	private final static String getColorName(char[] msg, int i){
-		switch(msg[i]){
-			case '0': return "black";
-			case '1': return "dark_blue";
-			case '2': return "dark_green";
-			case '3': return "dark_aqua";
-			case '4': return "dark_red";
-			case '5': return "dark_purple";
-			case '6': return "gold";
-			case '7': return "gray";
-			case '8': return "dark_gray";
-			case '9': return "blue";
-			case 'a': return "green";
-			case 'b': return "aqua";
-			case 'c': return "red";
-			case 'd': return "light_purple";
-			case 'e': return "yellow";
-			case 'f': return "white";
-			case 'r': return "white";
-			case 'x': return "#"+msg[i+2]+msg[i+4]+msg[i+6]+msg[i+8]+msg[i+10]+msg[i+12];
-			default: return null;
-		}
-	}
-	private final static FormatFlag getFormat(char ch){
-		switch(ch){
-			case 'l': return FormatFlag.BOLD_TRUE;
-			case 'o': return FormatFlag.ITALIC_TRUE;
-			case 'n': return FormatFlag.UNDERLINED_TRUE;
-			case 'm': return FormatFlag.STRIKETHROUGH_TRUE;
-			case 'k': return FormatFlag.OBFUSCATED_TRUE;
-			default: return null;
-		}
-	}
-	public final static TellrawBlob translateSpigotColorCodesToComponents(String textToTranslate){
-		TellrawBlob blob = new TellrawBlob();
-		String currentColor = "r"; // 
-		HashSet<FormatFlag> currentFormats = new HashSet<>();// We can simplify by only storing <FORMAT>_TRUE values (if not-contains, assume false)
-
-		Pattern pattern = Pattern.compile("§(?:[0-9a-fA-Fk-oK-O]|x(?:§[0-9a-fA-F]){6})");// Matches only valid colors, formats, and hex colors
-		Matcher matcher = pattern.matcher(textToTranslate);
-		int lastTextStart = 0;
-		while(matcher.find()){
-			String lastText = textToTranslate.substring(lastTextStart, matcher.start());
-			FormatFlag newFormat = getFormat(matcher.group().charAt(1));
-			if(newFormat != null){
-				if(currentFormats.contains(newFormat))
-				if(lastText.trim().isEmpty());
-			}
-			switch(matcher.group(1)){
-				
-			}
-		}
-		
-//		char[] msg = textToTranslate.toCharArray();
-//		for(int i=0; i<msg.length-1; ++i){
-//			if(msg[i] != ChatColor.COLOR_CHAR) currentText.append(msg[i]);
-//			else switch(msg[i+1]){
-//				case 'l': bold = true;
-//			}
-//			if(colorPick){
-//				String newColor = getColorName(msg, i);
-//				String newFormat;
-//				if(newColor == null)
-//			}
-//			else if(!(colorPick=(ch == ChatColor.COLOR_CHAR))) currentText.append(ch);
-//			
-//		}
-		return blob;
-	}*/
 }

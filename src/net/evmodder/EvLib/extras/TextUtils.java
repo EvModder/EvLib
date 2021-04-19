@@ -54,37 +54,7 @@ public class TextUtils{
 		return builder.toString();
 	}
 
-	private static boolean isHex(char ch){return  ('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F');}
-	/*public static String createColorCode(char altColorChar, String colorId){
-		switch(colorId.length()){
-			case 1:
-				if(isColorOrFormat(colorId.charAt(0))) return altColorChar+colorId;
-				break;
-			case 3:
-				if(isHex(colorId.charAt(0)) && isHex(colorId.charAt(1)) && isHex(colorId.charAt(2))){
-					return new StringBuilder("").append(altColorChar).append('x')
-							.append(altColorChar).append(colorId.charAt(0))
-							.append(altColorChar).append(colorId.charAt(0))
-							.append(altColorChar).append(colorId.charAt(1))
-							.append(altColorChar).append(colorId.charAt(1))
-							.append(altColorChar).append(colorId.charAt(2))
-							.append(altColorChar).append(colorId.charAt(2)).toString();
-				}
-				break;
-			case 6:
-				if(isHex(colorId.charAt(0)) && isHex(colorId.charAt(1)) && isHex(colorId.charAt(2))
-				&& isHex(colorId.charAt(3)) && isHex(colorId.charAt(4)) && isHex(colorId.charAt(5))){
-					return new StringBuilder("").append(altColorChar).append('x')
-							.append(altColorChar).append(colorId.charAt(0))
-							.append(altColorChar).append(colorId.charAt(1))
-							.append(altColorChar).append(colorId.charAt(2))
-							.append(altColorChar).append(colorId.charAt(3))
-							.append(altColorChar).append(colorId.charAt(4))
-							.append(altColorChar).append(colorId.charAt(5)).toString();
-				}
-		}
-		return null;
-	}*/
+	private static boolean isHex(char ch){return ('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F');}
 
 	public static String translateAlternateColorCodes(char altColorChar, String textToTranslate){
 		StringBuilder builder = new StringBuilder("");
@@ -158,18 +128,17 @@ public class TextUtils{
 		return new String(msg);
 	}
 
-	public static String stripColorsOnly(String str){return stripColorsOnly(str, ChatColor.COLOR_CHAR);}
 	public static String stripColorsOnly(String str, char altColorChar){
 		StringBuilder builder = new StringBuilder("");
 		boolean colorPick = false;
 		for(char ch : str.toCharArray()){
 			if(colorPick && !isColor(ch)){colorPick=false; builder.append(altColorChar).append(ch);}
-			else if((colorPick=(ch == '§')) == false) builder.append(ch);
+			else if((colorPick=(ch == altColorChar)) == false) builder.append(ch);
 		}
 		if(colorPick) builder.append(altColorChar);
 		return builder.toString();
 	}
-	public static String stripFormatsOnly(String str){return stripFormatsOnly(str, ChatColor.COLOR_CHAR);}
+	public static String stripColorsOnly(String str){return stripColorsOnly(str, ChatColor.COLOR_CHAR);}
 	public static String stripFormatsOnly(String str, char altColorChar){
 		StringBuilder builder = new StringBuilder("");
 		boolean colorPick = false;
@@ -180,7 +149,9 @@ public class TextUtils{
 		if(colorPick) builder.append(altColorChar);
 		return builder.toString();
 	}
+	public static String stripFormatsOnly(String str){return stripFormatsOnly(str, ChatColor.COLOR_CHAR);}
 
+	//Returns NULL if no color is present at end of string
 	public static ChatColor getCurrentColor(String str){
 		char[] msg = str.toCharArray();
 		for(int i=msg.length-1; i>0; --i){
@@ -204,7 +175,7 @@ public class TextUtils{
 		for(int i=msg.length-1; i>0; --i){
 			if(msg[i-1] == ChatColor.COLOR_CHAR){
 				if(isColor(msg[i])) return ChatColor.getByChar(msg[i]) + result;
-				if(isFormat(msg[i])){result = ChatColor.getByChar(msg[i]) + result; --i;}
+				if(isFormat(msg[i])) result = ChatColor.getByChar(msg[i--]) + result;
 			}
 		}
 		return result;
@@ -361,8 +332,8 @@ public class TextUtils{
 		return builder.toString();
 	}
 
-	public static String getNormalizedItemName(String material){//TODO: move to TypeUtils?
-		switch(material){
+	@Deprecated public static String getNormalizedName(Material material){
+		switch(material.name()){
 			case "CREEPER_BANNER_PATTERN":
 			case "FLOWER_BANNER_PATTERN":
 			case "GLOBE_BANNER_PATTERN":
@@ -371,24 +342,22 @@ public class TextUtils{
 				return "Banner Pattern";
 			default:
 //				return capitalizeWords(material.name().toLowerCase().replace("_", " "));
-				return capitalizeAndSpacify(material, '_');
+				return capitalizeAndSpacify(material.name(), '_');
 		}
 	}
-	public static String getNormalizedEntityName(String eType){//TODO: move to EntityUtils?
+	@Deprecated public static String getNormalizedName(EntityType eType){
 		//TODO: improve this algorithm / test for errors
-		switch(eType){
-		case "PIG_ZOMBIE":
-			return "Zombie Pigman";
-		case "MUSHROOM_COW":
-			return "Mooshroom";
-		case "TROPICAL_FISH"://TODO: 22 varieties (already implemented in TextureKeyLookup.java)
-		default:
-//			return capitalizeWords(eType.toLowerCase().replace("_", " "));
-			return capitalizeAndSpacify(eType, '_');
-		}
+				switch(eType.name()){
+				case "PIG_ZOMBIE":
+					return "Zombie Pigman";
+				case "MUSHROOM_COW":
+					return "Mooshroom";
+				case "TROPICAL_FISH"://TODO: 22 varieties (already implemented in TextureKeyLookup.java)
+				default:
+//					return capitalizeWords(eType.toLowerCase().replace("_", " "));
+					return capitalizeAndSpacify(eType.name(), '_');
+				}
 	}
-	public static String getNormalizedName(Material material){return getNormalizedItemName(material.name());}
-	public static String getNormalizedName(EntityType eType){return getNormalizedEntityName(eType.name());}
 
 
 	//TODO: Move this to TabText (once TabText is cleaned up)?

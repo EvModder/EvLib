@@ -36,14 +36,11 @@ public class ReflectionUtils{// version = X1.0
 				String verB = pas[3];
 				preClassB += "."+verB;
 			}
-			Method getHandle;
 			Object handle;
 			try{
-				getHandle = bukkitServerClass.getDeclaredMethod("getHandle");
-				handle = getHandle.invoke(server);
+				handle = bukkitServerClass.getDeclaredMethod("getHandle").invoke(server);
 			}
-			catch(NoSuchMethodException | SecurityException | IllegalAccessException
-					| IllegalArgumentException | InvocationTargetException e){
+			catch(NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e){
 				throw new RuntimeException(e);
 			}
 
