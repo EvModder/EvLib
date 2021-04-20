@@ -153,7 +153,8 @@ public class EntityUtils{
 
 	public static EntityType getEntityByName(@Nonnull String name){
 		//TODO: improve this function / test for errors
-		if(name.toUpperCase().startsWith("MHF_")) name = HeadUtils.normalizedNameFromMHFName(name);
+		//TODO: uncomment and access HeadUtils using reflection:
+		//if(name.toUpperCase().startsWith("MHF_")) name = HeadUtils.normalizedNameFromMHFName(name);
 		name = name.toUpperCase().replace(' ', '_');
 		String noUnderscoresName = name.replace("_", "");
 		if(noUnderscoresName.equals("ZOMBIEPIGMAN")) name = "PIG_ZOMBIE";
