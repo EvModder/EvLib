@@ -51,8 +51,8 @@ public class TellrawUtils{
 		@Override public String toString(){return name().toLowerCase();}
 	}
 	public final static class TextClickAction{
-		final ClickEvent event;
-		final String value;
+		public final ClickEvent event;
+		public final String value;
 		public TextClickAction(@Nonnull ClickEvent event, @Nonnull String value){this.event = event; this.value = value;}
 		@Override public boolean equals(Object other){
 			return other != null && other instanceof TextClickAction
@@ -60,8 +60,8 @@ public class TellrawUtils{
 		}
 	}
 	public final static class TextHoverAction{
-		final HoverEvent event;
-		final String value;
+		public final HoverEvent event;
+		public final String value;
 		public TextHoverAction(@Nonnull HoverEvent event, @Nonnull String value){this.event = event; this.value = value;}
 		@Override public boolean equals(Object other){
 			return other != null && other instanceof TextHoverAction
@@ -88,8 +88,8 @@ public class TellrawUtils{
 
 	public enum Format{BOLD, ITALIC, UNDERLINED, STRIKETHROUGH, OBFUSCATED}
 	public final static class FormatFlag{
-		final Format format;
-		final boolean value;
+		public final Format format;
+		public final boolean value;
 		public FormatFlag(@Nonnull Format format, boolean value){this.format = format; this.value = value;}
 		@Override public String toString(){
 			return new StringBuilder().append('"').append(format.toString().toLowerCase()).append("\":").append(value).toString();
@@ -206,6 +206,8 @@ public class TellrawUtils{
 	public final static class TranslationComponent extends Component{
 		final String jsonKey;
 		final Component[] with; // Used to replace "%s" placeholders in the translation text.
+		public String getJsonKey(){return jsonKey;}
+		public Component[] getWith(){return with;}
 		public TranslationComponent(@Nonnull String jsonKey){this.jsonKey = jsonKey; with = null;}
 		public TranslationComponent(@Nonnull String jsonKey, @Nonnull Component... with){this.jsonKey = jsonKey; this.with = with;}
 		public TranslationComponent(@Nonnull String jsonKey, Component[] with,
@@ -250,7 +252,7 @@ public class TellrawUtils{
 
 	final static String tropicalFishLocaleCCP = /*custom.tropical_fish.ccp*/"%s-%s %s";
 	final static String tropicalFishLocaleCP = /*custom.tropical_fish.cp*/"%s %s";
-	public static Component getLocalizedDisplayName(@Nonnull CCP ccp){
+	public static TranslationComponent getLocalizedDisplayName(@Nonnull CCP ccp){
 		Integer id = EntityUtils.commonTropicalFishIds.get(ccp);
 		if(id != null) return new TranslationComponent("entity.minecraft.tropical_fish.predefined."+id);
 		return ccp.bodyColor != ccp.patternColor
@@ -301,7 +303,7 @@ public class TellrawUtils{
 			case "UNCRAFTABLE": default: return "empty";
 		}
 	}
-	public static Component getLocalizedDisplayName(@Nonnull BlockState block){
+	public static TranslationComponent getLocalizedDisplayName(@Nonnull BlockState block){
 		switch(block.getType()){
 			case PLAYER_HEAD:
 			case PLAYER_WALL_HEAD:
