@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.bukkit.Bukkit;
@@ -111,8 +113,8 @@ public class TellrawUtils{
 		String getInsertion(){return insertion;}
 		TextClickAction getClickAction(){return clickAction;}
 		TextHoverAction getHoverAction(){return hoverAction;}
-		String getColor(){return color;}
-		FormatFlag[] getFormats(){return formats;}
+		public String getColor(){return color;}
+		public FormatFlag[] getFormats(){return formats;}
 
 		private Component(String insertion, TextClickAction clickAction, TextHoverAction hoverAction, String color, FormatFlag... formats){
 			this.insertion = insertion; this.clickAction = clickAction; this.hoverAction = hoverAction; this.color = color; this.formats = formats;
@@ -442,8 +444,8 @@ public class TellrawUtils{
 		@Override String getInsertion(){return components.isEmpty() ? null : components.get(0).getInsertion();}
 		@Override TextClickAction getClickAction(){return components.isEmpty() ? null : components.get(0).getClickAction();}
 		@Override TextHoverAction getHoverAction(){return components.isEmpty() ? null : components.get(0).getHoverAction();}
-		@Override String getColor(){return components.isEmpty() ? null : components.get(0).getColor();}
-		@Override FormatFlag[] getFormats(){return components.isEmpty() ? null : components.get(0).getFormats();}
+		@Override public String getColor(){return components.isEmpty() ? null : components.get(0).getColor();}
+		@Override public FormatFlag[] getFormats(){return components.isEmpty() ? null : components.get(0).getFormats();}
 		Component last = null;
 		List<Component> components;
 		public ListComponent(@Nonnull Component...components){
@@ -456,10 +458,11 @@ public class TellrawUtils{
 			return new RawTextComponent(text, comp.getInsertion(), comp.getClickAction(), comp.getHoverAction(), comp.getColor(), comp.getFormats());
 		}
 		public boolean addComponent(@Nonnull Component component){
-			if(component.toPlainText().isEmpty()) return false;
+			// If last==null, components[] is empty and we are willing to accept an empty component to set the list properties 
+			if(component.toPlainText().isEmpty() && last != null) return false;
 			if(component instanceof RawTextComponent){
-				if(ChatColor.stripColor(component.toPlainText()).isEmpty()) return false;
-				if(last != null && last instanceof RawTextComponent && last.noOverridingProperties(component)){
+				if(ChatColor.stripColor(component.toPlainText()).isEmpty() && last != null) return false;
+				if(last != null && last instanceof RawTextComponent && (last.samePropertiesAs(component))){
 					components.remove(components.size()-1);
 					components.add(last = copyWithNewText((RawTextComponent)last, last.toPlainText() + component.toPlainText()));
 					return true;
@@ -556,5 +559,20 @@ public class TellrawUtils{
 						).append(']').toString();
 			}
 		}
+	}
+
+	public final static ListComponent convertHexColorsToComponents(String str){
+		Matcher matcher = Pattern.compile("§x((?:§[0-9a-fA-F]){6})(?:[^§]|(?:§[k-o]))+").matcher(str);
+		ListComponent comp = new ListComponent();
+		int lastEnd = 0;
+		while(matcher.find()){
+			comp.addComponent(new RawTextComponent(str.substring(lastEnd, matcher.start())));
+			String color = "#"+matcher.group(1).replace("§", "");
+			comp.addComponent(new RawTextComponent(matcher.group().substring(14), /*insert=*/null, /*click=*/null, /*hover=*/null, color, /*formats=*/null));
+			lastEnd = matcher.end();
+		}
+		comp.addComponent(new RawTextComponent(str.substring(lastEnd)));
+		Bukkit.getLogger().info("convertHexColorsToComponents: "+comp.toString());
+		return comp;
 	}
 }
