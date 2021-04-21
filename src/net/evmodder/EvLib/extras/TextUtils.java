@@ -3,6 +3,8 @@ package net.evmodder.EvLib.extras;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -128,26 +130,34 @@ public class TextUtils{
 		return new String(msg);
 	}
 
-	public static String stripColorsOnly(String str, char altColorChar){
-		StringBuilder builder = new StringBuilder("");
-		boolean colorPick = false;
-		for(char ch : str.toCharArray()){
-			if(colorPick && !isColor(ch)){colorPick=false; builder.append(altColorChar).append(ch);}
-			else if((colorPick=(ch == altColorChar)) == false) builder.append(ch);
+	public static String minimizeColorCodes(String legacyStr){
+		// Find (<color>)(\s|<color>)+
+		Pattern colorsAndSpacesPattern = Pattern.compile(
+				"(?:(?:§x(?:§[0-9a-fA-F]){6})|(?:§[0-9a-fA-FrRkKmMnNoO]))(?:(?:§x(?:§[0-9a-fA-F]){6})|(?:§[0-9a-fA-FrRkKmMnNoO])|\\s)*");
+		Pattern lastColorPattern = Pattern.compile("((?:§x(?:§[0-9a-fA-F]){6})|(?:§[0-9a-fA-FrR]))\\s*$", Pattern.MULTILINE);
+		Matcher colorMatcher = colorsAndSpacesPattern.matcher(legacyStr);
+		StringBuilder builder = new StringBuilder();
+		int lastEnd = 0;
+		while(colorMatcher.find()){
+			builder.append(legacyStr.substring(lastEnd, colorMatcher.start()));
+			String colorsAndSpaces = colorMatcher.group();
+			Matcher lastColorFinder = lastColorPattern.matcher(colorsAndSpaces);
+			lastColorFinder.find();
+			builder.append(lastColorFinder.group(1)).append(TextUtils.stripColorsOnly(colorsAndSpaces));
+			lastEnd = colorMatcher.end();
 		}
-		if(colorPick) builder.append(altColorChar);
+		builder.append(legacyStr.substring(lastEnd));
 		return builder.toString();
+	}
+
+	public static String stripColorsOnly(String str, char altColorChar){
+		//(?:§x(?:§[0-9a-fA-FrR]){6})|(?:§#(?:[0-9a-fA-FrR]{3}){1,2})|(?:§[0-9a-fA-FrR])
+		return str.replaceAll("(?:"+altColorChar+"x(?:"+altColorChar+"[0-9a-fA-FrR]){6})|(?:"+altColorChar+"[0-9a-fA-FrR])", "");
 	}
 	public static String stripColorsOnly(String str){return stripColorsOnly(str, ChatColor.COLOR_CHAR);}
 	public static String stripFormatsOnly(String str, char altColorChar){
-		StringBuilder builder = new StringBuilder("");
-		boolean colorPick = false;
-		for(char ch : str.toCharArray()){
-			if(colorPick && !isFormat(ch)){colorPick=false; builder.append(altColorChar).append(ch);}
-			else if((colorPick=(ch == altColorChar)) == false) builder.append(ch);
-		}
-		if(colorPick) builder.append(altColorChar);
-		return builder.toString();
+		//§[k-oK-O]
+		return str.replaceAll(altColorChar+"[k-oK-O]", "");
 	}
 	public static String stripFormatsOnly(String str){return stripFormatsOnly(str, ChatColor.COLOR_CHAR);}
 
@@ -266,38 +276,43 @@ public class TextUtils{
 	static long[] scale = new long[]{31536000000L, /*2628000000L,*/ 604800000L, 86400000L, 3600000L, 60000L, 1000L};
 	static char[] units = new char[]{'y', /*'m',*/ 'w', 'd', 'h', 'm', 's'};
 	public static String formatTime(long millisecond){
-		return formatTime(millisecond, true, "", "", ", ", scale, units);
+		return formatTime(millisecond, /*show0s=*/true, units.length, "", "", ", ", scale, units);
 	}
 	public static String formatTime(long millisecond, boolean show0s){
-		return formatTime(millisecond, show0s, "", "", ", ", scale, units);
+		return formatTime(millisecond, show0s, units.length, "", "", ", ", scale, units);
 	}
 	public static String formatTime(long millisecond, boolean show0s, ChatColor timeColor, ChatColor unitColor){
-		return formatTime(millisecond, show0s, timeColor, unitColor, null);
+		return formatTime(millisecond, show0s, units.length, timeColor, unitColor, null);
 	}
-	public static String formatTime(long millisecond, boolean show0s, ChatColor timeColor, ChatColor unitColor, ChatColor commaColor){
+	public static String formatTime(long millisecond, boolean show0s, int sigUnits, ChatColor timeColor, ChatColor unitColor){
+		return formatTime(millisecond, show0s, sigUnits, timeColor, unitColor, null);
+	}
+	public static String formatTime(long millisecond, boolean show0s, int sigUnits, ChatColor timeColor, ChatColor unitColor, ChatColor sepColor){
 		String timePrefix = timeColor == null ? "" : timeColor+"";
 		String unitPrefix = unitColor == null ? "" : unitColor+"";
-		String commaPrefix = commaColor == null ? ", " : commaColor+", ";
-		return formatTime(millisecond, show0s, timePrefix, unitPrefix, commaPrefix, scale, units);
+		String sep = sepColor == null ? ", " : sepColor+", ";
+		return formatTime(millisecond, show0s, sigUnits, timePrefix, unitPrefix, sep, scale, units);
 	}
-	public static String formatTime(long millisecond, boolean show0s, String timePrefix, String unitPrefix, String sep){
-		return formatTime(millisecond, show0s, timePrefix, unitPrefix, sep, scale, units);
+	public static String formatTime(long millisecond, boolean show0s, int sigUnits, String timePrefix, String unitPrefix, String sep){
+		return formatTime(millisecond, show0s, sigUnits, timePrefix, unitPrefix, sep, scale, units);
 	}
-	public static String formatTime(long millis, boolean show0s, String timePrefix, String unitPrefix, String sep, long[] scale, char[] units){
+	public static String formatTime(long millis, boolean show0s, int sigUnits, String timePrefix, String unitPrefix, String sep, long[] scale, char[] units){
 		if(millis == 0) return new StringBuilder(timePrefix).append("0").append(unitPrefix).append(units[units.length-1]).toString();
-		int i = 0;
+		int i = 0, unitsShown = 0;
 		while(millis < scale[i]) ++i;
 		StringBuilder builder = new StringBuilder("");
 		for(; i < scale.length-1; ++i){
 			if(show0s || millis / scale[i] != 0){
 				long scaledTime = millis / scale[i];
 				builder.append(timePrefix).append(scaledTime).append(unitPrefix).append(units[i]).append(sep);
+				if(++unitsShown == sigUnits) break;
 			}
 			millis %= scale[i];
 		}
-		if(show0s || millis != 0) builder
+		if((show0s || (millis / scale[scale.length-1]) != 0) && unitsShown < sigUnits) builder
 			.append(timePrefix).append(millis / scale[scale.length-1])
 			.append(unitPrefix).append(units[units.length-1]).toString();
+		else builder.substring(0, builder.length()-sep.length()); // cut off trailing sep
 		return builder.toString();
 	}
 	/**
