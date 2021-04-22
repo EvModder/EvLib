@@ -27,6 +27,7 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Objective;
+import com.mojang.datafixers.util.Pair;
 import net.evmodder.EvLib.extras.EntityUtils.CCP;
 
 public class TellrawUtils{
@@ -362,11 +363,12 @@ public class TellrawUtils{
 		String value; // Optional; overwrites output of score selector
 		public ScoreComponent(@Nonnull Object selector, @Nonnull Objective objective){this.selector = selector; this.objective = objective;}
 		public ScoreComponent(@Nonnull String name, @Nonnull Objective objective){this.selector = name; this.objective = objective;}
-		public ScoreComponent(@Nonnull Object selector, @Nonnull Objective objective,
+		public ScoreComponent(@Nonnull Object selector, @Nonnull Objective objective, String value,
 				String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
 			super(insert, click, hover, color, formats);
 			this.selector = selector;
 			this.objective = objective;
+			this.value = value;
 		}
 		//tellraw @a {"score":{"name":"@p","objective":"levels","value":"3333"}}
 
@@ -403,7 +405,10 @@ public class TellrawUtils{
 		public SelectorComponent(@Nonnull Object selector){this.selector = selector; this.useDisplayName = true;}
 		public SelectorComponent(@Nonnull UUID uuid){this.selector = uuid; this.useDisplayName = true;}
 		public SelectorComponent(@Nonnull Object selector, boolean useDisplayName){this.selector = selector; this.useDisplayName = useDisplayName;}
-		public SelectorComponent(@Nonnull UUID uuid, boolean useDisplayName){this.selector = uuid; this.useDisplayName = useDisplayName;}
+		public SelectorComponent(@Nonnull Object selector, String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+			super(insert, click, hover, color, formats);
+			this.selector = selector; this.useDisplayName = true;
+		}
 //		public SelectorComponent(@Nonnull SelectorType type, @Nonnull SelectorArgument...arguments){this.selector = new Selector(type, arguments);}
 		//tellraw @a {"selector":"@a"}
 
@@ -433,6 +438,10 @@ public class TellrawUtils{
 	public final static class KeybindComponent extends Component{
 		final Keybind keybind;
 		public KeybindComponent(@Nonnull Keybind keybind){this.keybind = keybind;}
+		public KeybindComponent(@Nonnull Keybind keybind, String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+			super(insert, click, hover, color, formats);
+			this.keybind = keybind;
+		}
 		//tellraw @a {"keybind":"of.key.zoom"}
 		@Override public String toPlainText(){return keybind.toString();}//TODO: KEY SETTING NAME HERE if possible?
 		@Override public String toString(){
@@ -469,8 +478,9 @@ public class TellrawUtils{
 				}
 			}
 			if(component instanceof ListComponent){
-				// We can safely flatten nested TellrawBlobs IFF they don't override any of the parent's "group properties"
-				if(((ListComponent)component).components.size() <= 1 || noOverridingProperties(component)){
+				// We can safely flatten nested TellrawBlobs IFF they don't override any of the parent's "group properties"..
+				// AND we are not inside a "with":[]
+				if(((ListComponent)component).components.size() <= 1/* || noOverridingProperties(component)*/){
 					for(Component comp : ((ListComponent)component).components) addComponent(comp);
 					return true;
 				}
@@ -572,7 +582,237 @@ public class TellrawUtils{
 			lastEnd = matcher.end();
 		}
 		comp.addComponent(new RawTextComponent(str.substring(lastEnd)));
-		Bukkit.getLogger().info("convertHexColorsToComponents: "+comp.toString());
 		return comp;
 	}
+
+	private final static Pair<String, Integer> parseColonThenSimpleString(String str, int i){
+		while(Character.isWhitespace(str.charAt(i))) ++i;
+		if(str.charAt(i) != ':') Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+		++i;
+		while(Character.isWhitespace(str.charAt(i))) ++i;
+		if(str.charAt(i) != '"') Bukkit.getLogger().warning("TellrawUtils ERROR: expected \" at index "+i+" of string: "+str);
+		int j = ++i;
+		for(; str.charAt(j) != '"' || TextUtils.isEscaped(str, j); ++j);
+		String simpleStr = str.substring(i, j);
+		return new Pair<>(simpleStr, j + 1);
+	}
+	private final static Pair<Boolean, Integer> parseColonThenBoolean(String str, int i){
+		while(Character.isWhitespace(str.charAt(i))) ++i;
+		if(str.charAt(i) != ':') Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+		++i;
+		while(Character.isWhitespace(str.charAt(i))) ++i;
+		if(str.substring(i, i+4).toLowerCase().equals("true")) return new Pair<>(true, i+4);
+		if(str.substring(i, i+5).toLowerCase().equals("false")) return new Pair<>(false, i+5);
+		Bukkit.getLogger().warning("TellrawUtils ERROR: expected true/false at index "+i+" of string: "+str);
+		return null;
+	}
+	private enum ComponentType{TEXT, TRANSLATE, SCORE, SELECTOR, KEYBIND};
+	private final static Pair<Component, Integer> parseNextComponentFromString(String str, int i){
+		while(Character.isWhitespace(str.charAt(i)) && i < str.length()) ++i;
+		if(i == str.length()) return null;
+		switch(str.charAt(i)){
+			case '[': {
+//				while(i < str.length() && Character.isWhitespace(str.charAt(i))) ++i;
+				ListComponent listComp = new ListComponent();
+//				if(str.charAt('i') == ']') return comp;
+				do{
+					++i;
+					Pair<Component, Integer> nextComp = parseNextComponentFromString(str, i);
+					listComp.addComponent(nextComp.getFirst());
+					i = nextComp.getSecond();
+					while(Character.isWhitespace(str.charAt(i))) ++i;
+				} while(str.charAt(i) == ',');
+				if(str.charAt(i) != ']') Bukkit.getLogger().warning("TellrawUtils ERROR: expected ] at index "+i+" of string: "+str);
+				return new Pair<>(listComp, i + 1);
+			}
+			case '"': {
+				int j;
+				for(j = ++i; str.charAt(j) != '"' || TextUtils.isEscaped(str, j); ++j);
+				return new Pair<>(new RawTextComponent(str.substring(i, j)), j + 1);
+			}
+			case '{': {
+				String insert = null;
+				TextClickAction click = null;
+				TextHoverAction hover = null;
+				String color = null;
+				ArrayList<FormatFlag> formatList = new ArrayList<>();
+				ComponentType type = null;
+				String text = null;
+				String jsonKey = null;
+				Component[] with = null;
+				Keybind keybind = null;
+				Object selector = null;
+				Objective objective = null;
+				String value = null;
+				ListComponent extra = null;
+				do{ // while(str.charAt(i) != '}')
+					++i;
+					while(Character.isWhitespace(str.charAt(i))) ++i;
+					if(str.charAt(i) != '"'){
+						Bukkit.getLogger().warning("TellrawUtils ERROR parsing component at index "+i+" from string: "+str);
+						return null;
+					}
+					++i;
+					ComponentType newType = null;
+					if(str.startsWith("extra\"", i)){
+						i += 6;
+						while(Character.isWhitespace(str.charAt(i))) ++i;
+						if(str.charAt(i) != ':') Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+						++i;
+						Pair<Component, Integer> extraAndIdx = parseNextComponentFromString(str, i);
+						extra = (ListComponent)extraAndIdx.getFirst();
+						i = extraAndIdx.getSecond();
+					}
+					else if(str.startsWith("color\"", i)){
+						i += 6;
+						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+						color = textAndIdx.getFirst();
+						i = textAndIdx.getSecond();
+					}
+					else if(str.startsWith("bold\"", i)){
+						i += 5;
+						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
+						formatList.add(new FormatFlag(Format.BOLD, boolAndIdx.getFirst()));
+						i = boolAndIdx.getSecond();
+					}
+					else if(str.startsWith("italic\"", i)){
+						i += 7;
+						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
+						formatList.add(new FormatFlag(Format.ITALIC, boolAndIdx.getFirst()));
+						i = boolAndIdx.getSecond();
+					}
+					else if(str.startsWith("underlined\"", i)){
+						i += 11;
+						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
+						formatList.add(new FormatFlag(Format.UNDERLINED, boolAndIdx.getFirst()));
+						i = boolAndIdx.getSecond();
+					}
+					else if(str.startsWith("strikethrough\"", i)){
+						i += 14;
+						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
+						formatList.add(new FormatFlag(Format.STRIKETHROUGH, boolAndIdx.getFirst()));
+						i = boolAndIdx.getSecond();
+					}
+					else if(str.startsWith("obfuscated\"", i)){
+						i += 11;
+						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
+						formatList.add(new FormatFlag(Format.OBFUSCATED, boolAndIdx.getFirst()));
+						i = boolAndIdx.getSecond();
+					}
+					else if(str.startsWith("insertion\"", i)){
+						i += 10;
+						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+						insert = textAndIdx.getFirst();
+						i = textAndIdx.getSecond();
+					}
+					else if(str.startsWith("with\"", i)){
+						i += 5;
+						while(Character.isWhitespace(str.charAt(i))) ++i;
+						if(str.charAt(i) != ':') Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+						++i;
+						Pair<Component, Integer> withAndIdx = parseNextComponentFromString(str, i);
+						with = ((ListComponent)withAndIdx.getFirst()).components.toArray(new Component[0]);
+						i = withAndIdx.getSecond();
+					}
+					// Content tags are checked in the order: text, translate, score, selector, keybind, nbt
+					else if(str.startsWith("text\"", i)){
+						newType = ComponentType.TEXT;
+						i += 5;
+						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+						text = textAndIdx.getFirst();
+						i = textAndIdx.getSecond();
+					}
+					else if(str.startsWith("translate\"", i)){
+						newType = ComponentType.TRANSLATE;
+						i += 10;
+						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+						jsonKey = textAndIdx.getFirst();
+						i = textAndIdx.getSecond();
+					}
+					else if(str.startsWith("score\"", i)){
+						newType = ComponentType.SCORE;
+						i += 6;
+						while(Character.isWhitespace(str.charAt(i))) ++i;
+						if(str.charAt(i) != ':') Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+						++i;
+						while(Character.isWhitespace(str.charAt(i))) ++i;
+						if(str.charAt(i) != '{') Bukkit.getLogger().warning("TellrawUtils ERROR: expected { at index "+i+" of string: "+str);
+						do{
+							++i;
+							while(Character.isWhitespace(str.charAt(i))) ++i;
+							if(str.charAt(i) != '"') Bukkit.getLogger().warning("TellrawUtils ERROR: expected \" at index "+i+" of string: "+str);
+							++i;
+							if(str.startsWith("name\"", i)){
+								i += 5;
+								Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+								selector = TextUtils.unescapeString(textAndIdx.getFirst());
+								i = textAndIdx.getSecond();
+							}
+							else if(str.startsWith("objective\"", i)){
+								i += 10;
+								Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+								objective = Bukkit.getServer().getScoreboardManager().getMainScoreboard().getObjective(
+										TextUtils.unescapeString(textAndIdx.getFirst()));
+								i = textAndIdx.getSecond();
+							}
+							else if(str.startsWith("value\"", i)){
+								i += 6;
+								Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+								value = TextUtils.unescapeString(textAndIdx.getFirst());
+								i = textAndIdx.getSecond();
+							}
+							while(Character.isWhitespace(str.charAt(i))) ++i;
+						} while(str.charAt(i) == ',');
+						if(str.charAt(i) != '}') Bukkit.getLogger().warning("TellrawUtils ERROR: expected } at index "+i+" of string: "+str);
+						++i;
+					}
+					else if(str.startsWith("selector\"", i)){
+						newType = ComponentType.SELECTOR;
+						i += 9;
+						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+						selector = TextUtils.unescapeString(textAndIdx.getFirst());
+						i = textAndIdx.getSecond();
+					}
+					else if(str.startsWith("keybind\"", i)){
+						newType = ComponentType.KEYBIND;
+						i +=8;
+						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+						String keybindStr = textAndIdx.getFirst();
+						for(Keybind k : Keybind.values()) if(k.toString().equals(keybindStr)) keybind = k;
+						i = textAndIdx.getSecond();
+					}
+					else{
+						Bukkit.getLogger().warning("TellrawUtils ERROR: unknown comp-key at index "+i+" of : "+str);
+					}
+					// TODO: else if(str.startsWith("nbt\"", i)){
+					if(newType != null){
+						if(type != null) Bukkit.getLogger().warning("TellrawUtils MULTIPLE-TYPES parsing component at index "+i+" from string: "+str);
+						type = newType;
+					}
+					while(Character.isWhitespace(str.charAt(i))) ++i;
+				} while(str.charAt(i) == ',');
+				if(str.charAt(i) != '}') Bukkit.getLogger().warning("TellrawUtils ERROR: expected } at index "+i+" of string: "+str);
+				FormatFlag[] formats = formatList.isEmpty() ? null : formatList.toArray(new FormatFlag[0]);
+				Component comp = null;
+				if(type == null) Bukkit.getLogger().warning("TellrawUtils UNKNOWN TYPE parsing component at index "+i+" from string: "+str);
+				else switch(type){
+					case TEXT: comp = new RawTextComponent(text, insert, click, hover, color, formats); break;
+					case TRANSLATE: comp = new TranslationComponent(jsonKey, with, insert, click, hover, color, formats); break;
+					case SCORE: comp = new ScoreComponent(selector, objective, value, insert, click, hover, color, formats); break;
+					case SELECTOR: comp = new SelectorComponent(selector, insert, click, hover, color, formats); break;
+					case KEYBIND: comp = new KeybindComponent(keybind, insert, click, hover, color, formats); break;
+				}
+				++i;
+				if(extra == null || extra.isEmpty()) return new Pair<>(comp, i);
+				else{
+					extra.components.add(0, comp);
+					return new Pair<>(extra, i);
+				}
+			}
+			default:
+				Bukkit.getLogger().warning("TellrawUtils ERROR parsing component at index "+i+" from string: "+str);
+				return null;
+		}
+	}
+	public final static Component parseComponentFromString(@Nonnull String str){return parseNextComponentFromString(str, 0).getFirst();}
 }

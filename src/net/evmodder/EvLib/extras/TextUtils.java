@@ -276,28 +276,36 @@ public class TextUtils{
 	static long[] scale = new long[]{31536000000L, /*2628000000L,*/ 604800000L, 86400000L, 3600000L, 60000L, 1000L};
 	static char[] units = new char[]{'y', /*'m',*/ 'w', 'd', 'h', 'm', 's'};
 	public static String formatTime(long millisecond){
-		return formatTime(millisecond, /*show0s=*/true, units.length, "", "", ", ", scale, units);
+		return formatTime(millisecond, /*show0s=*/true, "", "", ", ", units.length, scale, units);
 	}
 	public static String formatTime(long millisecond, boolean show0s){
-		return formatTime(millisecond, show0s, units.length, "", "", ", ", scale, units);
+		return formatTime(millisecond, show0s, "", "", ", ", units.length, scale, units);
 	}
 	public static String formatTime(long millisecond, boolean show0s, ChatColor timeColor, ChatColor unitColor){
-		return formatTime(millisecond, show0s, units.length, timeColor, unitColor, null);
+		return formatTime(millisecond, show0s, timeColor, unitColor, null, units.length);
 	}
-	public static String formatTime(long millisecond, boolean show0s, int sigUnits, ChatColor timeColor, ChatColor unitColor){
-		return formatTime(millisecond, show0s, sigUnits, timeColor, unitColor, null);
+	public static String formatTime(long millisecond, boolean show0s, ChatColor timeColor, ChatColor unitColor, int sigUnits){//e
+		return formatTime(millisecond, show0s, timeColor, unitColor, null, sigUnits);
 	}
-	public static String formatTime(long millisecond, boolean show0s, int sigUnits, ChatColor timeColor, ChatColor unitColor, ChatColor sepColor){
+	public static String formatTime(long millisecond, boolean show0s, ChatColor timeColor, ChatColor unitColor, ChatColor sepColor){
+		return formatTime(millisecond, show0s, timeColor, unitColor, sepColor, units.length);
+	}
+	public static String formatTime(long millisecond, boolean show0s, ChatColor timeColor, ChatColor unitColor, ChatColor sepColor, int sigUnits){
 		String timePrefix = timeColor == null ? "" : timeColor+"";
 		String unitPrefix = unitColor == null ? "" : unitColor+"";
 		String sep = sepColor == null ? ", " : sepColor+", ";
-		return formatTime(millisecond, show0s, sigUnits, timePrefix, unitPrefix, sep, scale, units);
+		return formatTime(millisecond, show0s, timePrefix, unitPrefix, sep, sigUnits, scale, units);
 	}
-	public static String formatTime(long millisecond, boolean show0s, int sigUnits, String timePrefix, String unitPrefix, String sep){
-		return formatTime(millisecond, show0s, sigUnits, timePrefix, unitPrefix, sep, scale, units);
+	public static String formatTime(long millisecond, boolean show0s, String timePrefix, String unitPrefix, String sep){
+		return formatTime(millisecond, show0s, timePrefix, unitPrefix, sep, units.length, scale, units);
 	}
-	public static String formatTime(long millis, boolean show0s, int sigUnits, String timePrefix, String unitPrefix, String sep, long[] scale, char[] units){
-		if(millis == 0) return new StringBuilder(timePrefix).append("0").append(unitPrefix).append(units[units.length-1]).toString();
+	public static String formatTime(long millisecond, boolean show0s, String timePrefix, String unitPrefix, String sep, int sigUnits){
+		return formatTime(millisecond, show0s, timePrefix, unitPrefix, sep, sigUnits, scale, units);
+	}
+	public static String formatTime(long millis, boolean show0s, String timePrefix, String unitPrefix, String sep, int sigUnits, long[] scale, char[] units){
+		if(millis / scale[scale.length-1] == 0){
+			return new StringBuilder(timePrefix).append("0").append(unitPrefix).append(units[units.length-1]).toString();
+		}
 		int i = 0, unitsShown = 0;
 		while(millis < scale[i]) ++i;
 		StringBuilder builder = new StringBuilder("");
@@ -309,11 +317,11 @@ public class TextUtils{
 			}
 			millis %= scale[i];
 		}
-		if((show0s || (millis / scale[scale.length-1]) != 0) && unitsShown < sigUnits) builder
+		if((show0s || (millis / scale[scale.length-1]) != 0) && unitsShown < sigUnits)
+			return builder
 			.append(timePrefix).append(millis / scale[scale.length-1])
 			.append(unitPrefix).append(units[units.length-1]).toString();
-		else builder.substring(0, builder.length()-sep.length()); // cut off trailing sep
-		return builder.toString();
+		else return builder.substring(0, builder.length()-sep.length()); // cut off trailing sep
 	}
 	/**
 	 * Takes a string such as 30w6d11h55m33s or 1y and returns a value in milliseconds
