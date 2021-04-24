@@ -24,7 +24,9 @@ import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Objective;
 import com.mojang.datafixers.util.Pair;
@@ -337,8 +339,18 @@ public class TellrawUtils{
 	public static Component getLocalizedDisplayName(@Nonnull ItemStack item){
 		if(item.hasItemMeta() && item.getItemMeta().hasDisplayName()) return new RawTextComponent(item.getItemMeta().getDisplayName());
 		if(item.getType().isBlock()){
-			if(item.hasItemMeta()) return getLocalizedDisplayName(((BlockStateMeta)item.getItemMeta()).getBlockState());
-			return new TranslationComponent("block.minecraft."+item.getType().name().toLowerCase()); 
+			if(item.hasItemMeta() && item.getItemMeta() instanceof BlockStateMeta){
+				return getLocalizedDisplayName(((BlockStateMeta)item.getItemMeta()).getBlockState());
+			}
+			switch(item.getType()){
+				case PLAYER_HEAD:
+				case PLAYER_WALL_HEAD:
+					Bukkit.getLogger().warning("profile name: "+HeadUtils.getGameProfile((SkullMeta)item.getItemMeta()).getName());
+					return new TranslationComponent("block.minecraft.player_head.named",
+							new RawTextComponent(HeadUtils.getGameProfile((SkullMeta)item.getItemMeta()).getName()));
+				default:
+					return new TranslationComponent("block.minecraft."+item.getType().name().toLowerCase());
+			}
 		}
 		switch(item.getType()){
 			case POTION:
@@ -352,6 +364,8 @@ public class TellrawUtils{
 			case SHIELD:
 				if(item.hasItemMeta()) return new TranslationComponent("item.minecraft.shield."
 						+((Banner)((BlockStateMeta)item.getItemMeta()).getBlockState()).getBaseColor().name().toLowerCase());
+			case WRITTEN_BOOK:
+				return new RawTextComponent(((BookMeta)item.getItemMeta()).getTitle());//TODO: book.getTitleComponent()?
 			default:
 				return new TranslationComponent("item.minecraft."+item.getType().name().toLowerCase()); 
 		}
@@ -587,10 +601,16 @@ public class TellrawUtils{
 
 	private final static Pair<String, Integer> parseColonThenSimpleString(String str, int i){
 		while(Character.isWhitespace(str.charAt(i))) ++i;
-		if(str.charAt(i) != ':') Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+		if(str.charAt(i) != ':'){
+			Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+			return null;
+		}
 		++i;
 		while(Character.isWhitespace(str.charAt(i))) ++i;
-		if(str.charAt(i) != '"') Bukkit.getLogger().warning("TellrawUtils ERROR: expected \" at index "+i+" of string: "+str);
+		if(str.charAt(i) != '"'){
+			Bukkit.getLogger().warning("TellrawUtils ERROR: expected \" at index "+i+" of string: "+str);
+			return null;
+		}
 		int j = ++i;
 		for(; str.charAt(j) != '"' || TextUtils.isEscaped(str, j); ++j);
 		String simpleStr = str.substring(i, j);
@@ -598,7 +618,10 @@ public class TellrawUtils{
 	}
 	private final static Pair<Boolean, Integer> parseColonThenBoolean(String str, int i){
 		while(Character.isWhitespace(str.charAt(i))) ++i;
-		if(str.charAt(i) != ':') Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+		if(str.charAt(i) != ':'){
+			Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+			return null;
+		}
 		++i;
 		while(Character.isWhitespace(str.charAt(i))) ++i;
 		if(str.substring(i, i+4).toLowerCase().equals("true")) return new Pair<>(true, i+4);
@@ -618,11 +641,15 @@ public class TellrawUtils{
 				do{
 					++i;
 					Pair<Component, Integer> nextComp = parseNextComponentFromString(str, i);
+					if(nextComp.getFirst() == null) return null;
 					listComp.addComponent(nextComp.getFirst());
 					i = nextComp.getSecond();
 					while(Character.isWhitespace(str.charAt(i))) ++i;
 				} while(str.charAt(i) == ',');
-				if(str.charAt(i) != ']') Bukkit.getLogger().warning("TellrawUtils ERROR: expected ] at index "+i+" of string: "+str);
+				if(str.charAt(i) != ']'){
+					Bukkit.getLogger().warning("TellrawUtils ERROR: expected ] at index "+i+" of string: "+str);
+					return null;
+				}
 				return new Pair<>(listComp, i + 1);
 			}
 			case '"': {
@@ -657,60 +684,75 @@ public class TellrawUtils{
 					if(str.startsWith("extra\"", i)){
 						i += 6;
 						while(Character.isWhitespace(str.charAt(i))) ++i;
-						if(str.charAt(i) != ':') Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+						if(str.charAt(i) != ':'){
+							Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+							return null;
+						}
 						++i;
 						Pair<Component, Integer> extraAndIdx = parseNextComponentFromString(str, i);
+						if(extraAndIdx == null) return null;
 						extra = (ListComponent)extraAndIdx.getFirst();
 						i = extraAndIdx.getSecond();
 					}
 					else if(str.startsWith("color\"", i)){
 						i += 6;
 						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+						if(textAndIdx == null) return null;
 						color = textAndIdx.getFirst();
 						i = textAndIdx.getSecond();
 					}
 					else if(str.startsWith("bold\"", i)){
 						i += 5;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
+						if(boolAndIdx == null) return null;
 						formatList.add(new FormatFlag(Format.BOLD, boolAndIdx.getFirst()));
 						i = boolAndIdx.getSecond();
 					}
 					else if(str.startsWith("italic\"", i)){
 						i += 7;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
+						if(boolAndIdx == null) return null;
 						formatList.add(new FormatFlag(Format.ITALIC, boolAndIdx.getFirst()));
 						i = boolAndIdx.getSecond();
 					}
 					else if(str.startsWith("underlined\"", i)){
 						i += 11;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
+						if(boolAndIdx == null) return null;
 						formatList.add(new FormatFlag(Format.UNDERLINED, boolAndIdx.getFirst()));
 						i = boolAndIdx.getSecond();
 					}
 					else if(str.startsWith("strikethrough\"", i)){
 						i += 14;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
+						if(boolAndIdx == null) return null;
 						formatList.add(new FormatFlag(Format.STRIKETHROUGH, boolAndIdx.getFirst()));
 						i = boolAndIdx.getSecond();
 					}
 					else if(str.startsWith("obfuscated\"", i)){
 						i += 11;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
+						if(boolAndIdx == null) return null;
 						formatList.add(new FormatFlag(Format.OBFUSCATED, boolAndIdx.getFirst()));
 						i = boolAndIdx.getSecond();
 					}
 					else if(str.startsWith("insertion\"", i)){
 						i += 10;
 						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+						if(textAndIdx == null) return null;
 						insert = textAndIdx.getFirst();
 						i = textAndIdx.getSecond();
 					}
 					else if(str.startsWith("with\"", i)){
 						i += 5;
 						while(Character.isWhitespace(str.charAt(i))) ++i;
-						if(str.charAt(i) != ':') Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+						if(str.charAt(i) != ':'){
+							Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+							return null;
+						}
 						++i;
 						Pair<Component, Integer> withAndIdx = parseNextComponentFromString(str, i);
+						if(withAndIdx == null) return null;
 						with = ((ListComponent)withAndIdx.getFirst()).components.toArray(new Component[0]);
 						i = withAndIdx.getSecond();
 					}
@@ -719,6 +761,7 @@ public class TellrawUtils{
 						newType = ComponentType.TEXT;
 						i += 5;
 						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+						if(textAndIdx == null) return null;
 						text = textAndIdx.getFirst();
 						i = textAndIdx.getSecond();
 					}
@@ -726,6 +769,7 @@ public class TellrawUtils{
 						newType = ComponentType.TRANSLATE;
 						i += 10;
 						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+						if(textAndIdx == null) return null;
 						jsonKey = textAndIdx.getFirst();
 						i = textAndIdx.getSecond();
 					}
@@ -733,24 +777,35 @@ public class TellrawUtils{
 						newType = ComponentType.SCORE;
 						i += 6;
 						while(Character.isWhitespace(str.charAt(i))) ++i;
-						if(str.charAt(i) != ':') Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+						if(str.charAt(i) != ':'){
+							Bukkit.getLogger().warning("TellrawUtils ERROR: expected : at index "+i+" of string: "+str);
+							return null;
+						}
 						++i;
 						while(Character.isWhitespace(str.charAt(i))) ++i;
-						if(str.charAt(i) != '{') Bukkit.getLogger().warning("TellrawUtils ERROR: expected { at index "+i+" of string: "+str);
+						if(str.charAt(i) != '{'){
+							Bukkit.getLogger().warning("TellrawUtils ERROR: expected { at index "+i+" of string: "+str);
+							return null;
+						}
 						do{
 							++i;
 							while(Character.isWhitespace(str.charAt(i))) ++i;
-							if(str.charAt(i) != '"') Bukkit.getLogger().warning("TellrawUtils ERROR: expected \" at index "+i+" of string: "+str);
+							if(str.charAt(i) != '"'){
+								Bukkit.getLogger().warning("TellrawUtils ERROR: expected \" at index "+i+" of string: "+str);
+								return null;
+							}
 							++i;
 							if(str.startsWith("name\"", i)){
 								i += 5;
 								Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+								if(textAndIdx == null) return null;
 								selector = TextUtils.unescapeString(textAndIdx.getFirst());
 								i = textAndIdx.getSecond();
 							}
 							else if(str.startsWith("objective\"", i)){
 								i += 10;
 								Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+								if(textAndIdx == null) return null;
 								objective = Bukkit.getServer().getScoreboardManager().getMainScoreboard().getObjective(
 										TextUtils.unescapeString(textAndIdx.getFirst()));
 								i = textAndIdx.getSecond();
@@ -758,18 +813,23 @@ public class TellrawUtils{
 							else if(str.startsWith("value\"", i)){
 								i += 6;
 								Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+								if(textAndIdx == null) return null;
 								value = TextUtils.unescapeString(textAndIdx.getFirst());
 								i = textAndIdx.getSecond();
 							}
 							while(Character.isWhitespace(str.charAt(i))) ++i;
 						} while(str.charAt(i) == ',');
-						if(str.charAt(i) != '}') Bukkit.getLogger().warning("TellrawUtils ERROR: expected } at index "+i+" of string: "+str);
+						if(str.charAt(i) != '}'){
+							Bukkit.getLogger().warning("TellrawUtils ERROR: expected } at index "+i+" of string: "+str);
+							return null;
+						}
 						++i;
 					}
 					else if(str.startsWith("selector\"", i)){
 						newType = ComponentType.SELECTOR;
 						i += 9;
 						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+						if(textAndIdx == null) return null;
 						selector = TextUtils.unescapeString(textAndIdx.getFirst());
 						i = textAndIdx.getSecond();
 					}
@@ -777,12 +837,14 @@ public class TellrawUtils{
 						newType = ComponentType.KEYBIND;
 						i +=8;
 						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+						if(textAndIdx == null) return null;
 						String keybindStr = textAndIdx.getFirst();
 						for(Keybind k : Keybind.values()) if(k.toString().equals(keybindStr)) keybind = k;
 						i = textAndIdx.getSecond();
 					}
 					else{
 						Bukkit.getLogger().warning("TellrawUtils ERROR: unknown comp-key at index "+i+" of : "+str);
+						return null;
 					}
 					// TODO: else if(str.startsWith("nbt\"", i)){
 					if(newType != null){
@@ -791,11 +853,17 @@ public class TellrawUtils{
 					}
 					while(Character.isWhitespace(str.charAt(i))) ++i;
 				} while(str.charAt(i) == ',');
-				if(str.charAt(i) != '}') Bukkit.getLogger().warning("TellrawUtils ERROR: expected } at index "+i+" of string: "+str);
+				if(str.charAt(i) != '}'){
+					Bukkit.getLogger().warning("TellrawUtils ERROR: expected } at index "+i+" of string: "+str);
+					return null;
+				}
 				FormatFlag[] formats = formatList.isEmpty() ? null : formatList.toArray(new FormatFlag[0]);
 				Component comp = null;
-				if(type == null) Bukkit.getLogger().warning("TellrawUtils UNKNOWN TYPE parsing component at index "+i+" from string: "+str);
-				else switch(type){
+				if(type == null){
+					Bukkit.getLogger().warning("TellrawUtils UNKNOWN TYPE parsing component at index "+i+" from string: "+str);
+					return null;
+				}
+				switch(type){
 					case TEXT: comp = new RawTextComponent(text, insert, click, hover, color, formats); break;
 					case TRANSLATE: comp = new TranslationComponent(jsonKey, with, insert, click, hover, color, formats); break;
 					case SCORE: comp = new ScoreComponent(selector, objective, value, insert, click, hover, color, formats); break;
@@ -814,5 +882,8 @@ public class TellrawUtils{
 				return null;
 		}
 	}
-	public final static Component parseComponentFromString(@Nonnull String str){return parseNextComponentFromString(str, 0).getFirst();}
+	public final static Component parseComponentFromString(@Nonnull String str){
+		Pair<Component, Integer> compAndIdx = parseNextComponentFromString(str, 0);
+		return compAndIdx == null ? null : compAndIdx.getFirst();
+	}
 }
