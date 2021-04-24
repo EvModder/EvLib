@@ -95,7 +95,7 @@ public class HeadUtils {
 		if(textureCode == null) return item;
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
 
-		GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(textureCode.getBytes()), textureCode);
+		GameProfile profile = new GameProfile(/*uuid=*/UUID.nameUUIDFromBytes(textureCode.getBytes()), /*name=*/textureCode);
 		profile.getProperties().put("textures", new Property("textures", textureCode));
 		setGameProfile(meta, profile);
 
@@ -168,6 +168,7 @@ public class HeadUtils {
 
 	public enum HeadType{HEAD, SKULL, TOE}
 	public static HeadType getDroppedHeadType(EntityType eType){  // Replaces `isSkeletal()`, which is now in DropHeads>JunkUtils
+		if(eType == null) return null;
 		switch(eType){
 			case SKELETON:
 			case SKELETON_HORSE:
