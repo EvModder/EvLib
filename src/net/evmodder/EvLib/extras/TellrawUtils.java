@@ -631,7 +631,7 @@ public class TellrawUtils{
 	}
 	private enum ComponentType{TEXT, TRANSLATE, SCORE, SELECTOR, KEYBIND};
 	private final static Pair<Component, Integer> parseNextComponentFromString(String str, int i){
-		while(Character.isWhitespace(str.charAt(i)) && i < str.length()) ++i;
+		while(i < str.length() && Character.isWhitespace(str.charAt(i))) ++i;
 		if(i == str.length()) return null;
 		switch(str.charAt(i)){
 			case '[': {
