@@ -276,6 +276,10 @@ public class TellrawUtils{
 			case VILLAGER:
 				return new TranslationComponent("entity.minecraft."+entity.getType().name().toLowerCase()+"."
 						+((Villager)entity).getProfession().name().toLowerCase());
+			case MUSHROOM_COW:
+				return new TranslationComponent("entity.minecraft.mooshroom");
+			case PIG_ZOMBIE:
+				return new TranslationComponent("entity.minecraft.zombie_pigman");
 			case TROPICAL_FISH:
 				return getLocalizedDisplayName(EntityUtils.getCCP((TropicalFish)entity));
 			default:
