@@ -264,10 +264,6 @@ public class WebUtils {
 
 	static void runGrumm(){
 		String[] targetHeads = new String[]{
-				"SHULKER|BLACK|CLOSED", "SHULKER|BLUE|CLOSED", "SHULKER|BROWN|CLOSED", "SHULKER|CLOSED", "SHULKER|CYAN|CLOSED",
-				"SHULKER|GRAY|CLOSED", "SHULKER|GREEN|CLOSED", "SHULKER|LIGHT_BLUE|CLOSED", "SHULKER|LIGHT_GRAY|CLOSED",
-				"SHULKER|LIME|CLOSED", "SHULKER|MAGENTA|CLOSED", "SHULKER|ORANGE|CLOSED", "SHULKER|PINK|CLOSED", "SHULKER|PURPLE|CLOSED",
-				"SHULKER|RED|CLOSED", "SHULKER|WHITE|CLOSED", "SHULKER|YELLOW|CLOSED"
 //				"BOAT", "LEASH_HITCH",
 		};
 		System.out.print("runGrumm() auth for "+targetHeads.length+" heads...\n"); 
@@ -318,10 +314,13 @@ public class WebUtils {
 		}
 		for(String headData : FileIO.loadFile("head-textures.txt", "").split("\n")){
 			int i = headData.indexOf(':');
-			if(i != -1 && headData.indexOf('|') == -1){
-				String headName = headData.substring(0, i);
-				if(headData.substring(i+1).replace("xxx", "").trim().isEmpty()) continue;
-				if(!missingTxr.remove(headName)) extraTxr.add(headName);
+			if(i != -1){
+				if(headData.indexOf('|') == -1){
+					String headName = headData.substring(0, i);
+					if(headData.substring(i+1).replace("xxx", "").trim().isEmpty()) continue;
+					if(!missingTxr.remove(headName)) extraTxr.add(headName);
+				}
+				else extraTxr.add(headData.substring(0, i));
 			}
 		}
 		System.out.println("Missing textures for: "+missingTxr);
@@ -359,12 +358,49 @@ public class WebUtils {
 		System.out.println("Missing Grumms for: \""+String.join("\", \"", missingGrumms)+"\"");
 	}
 
+	static void checkAbnormalHeadTextures(){
+		String[] headTextures = FileIO.loadFile("head-textures.txt", "").split("\n");
+		TreeSet<String> abnormalSkins = new TreeSet<>();
+		int dotEvery = (int)Math.ceil(headTextures.length/80f); // Improv progress bar
+		for(int i=dotEvery; i<headTextures.length; i+=dotEvery) System.out.print('-'); System.out.println();
+		int num = 0;
+		for(String headData : headTextures){
+			if(++num == dotEvery){System.out.print('.'); System.out.flush(); num = 0;}
+			int i = headData.indexOf(':');
+			if(i == -1) continue;
+			String name = headData.substring(0, i).trim();
+			String base64 = headData.substring(i + 1).replace("xxx", "").trim();
+			if(base64.isEmpty()) continue;
+			String json = new String(Base64.getDecoder().decode(base64));
+			String url = json.substring(json.indexOf("\"url\":")+7, json.lastIndexOf('"')).trim();
+			//String textureId = url.substring(url.lastIndexOf('/')+1);
+//			try{Thread.sleep(2000);}catch(InterruptedException e1){e1.printStackTrace();}//2s
+			try{
+				HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
+				conn.setUseCaches(false);
+				conn.setDoOutput(true);
+				conn.setDoInput(true);
+
+				BufferedInputStream inImg = new BufferedInputStream(conn.getInputStream());
+				BufferedImage image = ImageIO.read(inImg);
+				int w = image.getWidth(), h = image.getHeight();
+				if(!((w==64 && h==64) || (w==640 && h==640))) abnormalSkins.add(name+"="+w+"x"+h);
+//				System.out.println("2. Image WxH: "+image.getWidth()+"x"+image.getHeight());
+//				ImageIO.write(image, "png", new File("tmp_textures/"+name+".png"));
+//				System.out.println("3. Saved image: "+url+" ("+name+")");
+			}
+			catch(IOException e){e.printStackTrace();}
+		}
+		System.out.println("\nAbnormal skins: "+abnormalSkins);
+	}
+
 	public static void main(String... args){
 		//com.sun.org.apache.xml.internal.security.Init.init();
 		FileIO.DIR = "./";
 		checkMissingTextures();
 		checkMissingGrummTextures();
-		runGrumm();
+//		checkAbnormalHeadTextures();
+//		runGrumm();
 //		System.out.println("Test: "+Vehicle.class.isAssignableFrom(EntityType.PLAYER.getEntityClass()));
 	}
 }
