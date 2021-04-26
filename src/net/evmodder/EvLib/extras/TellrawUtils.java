@@ -19,7 +19,9 @@ import org.bukkit.block.Banner;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Skull;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Rabbit;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
@@ -269,6 +271,22 @@ public class TellrawUtils{
 					new TranslationComponent("color.minecraft."+ccp.bodyColor.name().toLowerCase()),
 					new TranslationComponent("entity.minecraft.tropical_fish.type."+ccp.pattern.name().toLowerCase())});
 	}
+	public static Component getBestGuessLocalizedDisplayName(@Nonnull EntityType eType){
+		switch(eType){
+			case MUSHROOM_COW: return new TranslationComponent("entity.minecraft.mooshroom");
+			case SNOWMAN: return new TranslationComponent("entity.minecraft.snow_golem");
+			case LEASH_HITCH: return new TranslationComponent("entity.minecraft.leash_knot");
+			case MINECART_TNT: return new TranslationComponent("entity.minecraft.tnt_minecart");
+			case MINECART_CHEST: return new TranslationComponent("entity.minecraft.chest_minecart");
+			case MINECART_HOPPER: return new TranslationComponent("entity.minecraft.hopper_minecart");
+			case MINECART_FURNACE: return new TranslationComponent("entity.minecraft.furnace_minecart");
+			case MINECART_COMMAND: return new TranslationComponent("entity.minecraft.command_block_minecart");
+			case MINECART_MOB_SPAWNER: return new TranslationComponent("entity.minecraft.spawner_minecart");
+			default:
+				return new TranslationComponent("entity.minecraft."+eType.name().toLowerCase()
+						.replace("pig_zombie", "zombie_pigman"));
+		}
+	}
 	public static Component getLocalizedDisplayName(@Nonnull Entity entity, boolean useDisplayName){
 		if(entity.getName() != null) return new RawTextComponent(
 				(entity instanceof Player && useDisplayName) ? ((Player)entity).getDisplayName() : entity.getName());
@@ -276,13 +294,14 @@ public class TellrawUtils{
 			case VILLAGER:
 				return new TranslationComponent("entity.minecraft."+entity.getType().name().toLowerCase()+"."
 						+((Villager)entity).getProfession().name().toLowerCase());
-			case MUSHROOM_COW:
-				return new TranslationComponent("entity.minecraft.mooshroom");
+			case RABBIT:
+				return new TranslationComponent(((Rabbit)entity).getRabbitType() == Rabbit.Type.THE_KILLER_BUNNY
+					? "entity.minecraft.killer_bunny"
+					: "entity.minecraft.rabbit");
 			case TROPICAL_FISH:
 				return getLocalizedDisplayName(EntityUtils.getCCP((TropicalFish)entity));
 			default:
-				return new TranslationComponent("entity.minecraft."+entity.getType().name()
-						.replace("PIG_ZOMBIE", "ZOMBIE_PIGMAN").toLowerCase());
+				return getBestGuessLocalizedDisplayName(entity.getType());
 		}
 	}
 	static String getVanillaPotionEffectTypeName(@Nonnull PotionEffectType type){
