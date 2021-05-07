@@ -394,10 +394,10 @@ public class TextUtils{
 	 * @param ch the character to check
 	 * @return character width in pixels
 	 */
-	public static int pxLen(char ch){
+	private static int pxLen(char ch){
 		switch(ch){
 			case '§':
-				return -6; // Actual width is 5
+				return 0; // Actual width is 5
 			case '.': case ','://comma44
 			case ':': case ';':
 			case 'i': case '!': case '|': case '\'':
@@ -448,6 +448,11 @@ public class TextUtils{
 		//for(int px : charList.keySet()) if(charList.get(px).indexOf(ch) >= 0) return px;
 		return 6;
 	}
+	/**
+	 * returns true if the character uses half-pixels when bold
+	 * @param ch the Character to check
+	 * @return boolean whether to add .5px if inside bold formatting
+	 */
 	public static boolean isHalfPixel(char ch){
 		switch(ch){
 			case '´': case '¸'://2
@@ -492,7 +497,7 @@ public class TextUtils{
 				else ++len;
 			}
 		}
-		return len;
+		return len;// - (halfPixel ? .5 : 0);
 	}
 
 	public static double strLenExact(String str, boolean mono){
@@ -502,14 +507,14 @@ public class TextUtils{
 		for(char ch : str.toCharArray()){
 			if(colorPick){
 				colorPick = false;
-				switch(ch){
+				switch(Character.toLowerCase(ch)){
 					case '0': case '1': case '2': case '3': case '4':
 					case '5': case '6': case '7': case '8': case '9':
 					case 'a': case 'b': case 'c': case 'd': case 'e':
-					case 'f': case 'r': bold = false; continue;
+					case 'f': case 'r': case 'x': bold = false; continue;
 					case 'l': bold = true; continue;
 					case 'k': case 'm': case 'n': case 'o': continue;
-					default: /**/continue; // Apparently, "§x" => ""
+					default: /**/continue; // Apparently, "§w" => ""
 				}
 			}
 			if(ch == '§'){colorPick = true; continue;}
@@ -525,9 +530,9 @@ public class TextUtils{
 		public StrAndPxLen(String s, double l){str = s; pxLen = l;}
 	}
 	/**
-	 * returns substring, in chars or pixels, considering format codes
+	 * returns substring, in chars(mono) or pixels, ignoring color & format
 	 * @param str input string
-	 * @param len desired string length
+	 * @param len desired string maximum length
 	 * @param mono true if length will be in chars (for console) or false if will be in pixels (for chat area)
 	 * @return object array with stripped string [0] and integer length in pixels or chars depending of mono
 	 */
@@ -549,23 +554,24 @@ public class TextUtils{
 				if(colorPick){
 					colorPick = false;
 					subStrLen += 2;
-					switch(ch){
+					switch(Character.toLowerCase(ch)){
 						case '0': case '1': case '2': case '3': case '4':
 						case '5': case '6': case '7': case '8': case '9':
 						case 'a': case 'b': case 'c': case 'd': case 'e':
-						case 'f': case 'r': bold = false; continue;
+						case 'f': case 'r': case 'x': bold = false; continue;
 						case 'l': bold = true; continue;
 						case 'k': case 'm': case 'n': case 'o': continue;
-						default: /**/continue; // Apparently, "§x" => ""
+						default: /**/continue; // Apparently, "§W" => ""
 					}
 				}
 				if(ch == '§'){colorPick = true; continue;}
+				subStrPxLen = pxLen;
 				pxLen += TextUtils.pxLen(ch);
 				if(bold) pxLen += isHalfPixel(ch) ? .5 : 1;
 				if(pxLen > maxLen) break;
 				++subStrLen;
-				subStrPxLen = pxLen;
 			}
+			if(subStrLen == str.length()) subStrPxLen =pxLen;
 			return new StrAndPxLen(str.substring(0, subStrLen), subStrPxLen);
 		}
 	}

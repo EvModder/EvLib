@@ -157,6 +157,50 @@ public class WebUtils {
 		return newImg;
 	}
 
+	public static BufferedImage rotate(BufferedImage img, double angle){
+//		double sin = Math.abs(Math.sin(Math.toRadians(angle))), cos = Math.abs(Math.cos(Math.toRadians(angle)));
+		int w = img.getWidth(null), h = img.getHeight(null);
+//		int neww = (int) Math.floor(w*cos + h*sin), newh = (int) Math.floor(h*cos + w*sin);
+		BufferedImage newImg = new BufferedImage(w, h, img.getType());
+		Graphics2D g = newImg.createGraphics();
+//		g.translate((neww-w)/2, (newh-h)/2);
+		g.rotate(Math.toRadians(angle), w/2, h/2);
+		g.drawImage(img, 0, 0, null);
+		g.dispose();
+		return newImg;
+	}
+	public static BufferedImage flip(BufferedImage img){
+		BufferedImage newImg = new BufferedImage(img.getWidth(null), img.getHeight(null), img.getType());
+		Graphics2D g = newImg.createGraphics();
+		AffineTransform at = new AffineTransform();
+		at.concatenate(AffineTransform.getScaleInstance(1, -1));
+		at.concatenate(AffineTransform.getTranslateInstance(0, -img.getHeight(null)));
+		g.transform(at);
+		g.drawImage(img, 0, 0, null);
+		g.dispose();
+		return newImg;
+	}
+	static BufferedImage sidewaysHead(BufferedImage img){
+		BufferedImage newImg = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = newImg.createGraphics();
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC));
+		g.drawImage(img, 0, 0, null);
+		g.drawImage(flip(img.getSubimage(8, 8, 8, 8)), 16, 0, null);//face
+		g.drawImage(rotate(img.getSubimage(24, 8, 8, 8), 180), 8, 0, null);//back
+		g.drawImage(img.getSubimage(8, 0, 8, 8), 8, 8, null);//top
+		g.drawImage(rotate(flip(img.getSubimage(16, 0, 8, 8)), 180), 24, 8, null);//bottom
+		g.drawImage(flip(img.getSubimage(40, 8, 8, 8)), 48, 0, null);//face overlay
+		g.drawImage(rotate(img.getSubimage(56, 8, 8, 8), 180), 40, 0, null);//back overlay
+		g.drawImage(img.getSubimage(40, 0, 8, 8), 40, 8, null);//top overlay
+		g.drawImage(rotate(flip(img.getSubimage(48, 0, 8, 8)), 180), 56, 8, null);//bottom overlay
+		g.drawImage(rotate(img.getSubimage(0, 8, 8, 8), 90), 0, 8, null);//right cheek
+		g.drawImage(rotate(img.getSubimage(16, 8, 8, 8), -90), 16, 8, null);//left cheek
+		g.drawImage(rotate(img.getSubimage(32, 8, 8, 8), 90), 32, 8, null);//right cheek overlay
+		g.drawImage(rotate(img.getSubimage(48, 8, 8, 8), -90), 48, 8, null);//left cheek overlay
+		g.dispose();
+		return newImg;
+	}
+
 	static TreeMap<String, String> makeUpsideDownCopies(String[] heads, String outfolder, String uuid, String token){
 		TreeMap<String, String> newHeads = new TreeMap<String, String>();
 		for(String line : heads){
@@ -264,31 +308,32 @@ public class WebUtils {
 
 	static void runGrumm(){
 		String[] targetHeads = new String[]{
+//				"SHULKER|BLACK|CLOSED", "SHULKER|BLUE|CLOSED", "SHULKER|BROWN|CLOSED", "SHULKER|CYAN|CLOSED", "SHULKER|GRAY|CLOSED",
+//				"SHULKER|GREEN|CLOSED", "SHULKER|LIGHT_BLUE|CLOSED", "SHULKER|LIGHT_GRAY|CLOSED", "SHULKER|LIME|CLOSED", "SHULKER|MAGENTA|CLOSED",
+//				"SHULKER|ORANGE|CLOSED", "SHULKER|PINK|CLOSED", "SHULKER|PURPLE|CLOSED", "SHULKER|RED|CLOSED", "SHULKER|WHITE|CLOSED",
+//				"SHULKER|YELLOW|CLOSED",
 //				"BOAT", "LEASH_HITCH",
 		};
-		System.out.print("runGrumm() auth for "+targetHeads.length+" heads...\n"); 
-
-		Scanner scanner = new Scanner(System.in); 
-		System.out.print("Enter account email: "); String email = scanner.nextLine();//nl@nl.com
-		System.out.print("Enter account passw: "); String passw = scanner.nextLine();//y
-		System.out.print("Enter account uuid: "); String uuid = scanner.nextLine();//0e314b6029c74e35bef33c652c8fb467
-		scanner.close();
-
-		String token = authenticateMojang(email, passw);
-		System.out.println("token = "+token);
-
-
 		String[] headsData = FileIO.loadFile("head-textures.txt", "").split("\n");
 		String[] headsToFlip = new String[targetHeads.length];
 		for(int i=0; i<targetHeads.length; ++i){
 			for(String headData : headsData){
-				if(headData.startsWith(targetHeads[i]) && !headData.contains("|GRUMM:")){
+				if(headData.startsWith(targetHeads[i]+":")){
 					headsToFlip[i] = headData;
 					break;
 				}
 			}
 			if(headsToFlip[i] == null) System.out.println("Could not find target head: "+targetHeads[i]);
 		}
+
+		System.out.print("runGrumm() auth for "+targetHeads.length+" heads...\n"); 
+		Scanner scanner = new Scanner(System.in); 
+		System.out.print("Enter account email: "); String email = scanner.nextLine();//nl@nl.com
+		System.out.print("Enter account passw: "); String passw = scanner.nextLine();//y
+		System.out.print("Enter account uuid: "); String uuid = scanner.nextLine();//0e314b6029c74e35bef33c652c8fb467
+		scanner.close();
+		String token = authenticateMojang(email, passw);
+		System.out.println("token = "+token);
 
 		System.out.println(StringUtils.join(headsToFlip, "\n"));
 		System.out.println("Beginning conversion...");
@@ -354,7 +399,10 @@ public class WebUtils {
 			}
 		}
 		TreeSet<String> missingGrumms = new TreeSet<String>();
-		for(String headName : regularTxtrs) if(!grummTxtrs.contains(headName)) missingGrumms.add(headName);
+		for(String headName : regularTxtrs){
+			if(headName.startsWith("SHULKER|") && headName.contains("|SIDE")) continue;
+			if(!grummTxtrs.contains(headName)) missingGrumms.add(headName);
+		}
 		System.out.println("Missing Grumms for: \""+String.join("\", \"", missingGrumms)+"\"");
 	}
 
@@ -371,7 +419,9 @@ public class WebUtils {
 			String name = headData.substring(0, i).trim();
 			String base64 = headData.substring(i + 1).replace("xxx", "").trim();
 			if(base64.isEmpty()) continue;
-			String json = new String(Base64.getDecoder().decode(base64));
+			String json;
+			try{json = new String(Base64.getDecoder().decode(base64));}
+			catch(IllegalArgumentException ex){continue;} // Probably a redirected texture? (TODO: validate all base64s maybe)
 			String url = json.substring(json.indexOf("\"url\":")+7, json.lastIndexOf('"')).trim();
 			//String textureId = url.substring(url.lastIndexOf('/')+1);
 //			try{Thread.sleep(2000);}catch(InterruptedException e1){e1.printStackTrace();}//2s
@@ -399,7 +449,7 @@ public class WebUtils {
 		FileIO.DIR = "./";
 		checkMissingTextures();
 		checkMissingGrummTextures();
-//		checkAbnormalHeadTextures();
+		checkAbnormalHeadTextures();
 //		runGrumm();
 //		System.out.println("Test: "+Vehicle.class.isAssignableFrom(EntityType.PLAYER.getEntityClass()));
 	}

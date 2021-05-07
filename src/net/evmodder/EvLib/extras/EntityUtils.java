@@ -156,14 +156,41 @@ public class EntityUtils{
 		//TODO: uncomment and access HeadUtils using reflection:
 		//if(name.toUpperCase().startsWith("MHF_")) name = HeadUtils.normalizedNameFromMHFName(name);
 		name = name.toUpperCase().replace(' ', '_');
-		String noUnderscoresName = name.replace("_", "");
-		if(noUnderscoresName.equals("ZOMBIEPIGMAN")) name = "PIG_ZOMBIE";
-		else if(noUnderscoresName.equals("MOOSHROOM")) name = "MUSHROOM_COW";
+		switch(name.replace("_", "")){
+			case "MOOSHROOM": return EntityType.MUSHROOM_COW;
+			case "SNOWGOLEM": return EntityType.SNOWMAN;
+			case "ZOMBIEPIGMAN": return EntityType.valueOf("PIG_ZOMBIE");
+			case "LEASHKNOT": return EntityType.LEASH_HITCH;
+			case "TNTMINECART": return EntityType.MINECART_TNT;
+			case "CHESTMINECART": return EntityType.MINECART_CHEST;
+			case "HOPPERMINECART": return EntityType.MINECART_HOPPER;
+			case "FURNACEMINECART": return EntityType.MINECART_FURNACE;
+			case "COMMANDBLOCKMINECART": return EntityType.MINECART_COMMAND;
+			case "SPAWNERMINECART": return EntityType.MINECART_MOB_SPAWNER;
+			default: 
+				try{return EntityType.valueOf(name);}
+				catch(IllegalArgumentException ex){}
+				name = name.replace("_", "");
+				for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(name)) return t;
+				return EntityType.UNKNOWN;
+		}
+	}
 
-		try{EntityType type = EntityType.valueOf(name); return type;}
-		catch(IllegalArgumentException ex){}
-		for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(noUnderscoresName)) return t;
-		return EntityType.UNKNOWN;
+	public static String getNormalizedEntityName(@Nonnull String name){
+		//TODO: improve this function / test for errors
+		switch(name.toUpperCase()){
+			case "MUSHROOM_COW": return "mooshroom";
+			case "SNOWMAN": return "snow_golem";
+			case "PIG_ZOMBIE": return "zombie_pigman";
+			case "LEASH_HITCH": return "leash_knot";
+			case "MINECART_TNT": return "tnt_minecart";
+			case "MINECART_CHEST": return "chest_minecart";
+			case "MINECART_HOPPER": return "hopper_minecart";
+			case "MINECART_FURNACE": return "furnace_minecart";
+			case "MINECART_COMMAND": return "command_block_minecart";
+			case "MINECART_MOB_SPAWNER": return "spawner_minecart";
+			default: return name.toLowerCase();
+		}
 	}
 
 	public static boolean isSkeletal(@Nonnull EntityType eType){
