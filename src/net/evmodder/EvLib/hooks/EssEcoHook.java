@@ -8,11 +8,13 @@ import com.earth2me.essentials.api.NoLoanPermittedException;
 import com.earth2me.essentials.api.UserDoesNotExistException;
 
 public class EssEcoHook {
+	@SuppressWarnings("deprecation")
 	public static double getBalance(OfflinePlayer p){
 		try{return net.ess3.api.Economy.getMoneyExact(p.getName()).doubleValue();}
 		catch(UserDoesNotExistException e){return 0D;}
 	}
 
+	@SuppressWarnings("deprecation")
 	public static boolean hasAtLeast(OfflinePlayer p, double amount){
 		try{return net.ess3.api.Economy.hasEnough(p.getName(), new BigDecimal(amount));}
 		catch(UserDoesNotExistException e){return false;}
