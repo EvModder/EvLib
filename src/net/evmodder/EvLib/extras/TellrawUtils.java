@@ -505,9 +505,9 @@ public class TellrawUtils{
 		public boolean addComponent(@Nonnull Component component){
 			// If last==null, components[] is empty and we are willing to accept an empty component to set the list properties 
 			if(component.toPlainText().isEmpty() && last != null) return false;
-			if(component instanceof RawTextComponent){
-				if(ChatColor.stripColor(component.toPlainText()).isEmpty() && last != null) return false;
-				if(last != null && last instanceof RawTextComponent && (last.samePropertiesAs(component))){
+			if(component instanceof RawTextComponent && last != null){
+				if(ChatColor.stripColor(component.toPlainText()).isEmpty()) return false;
+				if(last instanceof RawTextComponent && (last.samePropertiesAs(component))){
 					components.remove(components.size()-1);
 					components.add(last = copyWithNewText((RawTextComponent)last, last.toPlainText() + component.toPlainText()));
 					return true;
@@ -523,7 +523,7 @@ public class TellrawUtils{
 			}
 			return components.add(last = component);
 		}
-		public void addComponent(@Nonnull String text){addComponent(new RawTextComponent(text));}
+		public boolean addComponent(@Nonnull String text){return addComponent(new RawTextComponent(text));}
 
 		/**
 		 * Loops through all RawTextComponents in this instance and replaces all occurances of @textToReplace with the @replacement component
@@ -651,7 +651,7 @@ public class TellrawUtils{
 		Bukkit.getLogger().warning("TellrawUtils ERROR: expected true/false at index "+i+" of string: "+str);
 		return null;
 	}
-	private enum ComponentType{TEXT, TRANSLATE, SCORE, SELECTOR, KEYBIND};
+	enum ComponentType{TEXT, TRANSLATE, SCORE, SELECTOR, KEYBIND};
 	private final static Pair<Component, Integer> parseNextComponentFromString(String str, int i){
 		while(i < str.length() && Character.isWhitespace(str.charAt(i))) ++i;
 		if(i == str.length()) return null;

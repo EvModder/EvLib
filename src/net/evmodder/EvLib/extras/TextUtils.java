@@ -13,8 +13,8 @@ import org.bukkit.entity.EntityType;
 
 public class TextUtils{
 	public static final char[] COLOR_CHARS = new char[]
-			{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-	public static final char[] FORMAT_CHARS = new char[]{'k', 'l', 'm', 'n', 'o'};
+			{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', /*r*/};
+	public static final char[] FORMAT_CHARS = new char[]{'k', 'l', 'm', 'n', 'o', /*r*/};
 	public static boolean isColor(char ch){
 		switch(ch){
 			case '0': case '1': case '2': case '3': case '4':
