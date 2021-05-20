@@ -16,6 +16,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
@@ -54,7 +55,7 @@ public class WebUtils {
 		}
 	}
 
-	public static String putReadURL(String payload, String url){
+	/*public static String putReadURL(String payload, String url){
 		try{
 			HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
 			conn.setDoInput(true);
@@ -72,7 +73,7 @@ public class WebUtils {
 			return resp.toString();
 		}
 		catch(IOException e){e.printStackTrace(); return null;}
-	}
+	}*/
 
 	public static String postReadURL(String payload, String url){
 		try{
@@ -127,15 +128,58 @@ public class WebUtils {
 	}
 
 	//Names are [3,16] characters from [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]
-	static HashMap<String, Boolean> exists = new HashMap<String, Boolean>();
-	public static boolean checkExists(String player){
-		Boolean b = exists.get(player);
+	static HashMap<String, Boolean> playerExists = new HashMap<>();
+	public static boolean checkPlayerExists(String player){
+		Boolean b = playerExists.get(player);
 		if(b == null){
-			//Sample data: {"id":"34471e8dd0c547b9b8e1b5b9472affa4","name":"EvDoc"}
-			String data = getReadURL("https://api.mojang.com/users/profiles/minecraft/"+player);
-			exists.put(player, b = (data != null));
+			try{
+				UUID.fromString(player);
+				try{
+					HttpURLConnection conn = (HttpURLConnection)
+							new URL("https://sessionserver.mojang.com/session/minecraft/profile/"+player).openConnection();
+					conn.setUseCaches(false);
+					conn.setDoOutput(false);
+					conn.setDoInput(true);
+					playerExists.put(player, b = (conn.getResponseCode() == 200));
+				}
+				catch(IOException e){playerExists.put(player, b=false);}
+			}
+			catch(IllegalArgumentException e){
+				//Sample data: {"id":"34471e8dd0c547b9b8e1b5b9472affa4","name":"EvDoc"}
+				String data = getReadURL("https://api.mojang.com/users/profiles/minecraft/"+player);
+				playerExists.put(player, b = (data != null));
+			}
 		}
 		return b;
+	}
+
+	static HashMap<String, String> textureExists = new HashMap<>();
+	public static String getTextureURL(String texture){
+		String url = textureExists.get(texture);
+		if(url == null){
+			try{
+				String json = new String(Base64.getDecoder().decode(texture));
+				int startIndex = json.indexOf("\"url\":");
+				if(startIndex != -1) url = json.substring(startIndex+7, json.indexOf('"', startIndex+8)).trim();
+			}
+			catch(IllegalArgumentException | StringIndexOutOfBoundsException e){}
+			if(url == null){
+				if(texture.chars().allMatch(ch -> (ch >= 'a' && ch <= 'f') || (ch >= '0' && ch <= '9'))){
+					url = "http://textures.minecraft.net/texture/"+texture;
+				}
+				else url = texture;
+			}
+			try{
+				HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
+				conn.setUseCaches(false);
+				conn.setDoOutput(false);
+				conn.setDoInput(true);
+				if(conn.getResponseCode() != 200) url = null;
+				textureExists.put(texture, url);
+			}
+			catch(IOException e){url = null;}
+		}
+		return url;
 	}
 
 	static BufferedImage upsideDownHead(BufferedImage img){
@@ -308,10 +352,6 @@ public class WebUtils {
 
 	static void runGrumm(){
 		String[] targetHeads = new String[]{
-//				"SHULKER|BLACK|CLOSED", "SHULKER|BLUE|CLOSED", "SHULKER|BROWN|CLOSED", "SHULKER|CYAN|CLOSED", "SHULKER|GRAY|CLOSED",
-//				"SHULKER|GREEN|CLOSED", "SHULKER|LIGHT_BLUE|CLOSED", "SHULKER|LIGHT_GRAY|CLOSED", "SHULKER|LIME|CLOSED", "SHULKER|MAGENTA|CLOSED",
-//				"SHULKER|ORANGE|CLOSED", "SHULKER|PINK|CLOSED", "SHULKER|PURPLE|CLOSED", "SHULKER|RED|CLOSED", "SHULKER|WHITE|CLOSED",
-//				"SHULKER|YELLOW|CLOSED",
 //				"BOAT", "LEASH_HITCH",
 		};
 		String[] headsData = FileIO.loadFile("head-textures.txt", "").split("\n");
@@ -323,7 +363,7 @@ public class WebUtils {
 					break;
 				}
 			}
-			if(headsToFlip[i] == null) System.out.println("Could not find target head: "+targetHeads[i]);
+			if(headsToFlip[i] == null) System.err.println("Could not find target head: "+targetHeads[i]);
 		}
 
 		System.out.print("runGrumm() auth for "+targetHeads.length+" heads...\n"); 
@@ -444,12 +484,57 @@ public class WebUtils {
 		System.out.println("\nAbnormal skins: "+abnormalSkins);
 	}
 
+	static String convertUUIDToIntArray(UUID uuid){
+		String uuidStr = uuid.toString().replace("-", "");
+		if(uuidStr.length() != 32){
+			System.err.print(uuid+"is not a valid UUID!");
+			return null;
+		}
+		int[] arr = new int[4];
+		for(int i=0; i<4; ++i){
+			String slice = uuidStr.substring(i*8, i*8+8);
+			arr[i] = Integer.parseUnsignedInt(slice, 16);
+		}
+		return "[I;"+arr[0]+","+arr[1]+","+arr[2]+","+arr[3]+"]";
+	}
+
+	static void printUUIDsForTextureKeys(){
+		String[] textureKeys = new String[]{
+			"#ARMOR_STAND"
+		};
+		String[] textures = new String[]{
+			"eyJ0ZXh0dXJlcyI6eyJTS0"
+		};
+		System.out.println("textureKeys: "+textureKeys.length+", Base64s: "+textures.length);
+		for(int i=0; i<textureKeys.length; ++i){
+			System.out.println(convertUUIDToIntArray(UUID.nameUUIDFromBytes(textureKeys[i].getBytes()))+"="+String.join("=", textures[i]));
+			//System.out.println(textureKeys[i]+"="+convertUUIDToIntArray(UUID.nameUUIDFromBytes(textureKeys[i].getBytes())));
+		}
+
+		for(int i=0; i<textureKeys.length; ++i){
+			try{
+			String json = new String(Base64.getDecoder().decode(textures[i]));
+			System.out.println("json: "+json);
+//			String url = json.substring(json.indexOf("\"url\":")+7, json.lastIndexOf('"')).trim();
+//			System.out.println("url: "+url);
+			System.out.println(textureKeys[i]+": "+json.substring(66, 130));
+			System.out.println("original texture: "+ Base64.getEncoder().encodeToString(
+					("{\"textures\":{\"SKIN\":{\"url\":\"http://textures.minecraft.net/texture/"+json.substring(66, 130)+"\"}}}")
+						.getBytes(StandardCharsets.ISO_8859_1)));
+			}
+			catch(IllegalArgumentException | StringIndexOutOfBoundsException e){
+				System.out.println(textureKeys[i]+": "+textures[i]);
+			}
+		}
+	}
+
 	public static void main(String... args){
 		//com.sun.org.apache.xml.internal.security.Init.init();
 		FileIO.DIR = "./";
+		printUUIDsForTextureKeys();
 		checkMissingTextures();
 		checkMissingGrummTextures();
-		checkAbnormalHeadTextures();
+//		checkAbnormalHeadTextures();
 //		runGrumm();
 //		System.out.println("Test: "+Vehicle.class.isAssignableFrom(EntityType.PLAYER.getEntityClass()));
 	}
