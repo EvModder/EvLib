@@ -68,8 +68,9 @@ public class TellrawUtils{
 	}
 	public final static class TextHoverAction{
 		public final HoverEvent event;
-		public final String value;
-		public TextHoverAction(@Nonnull HoverEvent event, @Nonnull String value){this.event = event; this.value = value;}
+		public final Component value;
+		public TextHoverAction(@Nonnull HoverEvent event, @Nonnull Component value){this.event = event; this.value = value;}
+		public TextHoverAction(@Nonnull HoverEvent event, @Nonnull String value){this.event = event; this.value = new RawTextComponent(value);}
 		@Override public boolean equals(Object other){
 			return other != null && other instanceof TextHoverAction
 					&& ((TextHoverAction)other).event.equals(event) && ((TextHoverAction)other).value.equals(value);
@@ -140,7 +141,7 @@ public class TellrawUtils{
 			if(clickAction != null) builder.append(",\"clickEvent\":{\"action\":\"").append(clickAction.event)
 									.append("\",\"value\":\"").append(TextUtils.escape(clickAction.value, "\"","\n")).append("\"}");
 			if(hoverAction != null) builder.append(",\"hoverEvent\":{\"action\":\"").append(hoverAction.event)
-									.append("\",\"value\":\"").append(TextUtils.escape(hoverAction.value, "\"","\n")).append("\"}");
+									.append("\",\"value\":").append(hoverAction.value.toString()).append("}");
 			return builder.toString();// Starts with a comma, formerly was builder.substring(1);
 		}
 		// Returns null if this component could NOT possibly be a Selector matching exactly 1 target
