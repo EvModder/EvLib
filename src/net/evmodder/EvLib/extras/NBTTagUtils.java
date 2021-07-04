@@ -9,9 +9,9 @@ import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 
 public final class NBTTagUtils{// version = X1.0
 	//-------------------------------------------------- ReflectionUtils used by RefNBTTag: --------------------------------------------------//
-	static final RefClass classItemStack = ReflectionUtils.getRefClass("{nms}.ItemStack");
-	static final RefClass classNBTTagCompound = ReflectionUtils.getRefClass("{nms}.NBTTagCompound");
-	static final RefClass classNBTBase = ReflectionUtils.getRefClass("{nms}.NBTBase"); 
+	static final RefClass classItemStack = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
+	static final RefClass classNBTTagCompound = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
+	static final RefClass classNBTBase = ReflectionUtils.getRefClass("{nms}.NBTBase", "{nm}.nbt.NBTBase"); 
 	static final RefClass classCraftItemStack = ReflectionUtils.getRefClass("{cb}.inventory.CraftItemStack");
 	static final RefMethod methodAsNMSCopy = classCraftItemStack.getMethod("asNMSCopy", ItemStack.class);
 	static final RefMethod methodAsCraftMirror = classCraftItemStack.getMethod("asCraftMirror", classItemStack);
@@ -54,7 +54,7 @@ public final class NBTTagUtils{// version = X1.0
 
 	//-------------------------------------------------- ReflectionUtils used by RefNBTTagList: --------------------------------------------------//
 //	static final RefClass classNBTBase = ReflectionUtils.getRefClass("{nms}.NBTBase"); 
-	static final RefClass classNBTTagList = ReflectionUtils.getRefClass("{nms}.NBTTagList");
+	static final RefClass classNBTTagList = ReflectionUtils.getRefClass("{nms}.NBTTagList", "{nm}.nbt.NBTTagList");
 	static final RefConstructor cnstrNBTTagList = classNBTTagList.findConstructor(0);
 //	static final Class<?> realNBTBaseClass = classNBTBase.getRealClass();
 	static final Class<?> realNBTTagListClass = classNBTTagList.getRealClass();

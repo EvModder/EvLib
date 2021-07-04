@@ -687,7 +687,6 @@ public class TypeUtils{
 			case FARMLAND: // Cannot be held
 			case FIRE: // Cannot be held
 			case FROSTED_ICE: // Cannot be held
-			case GRASS_PATH: // Not obtainable with silk
 			case KNOWLEDGE_BOOK:
 //			case LARGE_FERN: // Found in 18.6% of taiga village chests.
 			case REDSTONE_WALL_TORCH: // Cannot be held
@@ -748,6 +747,7 @@ public class TypeUtils{
 					if(mat.name().equals("BAMBOO_SAPLING")) return false; // Planted-form: Cannot be held
 					if(mat.name().equals("JIGSAW")) return canObtain.contains(ObtainableOptions.STRUCTURE_BLOCKS);
 				}
+				if(mat.name().equals(version >= 17 ? "DIRT_PATH" : "GRASS_PATH")) return false; // Not obtainable with silk
 				return true;
 		}
 	}

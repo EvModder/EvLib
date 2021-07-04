@@ -113,7 +113,11 @@ public class HeadUtils {
 	}
 	public static ItemStack getPlayerHead(OfflinePlayer player){
 		GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
-		return getPlayerHead(profile);
+		ItemStack head = getPlayerHead(profile);
+		SkullMeta meta = (SkullMeta) head.getItemMeta();
+		meta.setOwningPlayer(player);
+		head.setItemMeta(meta);
+		return head;
 	}
 
 	// TODO: Move to TypeUtils perhaps?

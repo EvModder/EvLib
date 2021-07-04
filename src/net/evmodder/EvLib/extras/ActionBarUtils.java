@@ -10,12 +10,16 @@ import net.evmodder.EvLib.extras.ReflectionUtils.*;
 public class ActionBarUtils{
 //	private static final RefClass classEntityPlayer = ReflectionUtils.getRefClass("{nms}.EntityPlayer");
 //	private static final RefClass classPlayerConnection = ReflectionUtils.getRefClass("{nms}.PlayerConnection");
-	private static final RefClass classIChatBaseComponent = ReflectionUtils.getRefClass("{nms}.IChatBaseComponent");
-	private static final RefClass classChatComponentText = ReflectionUtils.getRefClass("{nms}.ChatComponentText");
-	private static final RefClass classChatMessageType = ReflectionUtils.getRefClass("{nms}.ChatMessageType");
-	private static final RefClass classPacketPlayOutChat = ReflectionUtils.getRefClass("{nms}.PacketPlayOutChat");
+	private static final RefClass classIChatBaseComponent = ReflectionUtils.getRefClass(
+			"{nms}.IChatBaseComponent", "{nm}.network.chat.IChatBaseComponent");
+	private static final RefClass classChatComponentText = ReflectionUtils.getRefClass(
+			"{nms}.ChatComponentText", "{nm}.network.chat.ChatComponentText");
+	private static final RefClass classChatMessageType = ReflectionUtils.getRefClass(
+			"{nms}.ChatMessageType", "{nm}.network.chat.ChatMessageType");
+	private static final RefClass classPacketPlayOutChat = ReflectionUtils.getRefClass(
+			"{nms}.PacketPlayOutChat", "{nm}.network.protocol.game.PacketPlayOutChat");
 	private static final RefClass classCraftPlayer = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
-	private static final RefClass classPacket = ReflectionUtils.getRefClass("{nms}.Packet");
+	private static final RefClass classPacket = ReflectionUtils.getRefClass("{nms}.Packet", "{nm}.network.protocol.Packet");
 	private static Object chatMessageType = null;
 	static{
 		for(Object enumVal : classChatMessageType.getRealClass().getEnumConstants()){
@@ -45,7 +49,9 @@ public class ActionBarUtils{
 			*/
 			Object entityPlayer = methodGetHandle.of(p).call();
 			try{
-				Field playerConnectionField = entityPlayer.getClass().getDeclaredField("playerConnection");
+				Field playerConnectionField = entityPlayer.getClass().getDeclaredField(
+						ReflectionUtils.getServerVersionString().compareTo("v1_17") < 0
+						? "playerConnection" : "b");
 				Object playerConn = playerConnectionField.get(entityPlayer);
 				Method sendPacketMethod = playerConn.getClass()
 						.getDeclaredMethod("sendPacket", classPacket.getRealClass());

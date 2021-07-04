@@ -112,7 +112,7 @@ public class FileIO{// version = X1.0
 		return file.length() == 0 ? "" : file.substring(1);
 	}
 
-	public static String loadFile(String filename, String defaultContent){
+	public static String loadFile(String filename, String defaultContent/*, boolean exactContent*/){
 		BufferedReader reader = null;
 		try{reader = new BufferedReader(new FileReader(DIR+filename));}
 		catch(FileNotFoundException e){

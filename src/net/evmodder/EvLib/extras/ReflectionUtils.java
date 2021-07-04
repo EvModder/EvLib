@@ -35,6 +35,7 @@ public class ReflectionUtils{// version = X1.0
 			if(pas.length == 5){
 				String verB = pas[3];
 				preClassB += "."+verB;
+				serverVersionString = verB;
 			}
 			Object handle;
 			try{
@@ -46,7 +47,7 @@ public class ReflectionUtils{// version = X1.0
 
 			Class<?> handleServerClass = handle.getClass();
 			pas = handleServerClass.getName().split("\\.");
-			if(pas.length == 5){
+			if(pas.length == 5 && pas[3].matches("v[0-9]+(_[0-9]+)*(_R[0-9]+)?")){
 				String verM = pas[3];
 				preClassM += "."+verM;
 				serverVersionString = verM;
@@ -60,6 +61,13 @@ public class ReflectionUtils{// version = X1.0
 	public static boolean isForge(){ return forge; }
 
 	/**
+	 * get RefClass object by real class.
+	 * @param clazz class
+	 * @return RefClass based on passed class
+	 */
+	public static RefClass getRefClass(Class<?> clazz){ return new RefClass(clazz); }
+
+	/**
 	 * Get class for name.
 	 * Replace {nms} to net.minecraft.server.V*.
 	 * Replace {cb} to org.bukkit.craftbukkit.V*.
@@ -70,23 +78,18 @@ public class ReflectionUtils{// version = X1.0
 	 */
 	public static RefClass getRefClass(String... classes){
 		String className = "";
-		for(String rawName: classes) try{
-			className = rawName
-					.replace("{cb}", preClassB)
-					.replace("{nms}", preClassM)
-					.replace("{nm}", "net.minecraft");
-			return getRefClass(Class.forName(className));
+		for(String rawName: classes){
+			try{
+				className = rawName
+						.replace("{cb}", preClassB)
+						.replace("{nms}", preClassM)
+						.replace("{nm}", "net.minecraft");
+				return getRefClass(Class.forName(className));
+			}
+			catch(ClassNotFoundException ignored){}
 		}
-		catch(ClassNotFoundException ignored){}
 		throw new RuntimeException("no class found: " + className);
 	}
-
-	/**
-	 * get RefClass object by real class
-	 * @param clazz class
-	 * @return RefClass based on passed class
-	 */
-	public static RefClass getRefClass(Class<?> clazz){ return new RefClass(clazz); }
 
 	/**
 	 * RefClass - utility to simplify work with reflections.
