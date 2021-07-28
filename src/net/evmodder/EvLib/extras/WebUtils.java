@@ -136,41 +136,41 @@ public class WebUtils {
 	//Names are [3,16] characters from [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]
 	static HashMap<String, GameProfile> playerExists = new HashMap<>();
 	public static GameProfile getGameProfile(final String player){
-		GameProfile profile = playerExists.get(player);
-		if(profile == null){
-			try{
-				String uuidStr = player;
-				if(uuidStr.matches("^[a-f0-9]{32}$")) uuidStr = addDashesForUUID(player);
-				UUID uuid = UUID.fromString(uuidStr);
-				String data = getReadURL("https://sessionserver.mojang.com/session/minecraft/profile/"+uuidStr);
-				if(data != null){
-					data = data.replace(" ", "");
-					if(data.contains("\"name\":\"")){
-						int nameStart = data.indexOf("\"name\":\"")+8;
-						int nameEnd = data.indexOf("\"", nameStart+1);
-						String name = data.substring(nameStart, nameEnd);
-						playerExists.put(player, profile=new GameProfile(uuid, name));
-					}
-				}
-			}
-			catch(IllegalArgumentException e){
-				//Sample data: {"id":"34471e8dd0c547b9b8e1b5b9472affa4","name":"EvDoc"}
-				String data = getReadURL("https://api.mojang.com/users/profiles/minecraft/"+player);
-				if(data != null){
-					data = data.replace(" ", "");
-					if(data.contains("\"id\":\"")){
-						int idStart = data.indexOf("\"id\":\"")+6;
-						int idEnd = data.indexOf("\"", idStart+1);
-						String uuidStr = data.substring(idStart, idEnd);
-						if(uuidStr.matches("^[a-f0-9]{32}$")) uuidStr = addDashesForUUID(uuidStr);
-						int nameStart = data.indexOf("\"name\":\"")+8;
-						int nameEnd = data.indexOf("\"", nameStart+1);
-						String name = data.substring(nameStart, nameEnd);
-						playerExists.put(player, profile=new GameProfile(UUID.fromString(uuidStr), name));
-					}
+		if(playerExists.containsKey(player)) return playerExists.get(player);
+		GameProfile profile = null;
+		try{
+			String uuidStr = player;
+			if(uuidStr.matches("^[a-f0-9]{32}$")) uuidStr = addDashesForUUID(player);
+			UUID uuid = UUID.fromString(uuidStr);
+			String data = getReadURL("https://sessionserver.mojang.com/session/minecraft/profile/"+uuidStr);
+			if(data != null){
+				data = data.replace(" ", "");
+				if(data.contains("\"name\":\"")){
+					int nameStart = data.indexOf("\"name\":\"")+8;
+					int nameEnd = data.indexOf("\"", nameStart+1);
+					String name = data.substring(nameStart, nameEnd);
+					profile = new GameProfile(uuid, name);
 				}
 			}
 		}
+		catch(IllegalArgumentException e){
+			//Sample data: {"id":"34471e8dd0c547b9b8e1b5b9472affa4","name":"EvDoc"}
+			String data = getReadURL("https://api.mojang.com/users/profiles/minecraft/"+player);
+			if(data != null){
+				data = data.replace(" ", "");
+				if(data.contains("\"id\":\"")){
+					int idStart = data.indexOf("\"id\":\"")+6;
+					int idEnd = data.indexOf("\"", idStart+1);
+					String uuidStr = data.substring(idStart, idEnd);
+					if(uuidStr.matches("^[a-f0-9]{32}$")) uuidStr = addDashesForUUID(uuidStr);
+					int nameStart = data.indexOf("\"name\":\"")+8;
+					int nameEnd = data.indexOf("\"", nameStart+1);
+					String name = data.substring(nameStart, nameEnd);
+					profile = new GameProfile(UUID.fromString(uuidStr), name);
+				}
+			}
+		}
+		playerExists.put(player, profile);
 		return profile;
 	}
 
