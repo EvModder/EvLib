@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Nameable;
@@ -108,6 +109,13 @@ public class HeadUtils {
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
 		setGameProfile(meta, profile);
+		if(profile.getId() != null){
+			OfflinePlayer p = Bukkit.getOfflinePlayer(profile.getId());
+			if(p != null){
+				meta.setOwningPlayer(p);
+				//if(p.getName() != null) meta.setOwner(p.getName());
+			}
+		}
 		head.setItemMeta(meta);
 		return head;
 	}
