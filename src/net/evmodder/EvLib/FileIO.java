@@ -203,8 +203,10 @@ public class FileIO{// version = X1.0
 
 	public static String loadResource(Object pl, String filename/*, boolean keepComments*/){
 		try{
-			BufferedReader reader = new BufferedReader(
-					new InputStreamReader(pl.getClass().getResourceAsStream("/"+filename)));
+			InputStream inputStream = pl.getClass().getResourceAsStream("/"+filename);
+			if(inputStream == null) inputStream = pl.getClass().getClassLoader().getResourceAsStream("/"+filename);
+			if(inputStream == null) return "";
+			BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
 			StringBuilder file = new StringBuilder();
 			String line;
