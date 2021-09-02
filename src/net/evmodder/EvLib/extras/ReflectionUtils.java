@@ -6,7 +6,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -160,26 +162,28 @@ public class ReflectionUtils{// version = X1.0
 		 * @return RefMethod object
 		 * @throws RuntimeException if method not found
 		 */
-		@SuppressWarnings("unused")//TODO: remove this to see grossness below!
-		public RefMethod findMethod(Object... types){
+		public RefMethod findMethod(boolean isStatic, Object returnType, Object... types){
+			Class<?> returnTypeClass;
+			if(returnType instanceof Class) returnTypeClass = (Class<?>)returnType;
+			else if (returnType instanceof RefClass) returnTypeClass = ((RefClass)returnType).getRealClass();
+			else returnTypeClass = returnType.getClass();
+
 			Class<?>[] classes = new Class[types.length];
-			int t=0;
+			int i=0;
 			for(Object e : types){
-				if(e instanceof Class) classes[t] = (Class<?>)e;
-				else if (e instanceof RefClass) classes[t] = ((RefClass)e).getRealClass();
-				else classes[t] = e.getClass();
-				++t;
+				if(e instanceof Class) classes[i] = (Class<?>)e;
+				else if (e instanceof RefClass) classes[i] = ((RefClass)e).getRealClass();
+				else classes[i] = e.getClass();
+				++i;
 			}
 			List<Method> methods = new ArrayList<Method>();
 			Collections.addAll(methods, clazz.getMethods());
 			Collections.addAll(methods, clazz.getDeclaredMethods());
-			findMethod: for(Method m : methods){
-				Class<?>[] methodTypes = m.getParameterTypes();
-				if(methodTypes.length != classes.length) continue;
-				for(int i=0; i<classes.length; ++i){//TODO: ewww fix broken ahhh!!!
-					if(!classes.equals(methodTypes)) continue findMethod;
-					return new RefMethod(m);
-				}
+			for(Method m : methods){
+				if(Modifier.isStatic(m.getModifiers()) != isStatic) continue;
+				if(!m.getReturnType().equals(returnTypeClass)) continue;
+				if(!Arrays.equals(classes, m.getParameterTypes())) continue;
+				return new RefMethod(m);
 			}
 			throw new RuntimeException("no such method");
 		}
@@ -372,7 +376,10 @@ public class ReflectionUtils{// version = X1.0
 		 * @throws RuntimeException if something went wrong
 		 */
 		public Object create(Object... params){
-			try{return constructor.newInstance(params);}
+			try{
+				try{constructor.setAccessible(true);} catch(SecurityException e){}
+				return constructor.newInstance(params);
+			}
 			catch(InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e){
 				throw new RuntimeException(e);
 			}
