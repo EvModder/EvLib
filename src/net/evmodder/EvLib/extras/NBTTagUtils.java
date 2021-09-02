@@ -58,37 +58,61 @@ public final class NBTTagUtils{// version = X1.0
 	static final RefConstructor cnstrNBTTagList = classNBTTagList.findConstructor(0);
 //	static final Class<?> realNBTBaseClass = classNBTBase.getRealClass();
 	static final Class<?> realNBTTagListClass = classNBTTagList.getRealClass();
-	static final RefMethod methodAdd = ReflectionUtils.getRefClass(AbstractList.class).findMethodByName("add");
-//	static final RefMethod methodAdd = classNBTTagList.getMethod("add", realNBTBaseClass); //TODO: use this pre-1.16!!
+	static final RefMethod methodAdd;
+	static{
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_16") < 0){
+			methodAdd = classNBTTagList.getMethod("add", realNBTBaseClass);
+		}
+		else{
+			methodAdd = ReflectionUtils.getRefClass(AbstractList.class).getMethod("add", Object.class);
+		}
+	}
 	static final RefMethod methodGet = classNBTTagList.getMethod("get", int.class);
 
-	interface RefNBTBase{}
+	abstract static class RefNBTBase{
+		public RefNBTBase(){};
+		Object nmsTag;
+		@Override public String toString(){return nmsTag.toString();}
+	}
 
-	public static final class RefNBTTagList implements RefNBTBase{
-		Object nmsTagList;
-		public RefNBTTagList(){nmsTagList = cnstrNBTTagList.create();}
-		public RefNBTTagList(RefNBTTagList base){nmsTagList = base;};
-		RefNBTTagList(Object nmsTagList){this.nmsTagList = nmsTagList;}
+	// String tag
+	static final RefClass classNBTTagString = ReflectionUtils.getRefClass("{nms}.NBTTagString", "{nm}.nbt.NBTTagString");
+	static final RefMethod cnstrNBTTagString = classNBTTagString.findMethod(/*static=*/true, /*return=*/classNBTTagString, /*param0=*/String.class);
+	static final Class<?> realNBTTagStringClass = classNBTTagString.getRealClass();
+	public static final class RefNBTTagString extends RefNBTBase{
+		public RefNBTTagString(String str){nmsTag = cnstrNBTTagString.of(null).call(str);}
+	}
 
-		public void add(RefNBTTag tag){methodAdd.of(nmsTagList).call(tag.nmsTag);}
-		public void add(RefNBTTagList tagList){methodAdd.of(nmsTagList).call(tagList.nmsTagList);}
+	// List tag
+	public static final class RefNBTTagList extends RefNBTBase{
+		public RefNBTTagList(){nmsTag = cnstrNBTTagList.create();}
+		//public RefNBTTagList(RefNBTTagList base){nmsTagList = base;};
+		RefNBTTagList(Object nmsTagList){nmsTag = nmsTagList;}
+
+		public void add(RefNBTBase tag){methodAdd.of(nmsTag).call(tag.nmsTag);}
 		public RefNBTBase get(int i){
-			Object value = methodGet.of(nmsTagList).call(i);
+			Object value = methodGet.of(nmsTag).call(i);
 			if(value == null) return null;
-			return value.getClass().equals(realNBTTagListClass) ? new RefNBTTagList(value) : new RefNBTTag(value);
+			if(value.getClass().equals(realNBTTagCompoundClass)) return new RefNBTTagCompound(value);
+			if(value.getClass().equals(realNBTTagListClass)) return new RefNBTTagList(value);
+			if(value.getClass().equals(realNBTTagStringClass)) return new RefNBTTagString(value.toString());
+			return null;
 		}
 	}
 
-	public static final class RefNBTTag implements RefNBTBase{
+	// Compound tag
+	public static final class RefNBTTagCompound extends RefNBTBase{
 		Object nmsTag;
-		public RefNBTTag(){nmsTag = cnstrNBTTagCompound.create();}
-		public RefNBTTag(RefNBTTag base){nmsTag = base;};
-		RefNBTTag(Object nmsTag){this.nmsTag = nmsTag;}
+		public RefNBTTagCompound(){nmsTag = cnstrNBTTagCompound.create();}
+		//public RefNBTTagCompound(RefNBTTagCompound base){nmsTag = base;};
+		RefNBTTagCompound(Object nmsTag){this.nmsTag = nmsTag;}
 		private void addToTag(String key, Object value, Class<?> type) {tagSetters.get(type).of(nmsTag).call(key, value);}
 		private Object getFromTag(String key, Class<?> type) {return tagGetters.get(type).of(nmsTag).call(key);}
+		@Override public String toString(){return nmsTag.toString();}
 	
-		public void set(String key, RefNBTTag value){addToTag(key, value.nmsTag, realNBTBaseClass);}
-		public void set(String key, RefNBTTagList value){addToTag(key, value.nmsTagList, realNBTBaseClass);}
+		public void set(String key, RefNBTTagCompound value){addToTag(key, value.nmsTag, realNBTBaseClass);}
+		public void set(String key, RefNBTTagList value){addToTag(key, value.nmsTag, realNBTBaseClass);}
+		public void set(String key, RefNBTTagString value){addToTag(key, value.nmsTag, realNBTBaseClass);}
 		public void setBoolean	(String key, boolean		value){addToTag(key, value, boolean.class);}
 		public void setByte		(String key, byte			value){addToTag(key, value, byte.class);}
 		public void setByteArray(String key, byte[]			value){addToTag(key, value, byte[].class);}
@@ -103,7 +127,10 @@ public final class NBTTagUtils{// version = X1.0
 		public RefNBTBase get(String key){
 			Object value = getFromTag(key, realNBTBaseClass);
 			if(value == null) return null;
-			return value.getClass().equals(realNBTTagCompoundClass) ? new RefNBTTag(value) : new RefNBTTagList(value);
+			if(value.getClass().equals(realNBTTagCompoundClass)) return new RefNBTTagCompound(value);
+			if(value.getClass().equals(realNBTTagListClass)) return new RefNBTTagList(value);
+			if(value.getClass().equals(realNBTTagStringClass)) return new RefNBTTagString(value.toString());
+			return null;
 		}
 		public boolean getBoolean	(String key){return (boolean)	getFromTag(key, boolean.class);}
 		public byte getByte			(String key){return (byte)		getFromTag(key, byte.class);}
@@ -121,16 +148,16 @@ public final class NBTTagUtils{// version = X1.0
 	}
 
 	// For ItemStacks ----------------------------------------------------
-	public static ItemStack setTag(ItemStack item, RefNBTTag tag){
+	public static ItemStack setTag(ItemStack item, RefNBTTagCompound tag){
 		Object nmsTag = (tag == null || methodTagIsEmpty.of(tag.nmsTag).call().equals(true)) ? null : tag.nmsTag;
 		Object nmsItem = methodAsNMSCopy.of(null).call(item);
 		methodSetTag.of(nmsItem).call(nmsTag);
 		item = (ItemStack) methodAsCraftMirror.of(null).call(nmsItem);
 		return item;
 	}
-	public static RefNBTTag getTag(ItemStack item){
+	public static RefNBTTagCompound getTag(ItemStack item){
 		Object nmsItem = methodAsNMSCopy.of(null).call(item);
 		Object nmsTag = methodGetTag.of(nmsItem).call();
-		return nmsTag == null ? new RefNBTTag() : new RefNBTTag(nmsTag);
+		return nmsTag == null ? new RefNBTTagCompound() : new RefNBTTagCompound(nmsTag);
 	};
 }
