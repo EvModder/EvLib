@@ -58,7 +58,7 @@ public class SelectorUtils{
 
 	public enum SelectorType{
 		YOURSELF("@s"/* '*' also works */), NEAREST_PLAYER("@p"), RANDOM_PLAYER("@r"), ALL_PLAYERS("@a"), ALL_ENTITIES("@e"), UUID("");
-		String toString;
+		final String toString;
 		SelectorType(String toString){this.toString = toString;}
 		@Override public String toString(){return toString;}
 		public static SelectorType fromString(String str){ // Case sensitive!
@@ -322,13 +322,15 @@ public class SelectorUtils{
 			return 0 < limit && limit < entities.size() ? entities.subList(0, limit) : entities;
 		}
 
+		@SuppressWarnings("deprecation")
 		public static Selector fromString(@Nonnull CommandSender sender, @Nonnull String str){
 			// Attempt to parse as UUID selector
 			try{return new Selector(UUID.fromString(str));}
 			catch(IllegalArgumentException ex){}
+			if(Bukkit.getPlayer(str) != null) return new Selector(Bukkit.getPlayer(str).getUniqueId());
 
 			// Attempt to parse as selector without arguments
-			try{new Selector(SelectorType.fromString(str), sender);}
+			try{return new Selector(SelectorType.fromString(str), sender);}
 			catch(IllegalArgumentException ex){}
 
 			// Attempt to parse @<SelectorType>[<argument=value>, ...]
