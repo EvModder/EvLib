@@ -16,7 +16,6 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
 
 public class HeadUtils {
 	public static final String[] MHF_Heads = new String[]{//Standard, Mojang-Provided MHF Heads
@@ -91,19 +90,19 @@ public class HeadUtils {
 		return null;
 	}
 
-	public static ItemStack makeSkull(String textureCode, String headName){
-		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
-		if(textureCode == null) return item;
-		SkullMeta meta = (SkullMeta) item.getItemMeta();
-
-		GameProfile profile = new GameProfile(/*uuid=*/UUID.nameUUIDFromBytes(textureCode.getBytes()), /*name=*/textureCode);
-		profile.getProperties().put("textures", new Property("textures", textureCode));
-		setGameProfile(meta, profile);
-
-		meta.setDisplayName(headName);
-		item.setItemMeta(meta);
-		return item;
-	}
+//	public static ItemStack makeSkull(String textureCode, String headName){
+//		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+//		if(textureCode == null) return item;
+//		SkullMeta meta = (SkullMeta) item.getItemMeta();
+//
+//		GameProfile profile = new GameProfile(/*uuid=*/UUID.nameUUIDFromBytes(textureCode.getBytes()), /*name=*/null/*textureCode*/);
+//		profile.getProperties().put("textures", new Property("textures", textureCode));
+//		setGameProfile(meta, profile);
+//
+//		meta.setDisplayName(headName);
+//		item.setItemMeta(meta);
+//		return item;
+//	}
 
 	public static ItemStack getPlayerHead(GameProfile profile){
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
@@ -218,7 +217,7 @@ public class HeadUtils {
 			meta.setDisplayName(ChatColor.YELLOW+MHFName);
 		}
 		else{
-			GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(entity.name().getBytes()), entity.name());
+			GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(entity.name().getBytes()), entity.name()/*TODO: use null*/);
 			HeadUtils.setGameProfile(meta, profile);
 			String headTypeName = getDroppedHeadType(entity).toString();
 			headTypeName = headTypeName.charAt(0) + headTypeName.substring(1).toLowerCase();
