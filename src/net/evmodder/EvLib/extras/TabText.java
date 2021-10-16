@@ -33,7 +33,8 @@ import net.evmodder.EvLib.extras.TextUtils.StrAndPxLen;
 public class TabText{//max chat width is 53*6 + 2 = 320
 	final static int CHAT_HEIGHT = 100;//Chat history goes back 100 lines
 	final static int CHAT_WIDTH = 320, MONO_WIDTH = 80, MAX_PLAYER_NAME_WIDTH = 96/*6*16*/;
-	final static char W2_HALF_C = '´'/*'\''*/, W3_HALF_C = 'ˆ'/*'`'*/, W4_HALF_C = '˜';//Half-pixel-characters with widths [2, 3, 4](+.5 if bold)
+	//Half-pixel-characters with widths [1, 2, 3, 4](+.5 if bold)
+	final static char W1_HALF_C = '΄', W2_HALF_C = 'ʹ', W3_HALF_C = 'ˆ', W4_HALF_C = '˜';
 	private int chatHeight;
 	private double[] tabs;
 	private int numPages;
@@ -144,23 +145,26 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 		if(monospace) return repeat((int)pxLenGoal, ' ');
 		StringBuilder builder = new StringBuilder();
 		double pxLen = 0;
-		while(pxLen < pxLenGoal-1.5){// If we hit (pxLenGoal-1.5) it is not possible, sadly, as there are no chars with width < 2px
+		while(pxLen < pxLenGoal-0.5){// If we hit (pxLenGoal-0.5) it is not possible, sadly, as there are no chars with width < 1px
 			double lenLeft = pxLenGoal - pxLen;
 			double needShift = lenLeft % 4;
 			if(needShift == 0){builder.append(' '); pxLen += 4;}
-			else if(needShift == 1){builder.append(ChatColor.BOLD).append(' ').append(resumeColor); pxLen += 5;}
+			else if(needShift == 1){
+				if(lenLeft >= 5){builder.append(ChatColor.BOLD).append(' ').append(resumeColor); pxLen += 5;}
+				else{builder.append(W1_HALF_C); pxLen += 1;}
+			}
 			else if(needShift == 2){
 				if(lenLeft >= 10){builder.append(ChatColor.BOLD).append("  ").append(resumeColor); pxLen += 10;}
 				else{builder.append(W2_HALF_C); pxLen += 2;}
 			}
-			else if(needShift == 3){builder.append(W3_HALF_C); pxLen += 3;}
 			else if(needShift == 3){
 				if(lenLeft >= 15){builder.append(ChatColor.BOLD).append("   ").append(resumeColor); pxLen += 15;}
 				else{builder.append(W3_HALF_C); pxLen += 3;}
 			}
-			else if(needShift == 0.5){builder.append(ChatColor.BOLD).append(W4_HALF_C).append(resumeColor); pxLen += 4.5;}
+			else if(needShift == 1.5){builder.append(ChatColor.BOLD).append(W1_HALF_C).append(resumeColor); pxLen += 1.5;}
 			else if(needShift == 2.5){builder.append(ChatColor.BOLD).append(W2_HALF_C).append(resumeColor); pxLen += 2.5;}
-			else if(needShift == 1.5 || needShift == 3.5){builder.append(ChatColor.BOLD).append(W3_HALF_C).append(resumeColor); pxLen += 3.5;}
+			else if(needShift == 3.5){builder.append(ChatColor.BOLD).append(W3_HALF_C).append(resumeColor); pxLen += 3.5;}
+			else if(needShift == 0.5){builder.append(ChatColor.BOLD).append(W4_HALF_C).append(resumeColor); pxLen += 4.5;}
 		}
 		return builder.toString();
 	}
@@ -198,7 +202,10 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 					else while(lenLeft > 1.5){// (stopLen-1.5) is not possible, as there are no chars with width < 2px
 						double needShift = lenLeft % 4;
 						if(needShift == 0){line.append(' '); lineLen += 4;}
-						else if(needShift == 1){line.append(ChatColor.BOLD).append(' ').append(hideTabs); lineLen += 5;}
+						else if(needShift == 1){
+							if(lenLeft >= 5){line.append(ChatColor.BOLD).append(' ').append(hideTabs); lineLen += 5;}
+							else{line.append(W1_HALF_C); lineLen += 1;}
+						}
 						else if(needShift == 2){
 							if(lenLeft >= 10){line.append(ChatColor.BOLD).append("  ").append(hideTabs); lineLen += 10;}
 							else{line.append(W2_HALF_C); lineLen += 2;}
@@ -207,10 +214,10 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 							if(lenLeft >= 15){line.append(ChatColor.BOLD).append("   ").append(hideTabs); lineLen += 15;}
 							else{line.append(W3_HALF_C); lineLen += 3;}
 						}
-						else if(needShift == 0.5){line.append(ChatColor.BOLD).append(W4_HALF_C).append(hideTabs); lineLen += 4.5;}
+						else if(needShift == 1.5){line.append(ChatColor.BOLD).append(W1_HALF_C).append(hideTabs); lineLen += 1.5;}
 						else if(needShift == 2.5){line.append(ChatColor.BOLD).append(W2_HALF_C).append(hideTabs); lineLen += 2.5;}
-						else if(needShift == 1.5 || needShift == 3.5){line.append(ChatColor.BOLD).append(W3_HALF_C).append(hideTabs); lineLen += 3.5;}
-						lenLeft = stopLen - lineLen;
+						else if(needShift == 3.5){line.append(ChatColor.BOLD).append(W3_HALF_C).append(hideTabs); lineLen += 3.5;}
+						else if(needShift == 0.5){line.append(ChatColor.BOLD).append(W4_HALF_C).append(hideTabs); lineLen += 4.5;}
 					}
 					line.append(ChatColor.RESET);
 				}

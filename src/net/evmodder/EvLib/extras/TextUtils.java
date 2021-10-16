@@ -398,6 +398,8 @@ public class TextUtils{
 		switch(ch){
 			case '§':
 				return 0; // Actual width is 5
+			case '΄':
+				return 1;
 			case '.': case ','://comma44
 			case ':': case ';':
 			case 'i': case '!': case '|': case '\'':
