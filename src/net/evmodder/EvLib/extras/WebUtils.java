@@ -524,7 +524,7 @@ public class WebUtils {
 		System.out.println("Abnormal skins: "+abnormalSkins);
 	}
 
-	static String convertUUIDToIntArray(UUID uuid){
+	public static String convertUUIDToIntArray(UUID uuid){
 		String uuidStr = uuid.toString().replace("-", "");
 		if(uuidStr.length() != 32){
 			System.err.print(uuid+"is not a valid UUID!");
@@ -568,6 +568,20 @@ public class WebUtils {
 		}
 	}
 
+	static void printUUIDsForPlayerNames(){
+		String[] nameAndStuff = new String[]{
+				"EvDoc,312,4,random,crap,here"
+		};
+		TreeSet<String> badNames = new TreeSet<>();
+		for(String line : nameAndStuff){
+			String name = line.split(",")[0];
+			GameProfile profile = getGameProfile(name);
+			if(profile != null && profile.getId() != null) System.out.println(profile.getId()+","+line);
+			else badNames.add(name);
+		}
+		System.out.println("unknown players: "+badNames);
+	}
+
 	static void reformatTexturesFile(){
 		StringBuilder builder = new StringBuilder();
 		for(String line : FileIO.loadFile("head-textures.txt", "").split("\n")){
@@ -591,6 +605,7 @@ public class WebUtils {
 		FileIO.DIR = "./";
 //		reformatTexturesFile();
 //		printUUIDsForTextureKeys();
+//		printUUIDsForPlayerNames();
 		checkMissingTextures();
 		checkMissingGrummTextures();
 		checkAbnormalHeadTextures();
