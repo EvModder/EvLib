@@ -98,6 +98,7 @@ public final class NBTTagUtils{// version = X1.0
 			if(value.getClass().equals(realNBTTagStringClass)) return new RefNBTTagString(value.toString());
 			return null;
 		}
+		//TODO: add getLength/getSize
 	}
 
 	// Compound tag
