@@ -115,7 +115,12 @@ public class TypeUtils{
 			case DIAMOND_ORE:
 				return true;
 			default:
-				return version >= 16 && mat.name().equals("NETHER_GOLD_ORE");
+				return (
+						version >= 16 && mat.name().equals("NETHER_GOLD_ORE") || // Is ANCIENT_DEBRIS an ore?
+						version >= 17 && (mat.name().equals("COPPER_ORE")
+								|| (mat.name().startsWith("DEEPSLATE_") && isOre(Material.valueOf(mat.name().substring(10))))
+						)
+				);
 		}
 	}
 
@@ -129,7 +134,7 @@ public class TypeUtils{
 			case INFESTED_STONE_BRICKS:
 				return true;
 			default:
-				return false;
+				return version >= 17 && mat.name().equals("INFESTED_DEEPSLATE");
 		}
 	}
 
@@ -140,11 +145,14 @@ public class TypeUtils{
 				// EPIC:
 				case "MOJANG_BANNER_PATTERN":
 				case "JIGSAW":
+				case "LIGHT":
 					return ChatColor.LIGHT_PURPLE;
 				// UNCOMMON:
 				case "CREEPER_BANNER_PATTERN":
 				case "SKULL_BANNER_PATTERN":
 					return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : ChatColor.YELLOW;
+				default:
+					// Fallthrough intended
 			}
 		}
 		switch(item.getType()){
@@ -496,6 +504,7 @@ public class TypeUtils{
 			case JUNGLE_SAPLING:
 			case OAK_SAPLING:
 			case SPRUCE_SAPLING:
+			// Nether fungus?
 				return true;
 			default:
 				return false;
@@ -559,6 +568,19 @@ public class TypeUtils{
 				return true;
 			default:
 				return version >= 16 && (mat.name().equals("WARPED_PLANKS") || mat.name().equals("CRIMSON_PLANKS"));
+		}
+	}
+
+	public static boolean isChestplate(Material mat){
+		switch(mat){
+			case DIAMOND_CHESTPLATE:
+			case IRON_CHESTPLATE:
+			case CHAINMAIL_CHESTPLATE:
+			case GOLDEN_CHESTPLATE:
+			case LEATHER_CHESTPLATE:
+				return true;
+			default:
+				return version >= 16 && mat.name().equals("NETHERITE_CHESTPLATE");
 		}
 	}
 
@@ -668,7 +690,7 @@ public class TypeUtils{
 
 	enum ObtainableOptions{
 		SILK_SPAWNERS, SILK_INFESTED, MOB_EGGS, CMD_BLOCKS,
-		BEDROCK, END_PORTAL_FRAMES, BARRIERS, STRUCTURE_BLOCKS, PETRIFIED_SLABS,
+		BEDROCK, END_PORTAL_FRAMES, BARRIERS, STRUCTURE_BLOCKS, LIGHT_BLOCKS, PETRIFIED_SLABS,
 		ITEM_LORE, ITEM_NAME_COLOR, CONFLICTING_ENCHANTS, ABOVE_MAX_ENCHANTS, OVERSTACKED,
 		PLAYER_HEADS, TATTERED_BOOKS
 	};
@@ -746,6 +768,7 @@ public class TypeUtils{
 				if(version >= 14){
 					if(mat.name().equals("BAMBOO_SAPLING")) return false; // Planted-form: Cannot be held
 					if(mat.name().equals("JIGSAW")) return canObtain.contains(ObtainableOptions.STRUCTURE_BLOCKS);
+					if(mat.name().equals("LIGHT")) return canObtain.contains(ObtainableOptions.LIGHT_BLOCKS);
 				}
 				if(mat.name().equals(version >= 17 ? "DIRT_PATH" : "GRASS_PATH")) return false; // Not obtainable with silk
 				return true;

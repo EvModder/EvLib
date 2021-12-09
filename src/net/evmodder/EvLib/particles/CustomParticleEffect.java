@@ -172,7 +172,7 @@ public enum CustomParticleEffect {
 	OFFLIMITS(){
 		@Override public void display(Player p, long time){
 //			ParticleEffect.BARRIER.display(3, 3, 3, 0, 20, p.getEyeLocation(), 5);
-			if(time%4 == 0) p.getWorld().spawnParticle(Particle.BARRIER, p.getEyeLocation(), 20, 3, 3, 3);
+//			if(time%4 == 0) p.getWorld().spawnParticle(Particle.BARRIER, p.getEyeLocation(), 20, 3, 3, 3);
 		}
 	},
 	BATWINGS(){

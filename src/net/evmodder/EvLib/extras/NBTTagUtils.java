@@ -2,6 +2,7 @@ package net.evmodder.EvLib.extras;
 
 import java.util.AbstractList;
 import java.util.HashMap;
+import java.util.Set;
 import org.bukkit.inventory.ItemStack;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefConstructor;
@@ -15,40 +16,74 @@ public final class NBTTagUtils{// version = X1.0
 	static final RefClass classCraftItemStack = ReflectionUtils.getRefClass("{cb}.inventory.CraftItemStack");
 	static final RefMethod methodAsNMSCopy = classCraftItemStack.getMethod("asNMSCopy", ItemStack.class);
 	static final RefMethod methodAsCraftMirror = classCraftItemStack.getMethod("asCraftMirror", classItemStack);
-	static final RefMethod methodGetTag = classItemStack.getMethod("getTag");
-	static final RefMethod methodSetTag = classItemStack.getMethod("setTag", classNBTTagCompound);
-	static final RefMethod methodTagRemove = classNBTTagCompound.getMethod("remove", String.class);
-	static final RefMethod methodHasKey = classNBTTagCompound.getMethod("hasKey", String.class);
-	static final RefMethod methodTagIsEmpty = classNBTTagCompound.getMethod("isEmpty");
+//	static final RefMethod methodGetTag = classItemStack.getMethod("getTag");
+//	static final RefMethod methodSetTag = classItemStack.getMethod("setTag", classNBTTagCompound);
+	static final RefMethod methodGetTag = classItemStack.findMethod(/*isStatic=*/false, classNBTTagCompound);
+	static final RefMethod methodSetTag = classItemStack.findMethod(/*isStatic=*/false, Void.TYPE, classNBTTagCompound);
+//	static final RefMethod methodTagRemove = classNBTTagCompound.getMethod("remove", String.class);
+//	static final RefMethod methodHasKey = classNBTTagCompound.getMethod("hasKey", String.class);
+	static final RefMethod methodTagRemove = classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class);
+	static RefMethod methodHasKey = null, methodGetAllKeys = null;
+	static {
+		try{methodHasKey = classNBTTagCompound.getMethod("hasKey");}
+		catch(RuntimeException e){
+			try{methodGetAllKeys = classNBTTagCompound.findMethod(/*isStatic=*/false, Set.class);}
+			catch(RuntimeException e2){System.err.println("Unable to find getAllKeys() method");}
+		}
+	}
+//	static final RefMethod methodTagIsEmpty = classNBTTagCompound.getMethod("isEmpty");
+	static final RefMethod methodTagIsEmpty = classNBTTagCompound.findMethod(/*isStatic=*/false, boolean.class);
 	static final HashMap<Class<?>, RefMethod> tagSetters = new HashMap<Class<?>, RefMethod>();
 	static final HashMap<Class<?>, RefMethod> tagGetters = new HashMap<Class<?>, RefMethod>();
 	static final Class<?> realNBTTagCompoundClass = classNBTTagCompound.getRealClass();
 	static final Class<?> realNBTBaseClass = classNBTBase.getRealClass();
 	static{
-		tagSetters.put(realNBTBaseClass,classNBTTagCompound.getMethod("set",			String.class, classNBTBase));
-		tagSetters.put(boolean.class,	classNBTTagCompound.getMethod("setBoolean",		String.class, boolean.class));
-		tagSetters.put(byte.class,		classNBTTagCompound.getMethod("setByte",		String.class, byte.class));
-		tagSetters.put(byte[].class,	classNBTTagCompound.getMethod("setByteArray",	String.class, byte[].class));
-		tagSetters.put(double.class,	classNBTTagCompound.getMethod("setDouble",		String.class, double.class));
-		tagSetters.put(float.class,		classNBTTagCompound.getMethod("setFloat",		String.class, float.class));
-		tagSetters.put(int.class,		classNBTTagCompound.getMethod("setInt",			String.class, int.class));
-		tagSetters.put(int[].class,		classNBTTagCompound.getMethod("setIntArray",	String.class, int[].class));
-		tagSetters.put(long.class,		classNBTTagCompound.getMethod("setLong",		String.class, long.class));
-		tagSetters.put(short.class,		classNBTTagCompound.getMethod("setShort",		String.class, short.class));
-		tagSetters.put(String.class,	classNBTTagCompound.getMethod("setString",		String.class, String.class));
+//		tagSetters.put(realNBTBaseClass,classNBTTagCompound.getMethod("set",			String.class, classNBTBase));
+//		tagSetters.put(boolean.class,	classNBTTagCompound.getMethod("setBoolean",		String.class, boolean.class));
+//		tagSetters.put(byte.class,		classNBTTagCompound.getMethod("setByte",		String.class, byte.class));
+//		tagSetters.put(byte[].class,	classNBTTagCompound.getMethod("setByteArray",	String.class, byte[].class));
+//		tagSetters.put(double.class,	classNBTTagCompound.getMethod("setDouble",		String.class, double.class));
+//		tagSetters.put(float.class,		classNBTTagCompound.getMethod("setFloat",		String.class, float.class));
+//		tagSetters.put(int.class,		classNBTTagCompound.getMethod("setInt",			String.class, int.class));
+//		tagSetters.put(int[].class,		classNBTTagCompound.getMethod("setIntArray",	String.class, int[].class));
+//		tagSetters.put(long.class,		classNBTTagCompound.getMethod("setLong",		String.class, long.class));
+//		tagSetters.put(short.class,		classNBTTagCompound.getMethod("setShort",		String.class, short.class));
+//		tagSetters.put(String.class,	classNBTTagCompound.getMethod("setString",		String.class, String.class));
+		tagSetters.put(realNBTBaseClass,classNBTTagCompound.findMethod(/*isStatic=*/false, classNBTBase, String.class, classNBTBase));
+		tagSetters.put(boolean.class,	classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, boolean.class));
+		tagSetters.put(byte.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, byte.class));
+		tagSetters.put(byte[].class,	classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, byte[].class));
+		tagSetters.put(double.class,	classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, double.class));
+		tagSetters.put(float.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, float.class));
+		tagSetters.put(int.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, int.class));
+		tagSetters.put(int[].class,		classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, int[].class));
+		tagSetters.put(long.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, long.class));
+		tagSetters.put(short.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, short.class));
+		tagSetters.put(String.class,	classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, String.class));
 	}
 	static{
-		tagGetters.put(realNBTBaseClass,classNBTTagCompound.getMethod("get",			String.class));
-		tagGetters.put(boolean.class,	classNBTTagCompound.getMethod("getBoolean",		String.class));
-		tagGetters.put(byte.class,		classNBTTagCompound.getMethod("getByte",		String.class));
-		tagGetters.put(byte[].class,	classNBTTagCompound.getMethod("getByteArray",	String.class));
-		tagGetters.put(double.class,	classNBTTagCompound.getMethod("getDouble",		String.class));
-		tagGetters.put(float.class,		classNBTTagCompound.getMethod("getFloat",		String.class));
-		tagGetters.put(int.class,		classNBTTagCompound.getMethod("getInt",			String.class));
-		tagGetters.put(int[].class,		classNBTTagCompound.getMethod("getIntArray",	String.class));
-		tagGetters.put(long.class,		classNBTTagCompound.getMethod("getLong",		String.class));
-		tagGetters.put(short.class,		classNBTTagCompound.getMethod("getShort",		String.class));
-		tagGetters.put(String.class,	classNBTTagCompound.getMethod("getString",		String.class));
+//		tagGetters.put(realNBTBaseClass,classNBTTagCompound.getMethod("get",			String.class));
+//		tagGetters.put(boolean.class,	classNBTTagCompound.getMethod("getBoolean",		String.class));
+//		tagGetters.put(byte.class,		classNBTTagCompound.getMethod("getByte",		String.class));
+//		tagGetters.put(byte[].class,	classNBTTagCompound.getMethod("getByteArray",	String.class));
+//		tagGetters.put(double.class,	classNBTTagCompound.getMethod("getDouble",		String.class));
+//		tagGetters.put(float.class,		classNBTTagCompound.getMethod("getFloat",		String.class));
+//		tagGetters.put(int.class,		classNBTTagCompound.getMethod("getInt",			String.class));
+//		tagGetters.put(int[].class,		classNBTTagCompound.getMethod("getIntArray",	String.class));
+//		tagGetters.put(long.class,		classNBTTagCompound.getMethod("getLong",		String.class));
+//		tagGetters.put(short.class,		classNBTTagCompound.getMethod("getShort",		String.class));
+//		tagGetters.put(String.class,	classNBTTagCompound.getMethod("getString",		String.class));
+		tagGetters.put(realNBTBaseClass,classNBTTagCompound.findMethod(/*isStatic=*/false, classNBTBase, String.class));
+		tagGetters.put(boolean.class,	classNBTTagCompound.findMethod(/*isStatic=*/false, boolean.class, String.class));
+		tagGetters.put(byte.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, byte.class, String.class));
+		tagGetters.put(byte[].class,	classNBTTagCompound.findMethod(/*isStatic=*/false, byte[].class, String.class));
+		tagGetters.put(double.class,	classNBTTagCompound.findMethod(/*isStatic=*/false, double.class, String.class));
+		tagGetters.put(float.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, float.class, String.class));
+		tagGetters.put(int.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, int.class, String.class));
+		tagGetters.put(int[].class,		classNBTTagCompound.findMethod(/*isStatic=*/false, int[].class, String.class));
+		tagGetters.put(long.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, long.class, String.class));
+		tagGetters.put(short.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, short.class, String.class));
+		tagGetters.put(String.class,	classNBTTagCompound.findMethod(/*isStatic=*/false, String.class, String.class));
 	}
 	static final RefConstructor cnstrNBTTagCompound = classNBTTagCompound.findConstructor(0);
 
@@ -145,7 +180,11 @@ public final class NBTTagUtils{// version = X1.0
 		public String getString		(String key){return (String)	getFromTag(key, String.class);}
 		//
 		public void remove(String key){methodTagRemove.of(nmsTag).call(key);}
-		public boolean hasKey(String key){return (boolean)methodHasKey.of(nmsTag).call(key);}
+		@SuppressWarnings("unchecked")
+		public boolean hasKey(String key){
+			if(methodHasKey == null) return ((Set<String>)methodGetAllKeys.of(nmsTag).call()).contains(key);
+			else return (boolean)methodHasKey.of(nmsTag).call(key);
+		}
 	}
 
 	// For ItemStacks ----------------------------------------------------

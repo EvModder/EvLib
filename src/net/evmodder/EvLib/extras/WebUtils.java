@@ -608,7 +608,7 @@ public class WebUtils {
 //		printUUIDsForPlayerNames();
 		checkMissingTextures();
 		checkMissingGrummTextures();
-		checkAbnormalHeadTextures();
+//		checkAbnormalHeadTextures();
 //		runGrumm();
 //		System.out.println("Test: "+Vehicle.class.isAssignableFrom(EntityType.PLAYER.getEntityClass()));
 	}

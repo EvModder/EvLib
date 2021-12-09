@@ -489,6 +489,7 @@ public class Updater {
 			conn.setDoOutput(true);
 			final BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 			final String response = reader.readLine();
+			//TODO: not require JSON
 			final JSONArray array = (JSONArray) JSONValue.parse(response);
 			if(array.isEmpty()){
 				plugin.getLogger().warning("The updater could not find any files for the project id " + id);

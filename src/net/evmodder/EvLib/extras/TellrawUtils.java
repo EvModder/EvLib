@@ -31,8 +31,8 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Objective;
-import com.mojang.datafixers.util.Pair;
 import net.evmodder.EvLib.extras.EntityUtils.CCP;
+import net.evmodder.EvLib.util.Pair;
 
 public class TellrawUtils{
 	public enum ClickEvent{// Descriptions below are from https://minecraft.gamepedia.com/Raw_JSON_text_format
@@ -251,7 +251,8 @@ public class TellrawUtils{
 			return with == null ? jsonKey.replace("%s", "") : String.format(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
 		}
 		@Override public String toString(){
-			StringBuilder builder = new StringBuilder().append("{\"translate\":\"").append(jsonKey).append('"');
+			String escapedJsonKey = TextUtils.escape(jsonKey, "\"","\n");
+			StringBuilder builder = new StringBuilder().append("{\"translate\":\"").append(escapedJsonKey).append('"');
 			if(with != null && with.length > 0) builder.append(",\"with\":[").append(
 					Arrays.stream(with).map(Component::toString).collect(Collectors.joining(","))).append(']');
 			return builder.append(getProperties()).append('}').toString();
@@ -331,12 +332,36 @@ public class TellrawUtils{
 			case "UNCRAFTABLE": default: return "empty";
 		}
 	}
+	
+	private static Method getGameProfileFromSkull = null, getGameProfileFromSkullMeta = null, getNameFromProfile = null;
+	static{
+		try{
+			getGameProfileFromSkull = Class.forName("net.evmodder.EvLib.extras.HeadUtils").getMethod("getGameProfile", Skull.class);
+			getGameProfileFromSkullMeta = Class.forName("net.evmodder.EvLib.extras.HeadUtils").getMethod("getGameProfile", SkullMeta.class);
+			getNameFromProfile = Class.forName("com.mojang.authlib.GameProfile").getMethod("getName");
+		}
+		catch(ClassNotFoundException | NoSuchMethodException | SecurityException e){}
+	}
+	private static String getProfileName(Skull skull){
+		if(getNameFromProfile != null && getGameProfileFromSkull != null){
+			try{return (String)getNameFromProfile.invoke(getGameProfileFromSkull.invoke(null, skull));}
+			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException e){}
+		}
+		return skull.getOwningPlayer().getName();
+	}
+	private static String getProfileName(SkullMeta meta){
+		if(getNameFromProfile != null && getGameProfileFromSkull != null){
+			try{return (String)getNameFromProfile.invoke(getGameProfileFromSkullMeta.invoke(null, meta));}
+			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException e){}
+		}
+		return meta.getOwningPlayer().getName();
+	}
 	public static TranslationComponent getLocalizedDisplayName(@Nonnull BlockState block){
 		switch(block.getType()){
 			case PLAYER_HEAD:
 			case PLAYER_WALL_HEAD:
-				return new TranslationComponent("block.minecraft.player_head.named",
-						new RawTextComponent(HeadUtils.getGameProfile((Skull)block).getName()));
+				//Bukkit.getLogger().warning("profile name: "+HeadUtils.getGameProfile((Skull)item.getItemMeta()).getName());
+				return new TranslationComponent("block.minecraft.player_head.named", new RawTextComponent(getProfileName((Skull)block)));
 			case BLACK_BANNER:
 			case BLUE_BANNER:
 			case BROWN_BANNER:
@@ -368,9 +393,8 @@ public class TellrawUtils{
 			switch(item.getType()){
 				case PLAYER_HEAD:
 				case PLAYER_WALL_HEAD:
-					Bukkit.getLogger().warning("profile name: "+HeadUtils.getGameProfile((SkullMeta)item.getItemMeta()).getName());
-					return new TranslationComponent("block.minecraft.player_head.named",
-							new RawTextComponent(HeadUtils.getGameProfile((SkullMeta)item.getItemMeta()).getName()));
+					//Bukkit.getLogger().warning("profile name: "+HeadUtils.getGameProfile((SkullMeta)item.getItemMeta()).getName());
+					return new TranslationComponent("block.minecraft.player_head.named", new RawTextComponent(getProfileName((SkullMeta)item.getItemMeta())));
 				default:
 					return new TranslationComponent("block.minecraft."+item.getType().name().toLowerCase());
 			}

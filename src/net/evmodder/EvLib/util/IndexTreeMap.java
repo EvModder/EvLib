@@ -937,7 +937,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		Collection<V> vs = null;
 		try{
 			Field transientField = getClass().getDeclaredField("values");
-			System.out.print("Access?: " + transientField.canAccess(this));
+			//System.out.print("Access?: " + transientField.canAccess(this));
 			transientField.setAccessible(true);
 			vs = (Collection<V>) transientField.get(this);
 			if(vs == null) {
