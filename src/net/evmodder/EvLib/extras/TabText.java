@@ -198,30 +198,9 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 				if(lineLen < stopLen){
 					double lenLeft = stopLen - lineLen;
 					if(hideTabs != null) line.append(hideTabs);
-					if(monospace) while(lenLeft > 0){line.append(' '); lineLen += 1;}
-					else while(lenLeft > 1.5){// (stopLen-1.5) is not possible, as there are no chars with width < 2px
-						double needShift = lenLeft % 4;
-						if(needShift == 0){line.append(' '); lineLen += 4;}
-						else if(needShift == 1){
-							if(lenLeft >= 5){line.append(ChatColor.BOLD).append(' ').append(hideTabs); lineLen += 5;}
-							else{line.append(W1_HALF_C); lineLen += 1;}
-						}
-						else if(needShift == 2){
-							if(lenLeft >= 10){line.append(ChatColor.BOLD).append("  ").append(hideTabs); lineLen += 10;}
-							else{line.append(W2_HALF_C); lineLen += 2;}
-						}
-						else if(needShift == 3){
-							if(lenLeft >= 15){line.append(ChatColor.BOLD).append("   ").append(hideTabs); lineLen += 15;}
-							else{line.append(W3_HALF_C); lineLen += 3;}
-						}
-						else if(needShift == 1.5){line.append(ChatColor.BOLD).append(W1_HALF_C).append(hideTabs); lineLen += 1.5;}
-						else if(needShift == 2.5){line.append(ChatColor.BOLD).append(W2_HALF_C).append(hideTabs); lineLen += 2.5;}
-						else if(needShift == 3.5){line.append(ChatColor.BOLD).append(W3_HALF_C).append(hideTabs); lineLen += 3.5;}
-						else if(needShift == 0.5){line.append(ChatColor.BOLD).append(W4_HALF_C).append(hideTabs); lineLen += 4.5;}
-					}
+					line.append(getPxSpaces(lenLeft, monospace, ""+hideTabs));
 					line.append(ChatColor.RESET);
 				}
-
 				// get field and set line properties
 				subStrAndSubPxLen = TextUtils.pxSubstring(fields[fieldPos], tabs[fieldPos], monospace);
 				line.append(subStrAndSubPxLen.str);

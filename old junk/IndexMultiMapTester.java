@@ -4,9 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 
-public class IndexMultiMapDriver{
-
-	
+public class IndexMultiMapTester{
 	public static void main(String[] args){
 		HashMap<Double, Vector<String>> test = new HashMap<>();
 		IndexTreeMultiMap2<Double, Vector<String>, String> yeet = new IndexTreeMultiMap2<>(Vector::new, test);
