@@ -32,7 +32,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Objective;
 import net.evmodder.EvLib.extras.EntityUtils.CCP;
-import net.evmodder.EvLib.util.Pair;
 
 public class TellrawUtils{
 	public enum ClickEvent{// Descriptions below are from https://minecraft.gamepedia.com/Raw_JSON_text_format
@@ -646,6 +645,10 @@ public class TellrawUtils{
 		return comp;
 	}
 
+	private static class Pair<T, R>{
+		public final T a; public final R b;
+		public Pair(T t, R r){a=t; b=r;}
+	}
 	private final static Pair<String, Integer> parseColonThenSimpleString(String str, int i){
 		while(Character.isWhitespace(str.charAt(i))) ++i;
 		if(str.charAt(i) != ':'){
@@ -688,9 +691,9 @@ public class TellrawUtils{
 				do{
 					++i;
 					Pair<Component, Integer> nextComp = parseNextComponentFromString(str, i);
-					if(nextComp.getFirst() == null) return null;
-					listComp.addComponent(nextComp.getFirst());
-					i = nextComp.getSecond();
+					if(nextComp.a == null) return null;
+					listComp.addComponent(nextComp.a);
+					i = nextComp.b;
 					while(Character.isWhitespace(str.charAt(i))) ++i;
 				} while(str.charAt(i) == ',');
 				if(str.charAt(i) != ']'){
@@ -738,57 +741,57 @@ public class TellrawUtils{
 						++i;
 						Pair<Component, Integer> extraAndIdx = parseNextComponentFromString(str, i);
 						if(extraAndIdx == null) return null;
-						extra = (ListComponent)extraAndIdx.getFirst();
-						i = extraAndIdx.getSecond();
+						extra = (ListComponent)extraAndIdx.a;
+						i = extraAndIdx.b;
 					}
 					else if(str.startsWith("color\"", i)){
 						i += 6;
 						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
 						if(textAndIdx == null) return null;
-						color = textAndIdx.getFirst();
-						i = textAndIdx.getSecond();
+						color = textAndIdx.a;
+						i = textAndIdx.b;
 					}
 					else if(str.startsWith("bold\"", i)){
 						i += 5;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
 						if(boolAndIdx == null) return null;
-						formatList.add(new FormatFlag(Format.BOLD, boolAndIdx.getFirst()));
-						i = boolAndIdx.getSecond();
+						formatList.add(new FormatFlag(Format.BOLD, boolAndIdx.a));
+						i = boolAndIdx.b;
 					}
 					else if(str.startsWith("italic\"", i)){
 						i += 7;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
 						if(boolAndIdx == null) return null;
-						formatList.add(new FormatFlag(Format.ITALIC, boolAndIdx.getFirst()));
-						i = boolAndIdx.getSecond();
+						formatList.add(new FormatFlag(Format.ITALIC, boolAndIdx.a));
+						i = boolAndIdx.b;
 					}
 					else if(str.startsWith("underlined\"", i)){
 						i += 11;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
 						if(boolAndIdx == null) return null;
-						formatList.add(new FormatFlag(Format.UNDERLINED, boolAndIdx.getFirst()));
-						i = boolAndIdx.getSecond();
+						formatList.add(new FormatFlag(Format.UNDERLINED, boolAndIdx.a));
+						i = boolAndIdx.b;
 					}
 					else if(str.startsWith("strikethrough\"", i)){
 						i += 14;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
 						if(boolAndIdx == null) return null;
-						formatList.add(new FormatFlag(Format.STRIKETHROUGH, boolAndIdx.getFirst()));
-						i = boolAndIdx.getSecond();
+						formatList.add(new FormatFlag(Format.STRIKETHROUGH, boolAndIdx.a));
+						i = boolAndIdx.b;
 					}
 					else if(str.startsWith("obfuscated\"", i)){
 						i += 11;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
 						if(boolAndIdx == null) return null;
-						formatList.add(new FormatFlag(Format.OBFUSCATED, boolAndIdx.getFirst()));
-						i = boolAndIdx.getSecond();
+						formatList.add(new FormatFlag(Format.OBFUSCATED, boolAndIdx.a));
+						i = boolAndIdx.b;
 					}
 					else if(str.startsWith("insertion\"", i)){
 						i += 10;
 						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
 						if(textAndIdx == null) return null;
-						insert = textAndIdx.getFirst();
-						i = textAndIdx.getSecond();
+						insert = textAndIdx.a;
+						i = textAndIdx.b;
 					}
 					else if(str.startsWith("with\"", i)){
 						i += 5;
@@ -800,8 +803,8 @@ public class TellrawUtils{
 						++i;
 						Pair<Component, Integer> withAndIdx = parseNextComponentFromString(str, i);
 						if(withAndIdx == null) return null;
-						with = ((ListComponent)withAndIdx.getFirst()).components.toArray(new Component[0]);
-						i = withAndIdx.getSecond();
+						with = ((ListComponent)withAndIdx.a).components.toArray(new Component[0]);
+						i = withAndIdx.b;
 					}
 					// Content tags are checked in the order: text, translate, score, selector, keybind, nbt
 					else if(str.startsWith("text\"", i)){
@@ -809,16 +812,16 @@ public class TellrawUtils{
 						i += 5;
 						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
 						if(textAndIdx == null) return null;
-						text = textAndIdx.getFirst();
-						i = textAndIdx.getSecond();
+						text = textAndIdx.a;
+						i = textAndIdx.b;
 					}
 					else if(str.startsWith("translate\"", i)){
 						newType = ComponentType.TRANSLATE;
 						i += 10;
 						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
 						if(textAndIdx == null) return null;
-						jsonKey = textAndIdx.getFirst();
-						i = textAndIdx.getSecond();
+						jsonKey = textAndIdx.a;
+						i = textAndIdx.b;
 					}
 					else if(str.startsWith("score\"", i)){
 						newType = ComponentType.SCORE;
@@ -846,23 +849,23 @@ public class TellrawUtils{
 								i += 5;
 								Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
 								if(textAndIdx == null) return null;
-								selector = TextUtils.unescapeString(textAndIdx.getFirst());
-								i = textAndIdx.getSecond();
+								selector = TextUtils.unescapeString(textAndIdx.a);
+								i = textAndIdx.b;
 							}
 							else if(str.startsWith("objective\"", i)){
 								i += 10;
 								Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
 								if(textAndIdx == null) return null;
 								objective = Bukkit.getServer().getScoreboardManager().getMainScoreboard().getObjective(
-										TextUtils.unescapeString(textAndIdx.getFirst()));
-								i = textAndIdx.getSecond();
+										TextUtils.unescapeString(textAndIdx.a));
+								i = textAndIdx.b;
 							}
 							else if(str.startsWith("value\"", i)){
 								i += 6;
 								Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
 								if(textAndIdx == null) return null;
-								value = TextUtils.unescapeString(textAndIdx.getFirst());
-								i = textAndIdx.getSecond();
+								value = TextUtils.unescapeString(textAndIdx.a);
+								i = textAndIdx.b;
 							}
 							while(Character.isWhitespace(str.charAt(i))) ++i;
 						} while(str.charAt(i) == ',');
@@ -877,17 +880,17 @@ public class TellrawUtils{
 						i += 9;
 						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
 						if(textAndIdx == null) return null;
-						selector = TextUtils.unescapeString(textAndIdx.getFirst());
-						i = textAndIdx.getSecond();
+						selector = TextUtils.unescapeString(textAndIdx.a);
+						i = textAndIdx.b;
 					}
 					else if(str.startsWith("keybind\"", i)){
 						newType = ComponentType.KEYBIND;
 						i +=8;
 						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
 						if(textAndIdx == null) return null;
-						String keybindStr = textAndIdx.getFirst();
+						String keybindStr = textAndIdx.a;
 						for(Keybind k : Keybind.values()) if(k.toString().equals(keybindStr)) keybind = k;
-						i = textAndIdx.getSecond();
+						i = textAndIdx.b;
 					}
 					else{
 						Bukkit.getLogger().warning("TellrawUtils ERROR: unknown comp-key at index "+i+" of : "+str);
@@ -931,6 +934,6 @@ public class TellrawUtils{
 	}
 	public final static Component parseComponentFromString(@Nonnull String str){
 		Pair<Component, Integer> compAndIdx = parseNextComponentFromString(str, 0);
-		return compAndIdx == null ? null : compAndIdx.getFirst();
+		return compAndIdx == null ? null : compAndIdx.a;
 	}
 }
