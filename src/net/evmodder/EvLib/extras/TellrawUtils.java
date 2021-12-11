@@ -531,14 +531,14 @@ public class TellrawUtils{
 			if(component.toPlainText().isEmpty() && last != null) return false;
 			if(component instanceof RawTextComponent && last != null){
 				if(ChatColor.stripColor(component.toPlainText()).isEmpty()) return false;
-				if(last instanceof RawTextComponent && (last.samePropertiesAs(component))){
+				if(last instanceof RawTextComponent && last.samePropertiesAs(component)){
 					components.remove(components.size()-1);
 					components.add(last = copyWithNewText((RawTextComponent)last, last.toPlainText() + component.toPlainText()));
 					return true;
 				}
 			}
 			// For TranslationComponents that are actually just String formatters, not translation keys.
-			if(component instanceof TranslationComponent){
+			if(component instanceof TranslationComponent && last != null && last.samePropertiesAs(component)){
 				final TranslationComponent strFormatComp = ((TranslationComponent)component);
 				if(ChatColor.stripColor(strFormatComp.jsonKey.replaceAll("%s", "").trim()).isEmpty()){
 					int i = 0;
