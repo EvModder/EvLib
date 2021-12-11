@@ -1,15 +1,12 @@
 package net.evmodder.EvLib.extras;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.UUID;
 import org.bukkit.entity.Player;
 import net.evmodder.EvLib.extras.ReflectionUtils.*;
 
 public class ActionBarUtils{
-//	private static final RefClass classEntityPlayer = ReflectionUtils.getRefClass("{nms}.EntityPlayer");
-//	private static final RefClass classPlayerConnection = ReflectionUtils.getRefClass("{nms}.PlayerConnection");
+	private static final RefClass classEntityPlayer = ReflectionUtils.getRefClass("{nms}.EntityPlayer", "{nm}.server.level.EntityPlayer");
+	private static final RefClass classPlayerConnection = ReflectionUtils.getRefClass("{nms}.PlayerConnection", "{nm}.server.network.PlayerConnection");
 	private static final RefClass classIChatBaseComponent = ReflectionUtils.getRefClass(
 			"{nms}.IChatBaseComponent", "{nm}.network.chat.IChatBaseComponent");
 	private static final RefClass classChatComponentText = ReflectionUtils.getRefClass(
@@ -29,8 +26,8 @@ public class ActionBarUtils{
 			}
 		}
 	}
-//	private static final RefMethod methodSendPacket = classPlayerConnection.getMethod("sendPacket", classPacket);
-//	private static final RefField fieldPlayerConnection = classEntityPlayer.getField("playerConnection");
+	private static final RefMethod methodSendPacket = classPlayerConnection.findMethod(/*isStatic=*/false, Void.TYPE, classPacket);
+	private static final RefField fieldPlayerConnection = classEntityPlayer.findField(classPlayerConnection);
 	private static final RefMethod methodGetHandle = classCraftPlayer.getMethod("getHandle");
 	private static final RefConstructor makeChatComponentText = classChatComponentText.getConstructor(String.class);
 	private static final RefConstructor makePacketPlayOutChat =
@@ -41,24 +38,10 @@ public class ActionBarUtils{
 		Object chatCompontentText = makeChatComponentText.create(message);
 		Object packet = makePacketPlayOutChat.create(chatCompontentText, chatMessageType, UHHHHH_UUID);
 		for(Player p : ppl){
-			/*
 			Object entityPlayer = methodGetHandle.of(p).call();
-			Object playerConnection = fieldPlayerConnection.of(entityPlayer);
+			Object playerConnection = fieldPlayerConnection.of(entityPlayer).get();
 			Object castPacket = classPacket.getRealClass().cast(packet);
 			methodSendPacket.of(playerConnection).call(castPacket);
-			*/
-			Object entityPlayer = methodGetHandle.of(p).call();
-			try{
-				Field playerConnectionField = entityPlayer.getClass().getDeclaredField(
-						ReflectionUtils.getServerVersionString().compareTo("v1_17") < 0
-						? "playerConnection" : "b");
-				Object playerConn = playerConnectionField.get(entityPlayer);
-				Method sendPacketMethod = playerConn.getClass()
-						.getDeclaredMethod("sendPacket", classPacket.getRealClass());
-				sendPacketMethod.invoke(playerConn, packet);
-			}
-			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException
-				| NoSuchFieldException | SecurityException | NoSuchMethodException e){e.printStackTrace();}
 		}
 	}
 
