@@ -545,7 +545,7 @@ public class TellrawUtils{
 					boolean addedContent = false;
 					for(String s : strFormatComp.jsonKey.split("%s")){
 						addedContent |= addComponent(s);
-						if(i < strFormatComp.with.length) addedContent |= addComponent(strFormatComp.with[i]);
+						if(i < strFormatComp.with.length) addedContent |= addComponent(strFormatComp.with[i++]);
 					}
 					return addedContent;
 				}
