@@ -537,6 +537,19 @@ public class TellrawUtils{
 					return true;
 				}
 			}
+			// For TranslationComponents that are actually just String formatters, not translation keys.
+			if(component instanceof TranslationComponent){
+				final TranslationComponent strFormatComp = ((TranslationComponent)component);
+				if(ChatColor.stripColor(strFormatComp.jsonKey.replaceAll("%s", "").trim()).isEmpty()){
+					int i = 0;
+					boolean addedContent = false;
+					for(String s : strFormatComp.jsonKey.split("%s")){
+						addedContent |= addComponent(s);
+						if(i < strFormatComp.with.length) addedContent |= addComponent(strFormatComp.with[i]);
+					}
+					return addedContent;
+				}
+			}
 			if(component instanceof ListComponent){
 				// We can safely flatten nested TellrawBlobs IFF they don't override any of the parent's "group properties"..
 				// AND we are not inside a "with":[]
