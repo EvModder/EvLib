@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -35,29 +36,22 @@ public class SelectorUtils{
 	enum SortType{NEAREST, FURTHEST, RANDOM, ARBITRARY};
 
 	public final static class SelectorArgument{
-		final String/*SelectorArgumentType*/ type;
+		final SelectorArgumentType type;
 		final String value;
 		public SelectorArgument(SelectorArgumentType argumentType, String value){
-//			if(validateSelectorArgument(argumentType, value) == false)
-//				throw new IllegalArgumentException(value+" is not a valid value for "+argumentType);
-			this.type = argumentType.toString();
+			this.type = argumentType;
 			this.value = value;
 		}
-		/*@Deprecated public SelectorArgument(String argumentTypeStr, String value){
-			try{
-				SelectorArgumentType argumentType = SelectorArgumentType.valueOf(argumentTypeStr);
-				if(validateSelectorArgument(argumentType, value) == false)
-					throw new IllegalArgumentException(value+" is not a valid value for "+argumentTypeStr);
-			}
-			catch(IllegalArgumentException ex){Bukkit.getLogger().warning("Unrecognized selector argument: "+argumentTypeStr);}
-			this.type = argumentTypeStr;
+		public SelectorArgument(SelectorArgumentType argumentType, String value, boolean validate){
+			if(!validateSelectorArgument(argumentType, value)) throw new IllegalArgumentException(value+" is not a valid value for "+argumentType);
+			this.type = argumentType;
 			this.value = value;
-		}*/
+		}
 		@Override public String toString(){return new StringBuilder(type.toString()).append("=").append(value).toString();}
 	}
 
 	public enum SelectorType{
-		YOURSELF("@s"/* '*' also works */), NEAREST_PLAYER("@p"), RANDOM_PLAYER("@r"), ALL_PLAYERS("@a"), ALL_ENTITIES("@e"), UUID("");
+		ALL_PLAYERS("@a"), ALL_ENTITIES("@e"), NEAREST_PLAYER("@p"), RANDOM_PLAYER("@r"), YOURSELF("@s"/* '*' also works */), UUID("");
 		final String toString;
 		SelectorType(String toString){this.toString = toString;}
 		@Override public String toString(){return toString;}
@@ -129,7 +123,7 @@ public class SelectorUtils{
 			Double x, y, z; x = y = z = null;
 			World world; world = null;
 			for(SelectorArgument argument : arguments){
-				switch(SelectorArgumentType.valueOf(argument.type)){
+				switch(argument.type){
 					case X: x = Double.parseDouble(argument.value); break;
 					case Y: y = Double.parseDouble(argument.value); break;
 					case Z: z = Double.parseDouble(argument.value); break;
@@ -147,7 +141,7 @@ public class SelectorUtils{
 			boolean hasNameEquals = false, hasNameNotEquals = false;
 			boolean hasTypeEquals = false, hasTypeNotEquals = false;
 			for(SelectorArgument argument : arguments){
-				switch(SelectorArgumentType.valueOf(argument.type)){
+				switch(argument.type){
 					case LIMIT:
 						limit = Integer.parseInt(argument.value);
 						if(limit < 1) throw new IllegalArgumentException("Selector 'limit' argument can not be less than 1");
@@ -179,7 +173,7 @@ public class SelectorUtils{
 						double maxDistSq = maxDist * maxDist;
 						entities.removeIf(e -> {
 							double distSq = e.getLocation().distanceSquared(origin);
-							return distSq > minDistSq || distSq > maxDistSq;
+							return distSq < minDistSq || distSq > maxDistSq;
 						});
 					case LEVEL:
 						double minLevel = getRangeMin(argument.value, 0);
@@ -200,7 +194,7 @@ public class SelectorUtils{
 						break;
 					case GAMEMODE:
 						boolean not = argument.value.startsWith("!");
-						GameMode gm = GameMode.valueOf(not ? argument.value.substring(1) : argument.value);
+						GameMode gm = GameMode.valueOf((not ? argument.value.substring(1) : argument.value).toUpperCase());
 						entities.removeIf(e -> !(e instanceof HumanEntity) || not == (((HumanEntity)e).getGameMode() == gm));
 						break;
 					case TEAM:
@@ -251,9 +245,12 @@ public class SelectorUtils{
 								}
 							});
 						}
-						EntityType type = EntityType.valueOf(typeName);
+						// TODO: add #arrows, #axolotl_always_hostiles, #axolotl_hunt_targets, #beehive_inhabitors, #freeze_hurts_extra_types,
+						// #freeze_immune_entity_types, #impact_projectiles, #powder_snow_walkable_mobs, #raiders
+						EntityType type = EntityType.valueOf(typeName.toUpperCase());
 						entities.removeIf(e -> not == (e.getType() == type));
-					case SCORES:
+						break;
+					case SCORES: {
 						// scores={health=15..20,deaths=3..}
 						String scoresStr = argument.value.substring(1, argument.value.length()-1);
 						if(scoresStr.isEmpty()) break; // Yes, vanilla minecraft considers "scores={}" valid, and doesn't filter anything.
@@ -286,6 +283,7 @@ public class SelectorUtils{
 						// TODO: Once it does get fixed, make sure we handle "name==null" the same way as minecraft vanilla
 						entities.removeIf(e -> e.getCustomName() == null || !checkScores.apply(e.getCustomName()));
 						break;
+					}
 					case NBT:
 						// TODO:
 						// Example: @e[type=item,nbt={Item:{id:"minecraft:slime_ball"}}]
@@ -319,11 +317,11 @@ public class SelectorUtils{
 						throw new UnsupportedOperationException("Unknown sort type '"+sort+"', please update EvLib");
 				}
 			}
-			return 0 < limit && limit < entities.size() ? entities.subList(0, limit) : entities;
+			return limit > 0 && limit < entities.size() ? entities.subList(0, limit) : entities;
 		}
 
-		@SuppressWarnings("deprecation")
-		public static Selector fromString(@Nonnull CommandSender sender, @Nonnull String str){
+		@SuppressWarnings("deprecation") // TODO: add "throws X, Y, Z" for all possible exceptions
+		public static Selector fromString(@Nonnull final CommandSender sender, @Nonnull final String str){
 			// Attempt to parse as UUID selector
 			try{return new Selector(UUID.fromString(str));}
 			catch(IllegalArgumentException ex){}
@@ -334,14 +332,16 @@ public class SelectorUtils{
 			catch(IllegalArgumentException ex){}
 
 			// Attempt to parse @<SelectorType>[<argument=value>, ...]
+			if(str.length() < 4) throw new IllegalArgumentException("Unable to parse selector (incomplete): "+str);
 			SelectorType type = SelectorType.fromString(str.substring(0, 2));
 			ArrayList<SelectorArgument> arguments = new ArrayList<>();
 			String argumentStrs = str.substring(3, str.length()-1)+",";
 			int argStart = 0, argEnd = argumentStrs.indexOf(',');
 			while(argEnd != -1){
 				int valSep = argumentStrs.indexOf('=', argStart);
+				if(valSep == -1) throw new IllegalArgumentException("Unable to parse selector (missing =): "+str);
 				String argTypeStr = argumentStrs.substring(argStart, valSep);
-				if(!argTypeStr.equals(argTypeStr.toLowerCase())) throw new IllegalArgumentException("Selector arguments should be lower case");
+				if(!argTypeStr.equals(argTypeStr.toLowerCase())) throw new IllegalArgumentException("Selector arg types should be lower case");
 				SelectorArgumentType argType = SelectorArgumentType.valueOf(argTypeStr.toUpperCase());
 				String argValue;
 				if(argumentStrs.charAt(valSep+1) == '"' || argumentStrs.startsWith("!\"", valSep+1)){
@@ -351,12 +351,79 @@ public class SelectorUtils{
 					argEnd = endQuote+1; // Since ',' could have been in the quoted string
 				}
 				else argValue = argumentStrs.substring(valSep+1, argEnd);
-				arguments.add(new SelectorArgument(argType, argValue));
+				arguments.add(new SelectorArgument(argType, argValue, /*validate=*/true));
 
 				argStart = argEnd+1;
 				argEnd = argumentStrs.indexOf(',', argStart);
 			}
-			return new Selector(type, sender, arguments.toArray(new SelectorArgument[arguments.size()]));
+			return new Selector(type, sender, arguments.toArray(new SelectorArgument[0]));
+		}
+
+		public static List<String> getTabComplete(@Nonnull final CommandSender sender, @Nonnull final String selectorSubstr){
+			List<String> tabCompletes = new ArrayList<>();
+			final boolean startsWithAt = selectorSubstr.startsWith("@");
+			if(selectorSubstr.length() <= 1){
+				if("@".startsWith(selectorSubstr)){
+					for(SelectorType s : SelectorType.values()) if(!s.toString().isEmpty()) tabCompletes.add(s.toString());
+				}
+				if(startsWithAt) return tabCompletes;
+			}
+			if(!startsWithAt){
+				final String lowerCaseSelector = selectorSubstr.toLowerCase();
+				for(Player p : sender.getServer().getOnlinePlayers()){
+					if(p.getName().toLowerCase().startsWith(lowerCaseSelector)) tabCompletes.add(p.getName());
+				}
+				return tabCompletes;
+			}
+			try{SelectorType.fromString(selectorSubstr.substring(0, 2));}
+			catch(IllegalArgumentException e){return null;}
+			if(selectorSubstr.length() == 2) return Arrays.asList(selectorSubstr+"[");
+			if(selectorSubstr.endsWith("]")){
+				try{Selector.fromString(sender, selectorSubstr);}
+				catch(Exception e){return null;}  // TODO: list specific exceptions
+				return Arrays.asList(selectorSubstr);
+			}
+			int lastComma = selectorSubstr.lastIndexOf(',');
+			if(lastComma != -1){
+				try{Selector.fromString(sender, selectorSubstr.substring(0, lastComma)+"]");}
+				catch(Exception e){return null;}  // TODO: list specific exceptions
+			}
+			int lastArgStart = Math.max(lastComma+1, 3);
+			String currentArg = selectorSubstr.substring(lastArgStart);
+			int valSep = currentArg.indexOf('=');
+			if(valSep == -1){
+				HashSet<SelectorArgumentType> usedArgumentType = new HashSet<>();
+				for(String selectorArg : selectorSubstr.substring(3).split(",")){
+					if(!selectorArg.equals(currentArg)) usedArgumentType.add(SelectorArgumentType.valueOf(
+							selectorArg.substring(0, selectorArg.indexOf('=')).toUpperCase()));
+				}
+				for(SelectorArgumentType t : SelectorArgumentType.values()){
+					if(t.toString().startsWith(currentArg) && !usedArgumentType.contains(t)){
+						tabCompletes.add(selectorSubstr.substring(0, lastArgStart)+t.toString()+"=");
+					}
+				}
+				return tabCompletes;
+			}
+			SelectorArgumentType type;
+			try{type = SelectorArgumentType.valueOf(currentArg.substring(0, valSep).toUpperCase());}
+			catch(IllegalArgumentException e){return null;}
+			String argValueStr = currentArg.substring(valSep+1);
+			try{new SelectorArgument(type, argValueStr, /*validate=*/true);}
+			catch(IllegalArgumentException e){
+				if(type == SelectorArgumentType.GAMEMODE){
+					String currentSelectorStr = selectorSubstr.substring(0, selectorSubstr.lastIndexOf('=')+1);
+					for(GameMode gm : GameMode.values()){
+						final String gmNameLower = gm.name().toLowerCase();
+						final String gmNameLowerNot = "!"+gmNameLower;
+						if(gmNameLower.startsWith(argValueStr)) tabCompletes.add(currentSelectorStr+gmNameLower);
+						if(gmNameLowerNot.startsWith(argValueStr)) tabCompletes.add(currentSelectorStr+gmNameLowerNot);
+					}
+					return tabCompletes;
+				}
+				// TODO: else if(type == SelectorArgumentType.TYPE) {
+				return null/*currentSelectorStr*/; // might become valid once they finish typing argValue;
+			}
+			return Arrays.asList(selectorSubstr+",", selectorSubstr+"]");
 		}
 
 		@Override public String toString(){
@@ -379,7 +446,7 @@ public class SelectorUtils{
 	}
 
 	// Utilities for SelectorArgument validation
-/*	private static boolean isValidPositionNumber(String value){
+	private static boolean isValidPositionNumber(String value){
 		return value.matches("^(?:[~^]|(?:[~^]?-?(?:(?:\\.[0-9]+)|(?:[0-9]+(?:\\.[0-9]+)?))))$");
 	}
 	private static boolean isValidNumber(String value){
@@ -427,8 +494,8 @@ public class SelectorUtils{
 			case LIMIT:
 				return value.matches("0*[1-9][0-9]*");
 			case GAMEMODE:
-				return Arrays.asList("adventure", "creative", "survival", "spectator").contains(value);
-//				try{GameMode.valueOf(value); return true;} catch(IllegalArgumentException e){return false;}
+				final String finalValue = value;
+				return Arrays.stream(GameMode.values()).anyMatch(gm -> gm.name().toLowerCase().equals(finalValue));
 			case SORT:
 				return Arrays.asList("nearest", "furthest", "random", "arbitrary").contains(value);
 			case NAME:
@@ -447,7 +514,7 @@ public class SelectorUtils{
 				return true;
 			
 		}
-	}*/
+	}
 
 	// Utilities for Selector.resolve()
 	private static double getRangeMin(String value, double min){
