@@ -138,6 +138,8 @@ public class TellrawUtils{
 		final FormatFlag[] formats = color == null
 			? Arrays.stream(Format.values()).map(f -> new FormatFlag(f, formatsStr.indexOf(f.toChar) != -1)).toArray(FormatFlag[]::new)
 			: colorAndFormatsStr.chars().mapToObj(c -> new FormatFlag(Format.fromChar((char)c), true)).toArray(FormatFlag[]::new);
+//		Bukkit.getLogger().info("properties for str('"+str+"'): color: "+color+", formats: "
+//			+Arrays.stream(formats).map(f -> f.format.toChar+":"+f.value).collect(Collectors.joining(",", "{", "}")));
 		return new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null, color, formats);
 	}
 
@@ -197,7 +199,7 @@ public class TellrawUtils{
 			catch(Exception ex){return UUID.randomUUID();}// assume this matches an unknown single entity
 			return null;
 		}
-		public boolean samePropertiesAs(Component other){
+		boolean samePropertiesAs(Component other){
 			return (getInsertion() == null ? other.getInsertion() == null : getInsertion().equals(other.getInsertion())) &&
 					(getClickAction() == null ? other.getClickAction() == null : getClickAction().equals(other.getClickAction())) &&
 					(getHoverAction() == null ? other.getHoverAction() == null : getHoverAction().equals(other.getHoverAction())) &&
@@ -208,7 +210,7 @@ public class TellrawUtils{
 						: potentialSingleMatchSelector().equals(other.potentialSingleMatchSelector()));
 		}
 		// True if @other doesn't override any of the properties of this component
-		boolean noOverridingProperties(@Nonnull Component other){
+		boolean isPropertiesSupersetOf(@Nonnull Component other){
 			return (other.getInsertion() == null || other.getInsertion().equals(getInsertion())) &&
 					(other.getClickAction() == null || other.getClickAction().equals(getClickAction())) &&
 					(other.getHoverAction() == null || other.getHoverAction().equals(getHoverAction())) &&
@@ -220,6 +222,7 @@ public class TellrawUtils{
 
 		public abstract String toString();
 		public abstract String toPlainText();
+		abstract Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats);
 	};
 	public final static class RawTextComponent extends Component{
 		final String text;
@@ -244,6 +247,9 @@ public class TellrawUtils{
 			return !hasProperties
 					? new StringBuilder().append('"').append(escapedText).append('"').toString()
 					: new StringBuilder("{\"text\":\"").append(escapedText).append('"').append(getProperties()).append('}').toString();
+		}
+		@Override Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+			return new RawTextComponent(text, insert, click, hover, color, formats);
 		}
 	}
 	public final static class TranslationComponent extends Component{
@@ -286,11 +292,35 @@ public class TellrawUtils{
 			return with == null ? jsonKey.replace("%s", "") : String.format(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
 		}
 		@Override public String toString(){
+			// For TranslationComponents that are actually just String formatters, convert to a list
+			Component convertedComp = convertStringFormatters();
+			if(convertedComp instanceof ListComponent) return convertedComp.toString();
+			// Otherwise, proceed with toString() as a {"translate"} component
 			String escapedJsonKey = TextUtils.escape(jsonKey, "\"","\n");
 			StringBuilder builder = new StringBuilder().append("{\"translate\":\"").append(escapedJsonKey).append('"');
 			if(with != null && with.length > 0) builder.append(",\"with\":[").append(
 					Arrays.stream(with).map(Component::toString).collect(Collectors.joining(","))).append(']');
 			return builder.append(getProperties()).append('}').toString();
+		}
+		@Override Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+			return new TranslationComponent(jsonKey, with, insert, click, hover, color, formats);
+		}
+		Component convertStringFormatters(){
+			if(jsonKey.replaceAll("%s", "").trim().isEmpty()){
+				ListComponent listComp = new ListComponent();
+				int i = 0;
+				boolean isFirstComp = true;
+				for(String s : jsonKey.split("%s")){
+					if(isFirstComp){
+						isFirstComp = false;
+						listComp.addComponent(new RawTextComponent(s, getInsertion(), getClickAction(), getHoverAction(), getColor(), getFormats()));
+					}
+					else if(!s.isEmpty()) listComp.addComponent(s);
+					if(i < with.length) listComp.addComponent(with[i++]);
+				}
+				return listComp;
+			}
+			return this;
 		}
 	}
 
@@ -493,6 +523,9 @@ public class TellrawUtils{
 			if(value != null) builder.append(",\"value\":\"").append(TextUtils.escape(value, "\"","\n")).append('"');
 			return builder.append('}').append(getProperties()).append('}').toString();
 		}
+		@Override Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+			return new ScoreComponent(selector, objective, value, insert, click, hover, color, formats);
+		}
 	}
 	public final static class SelectorComponent extends Component{
 //		final Selector selector;
@@ -530,6 +563,9 @@ public class TellrawUtils{
 			return new StringBuilder().append("{\"selector\":\"").append(TextUtils.escape(selector.toString(), "\"","\n"))
 					.append(getProperties()).append("\"}").toString();
 		}
+		@Override Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+			return new SelectorComponent(selector, insert, click, hover, color, formats);
+		}
 	}
 	public final static class KeybindComponent extends Component{
 		final Keybind keybind;
@@ -542,6 +578,9 @@ public class TellrawUtils{
 		@Override public String toPlainText(){return keybind.toString();}//TODO: KEY SETTING NAME HERE if possible?
 		@Override public String toString(){
 			return new StringBuilder().append("{\"keybind\":\"").append(keybind).append('"').append(getProperties()).append('}').toString();
+		}
+		@Override Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+			return new SelectorComponent(keybind, insert, click, hover, color, formats);
 		}
 	}
 
@@ -563,11 +602,19 @@ public class TellrawUtils{
 			return new RawTextComponent(text, comp.getInsertion(), comp.getClickAction(), comp.getHoverAction(), comp.getColor(), comp.getFormats());
 		}
 		public boolean addComponent(@Nonnull Component component){
+			// Currently the only component is just properties, so see if we can delete it and move the properties to the new component
+			if(components.size() == 1 && last.toPlainText().isEmpty() && last.isPropertiesSupersetOf(component)){
+				components.set(0, last=component.copyWithNewProperties(
+						last.getInsertion(), last.getClickAction(), last.getHoverAction(), last.getColor(), last.getFormats()));
+				return true;
+			}
 			// If last==null, components[] is empty and we are willing to accept an empty component to set the list properties 
 			if(component.toPlainText().isEmpty() && last != null) return false;
 			if(component instanceof RawTextComponent && last != null){
 				if(ChatColor.stripColor(component.toPlainText()).isEmpty()) return false;
-				if(last instanceof RawTextComponent && last.samePropertiesAs(component)){
+				if(last instanceof RawTextComponent && (last.samePropertiesAs(component)
+						|| (components.size() == 1 && last.isPropertiesSupersetOf(component))
+				)){
 					components.remove(components.size()-1);
 					components.add(last = copyWithNewText((RawTextComponent)last, last.toPlainText() + component.toPlainText()));
 					return true;
@@ -575,16 +622,8 @@ public class TellrawUtils{
 			}
 			// For TranslationComponents that are actually just String formatters, not translation keys.
 			if(component instanceof TranslationComponent && last != null && last.samePropertiesAs(component)){
-				final TranslationComponent strFormatComp = ((TranslationComponent)component);
-				if(ChatColor.stripColor(strFormatComp.jsonKey.replaceAll("%s", "").trim()).isEmpty()){
-					int i = 0;
-					boolean addedContent = false;
-					for(String s : strFormatComp.jsonKey.split("%s")){
-						addedContent |= addComponent(s);
-						if(i < strFormatComp.with.length) addedContent |= addComponent(strFormatComp.with[i++]);
-					}
-					return addedContent;
-				}
+				final Component strFormatComp = ((TranslationComponent)component).convertStringFormatters();
+				if(!(strFormatComp instanceof TranslationComponent)) return addComponent(strFormatComp);
 			}
 			if(component instanceof ListComponent){
 				// We can safely flatten nested TellrawBlobs IFF they don't override any of the parent's "group properties"..
@@ -618,7 +657,7 @@ public class TellrawUtils{
 				if(text.contains(textToReplace) == false) continue;
 				boolean replacementIsRawText = replacement instanceof RawTextComponent;
 
-				if(replacementIsRawText && txComp.noOverridingProperties(replacement)){
+				if(replacementIsRawText && txComp.isPropertiesSupersetOf(replacement)){
 					components.set(i, copyWithNewText(txComp, text.replace(textToReplace, ((RawTextComponent)replacement).toPlainText())));
 					continue;
 				}
@@ -677,6 +716,11 @@ public class TellrawUtils{
 							components.stream().map(Component::toString).collect(Collectors.joining(","))
 						).append(']').toString();
 			}
+		}
+		@Override Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+			ListComponent newListComp = new ListComponent(new RawTextComponent("", insert, click, hover, color, formats));
+			components.forEach(comp -> newListComp.addComponent(comp));
+			return newListComp;
 		}
 	}
 
