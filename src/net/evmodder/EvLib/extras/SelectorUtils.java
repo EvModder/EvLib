@@ -175,6 +175,7 @@ public class SelectorUtils{
 							double distSq = e.getLocation().distanceSquared(origin);
 							return distSq < minDistSq || distSq > maxDistSq;
 						});
+						break;
 					case LEVEL:
 						double minLevel = getRangeMin(argument.value, 0);
 						double maxLevel = getRangeMax(argument.value, Double.MAX_VALUE);
@@ -213,7 +214,7 @@ public class SelectorUtils{
 					case TAG:
 						// "tag=" == doesn't have any tags, "tag=!" == has at least one tag
 						String tagName = (not = argument.value.startsWith("!")) ? argument.value.substring(1) : argument.value;
-						if(tagName.isEmpty()) entities.removeIf(e -> not != e.getScoreboardTags().isEmpty());
+						if(tagName.isEmpty()) entities.removeIf(e -> not == e.getScoreboardTags().isEmpty());
 						else entities.removeIf(e -> not == e.getScoreboardTags().contains(tagName));
 						break;
 					case NAME:
@@ -225,7 +226,7 @@ public class SelectorUtils{
 							if(hasNameEquals || hasNameNotEquals) throw new IllegalArgumentException("Cannot reuse argument 'name' equals");
 							hasNameEquals = true;
 						}
-						String rawName = name.startsWith("\"") ? TextUtils.unescapeString(name.substring(1, name.length()-1)) : name;
+						final String rawName = name.startsWith("\"") ? TextUtils.unescapeString(name.substring(1, name.length()-1)) : name;
 						entities.removeIf(e -> not == (e.getCustomName() != null && e.getCustomName().equals(rawName)));
 						break;
 					case TYPE:// @e[type=!chicken,type=!cow], @e[type=#skeletons] <-- selects all skeleton

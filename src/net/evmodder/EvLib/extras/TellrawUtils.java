@@ -93,7 +93,22 @@ public class TellrawUtils{
 		@Override public String toString(){return toString;}
 	};
 
-	public enum Format{BOLD, ITALIC, UNDERLINED, STRIKETHROUGH, OBFUSCATED}
+	public enum Format{
+		BOLD('b'), ITALIC('o'), UNDERLINED('n'), STRIKETHROUGH('m'), OBFUSCATED('k');
+		final char toChar;
+		Format(char toChar){this.toChar = toChar;}
+//		char toChar(){return toChar;}
+		static Format fromChar(char ch){
+			switch(ch){
+				case 'b': return Format.BOLD;
+				case 'o': return Format.ITALIC;
+				case 'n': return Format.UNDERLINED;
+				case 'm': return Format.STRIKETHROUGH;
+				case 'k': return Format.OBFUSCATED;
+				default: throw new IllegalArgumentException("Unknown format char: "+ch);
+			}
+		}
+	}
 	public final static class FormatFlag{
 		public final Format format;
 		public final boolean value;
@@ -104,6 +119,26 @@ public class TellrawUtils{
 		@Override public boolean equals(Object other){
 			return other != null && other instanceof FormatFlag && ((FormatFlag)other).format.equals(format) && ((FormatFlag)other).value == value;
 		}
+	}
+
+	public static Component getCurrentColorAndFormatProperties(String str){
+		String colorAndFormatsStr = TextUtils.getCurrentColorAndFormats(str).replace("§", "");
+		if(colorAndFormatsStr.isEmpty()) return null;
+		final char colorChar = colorAndFormatsStr.charAt(0);
+		String color = null;
+		if(colorChar == 'x'){
+			color = "#"+colorAndFormatsStr.substring(1, 7);
+			colorAndFormatsStr = colorAndFormatsStr.substring(7);
+		}
+		if(TextUtils.isSimpleColor(colorChar)){
+			color = ChatColor.getByChar(colorChar).name().toLowerCase();
+			colorAndFormatsStr = colorAndFormatsStr.substring(1);
+		}
+		final String formatsStr = colorAndFormatsStr;
+		final FormatFlag[] formats = color == null
+			? Arrays.stream(Format.values()).map(f -> new FormatFlag(f, formatsStr.indexOf(f.toChar) != -1)).toArray(FormatFlag[]::new)
+			: colorAndFormatsStr.chars().mapToObj(c -> new FormatFlag(Format.fromChar((char)c), true)).toArray(FormatFlag[]::new);
+		return new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null, color, formats);
 	}
 
 	// From wiki: Content tags are checked in the order: text, translate, score, selector, keybind, nbt.
@@ -162,12 +197,13 @@ public class TellrawUtils{
 			catch(Exception ex){return UUID.randomUUID();}// assume this matches an unknown single entity
 			return null;
 		}
-		boolean samePropertiesAs(Component other){
+		public boolean samePropertiesAs(Component other){
 			return (getInsertion() == null ? other.getInsertion() == null : getInsertion().equals(other.getInsertion())) &&
 					(getClickAction() == null ? other.getClickAction() == null : getClickAction().equals(other.getClickAction())) &&
 					(getHoverAction() == null ? other.getHoverAction() == null : getHoverAction().equals(other.getHoverAction())) &&
 					(getColor() == null ? other.getColor() == null : getColor().equals(other.getColor())) &&
-					(getFormats() == null ? other.getFormats() == null : (other.getFormats() != null && Arrays.equals(getFormats(), other.getFormats()))) &&
+					(getFormats() == null ? (other.getFormats() == null || other.getFormats().length == 0)
+							: (other.getFormats() != null && Arrays.equals(getFormats(), other.getFormats()))) &&
 					(potentialSingleMatchSelector() == null ? other.potentialSingleMatchSelector() == null
 						: potentialSingleMatchSelector().equals(other.potentialSingleMatchSelector()));
 		}

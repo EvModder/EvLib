@@ -1,7 +1,5 @@
 package net.evmodder.EvLib.extras;
 
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,7 +13,7 @@ public class TextUtils{
 	public static final char[] COLOR_CHARS = new char[]
 			{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', /*r*/};
 	public static final char[] FORMAT_CHARS = new char[]{'k', 'l', 'm', 'n', 'o', /*r*/};
-	public static boolean isColor(char ch){
+	public static boolean isSimpleColor(char ch){
 		switch(ch){
 			case '0': case '1': case '2': case '3': case '4':
 			case '5': case '6': case '7': case '8': case '9':
@@ -30,7 +28,7 @@ public class TextUtils{
 			default: return false;
 		}
 	}
-	public static boolean isColorOrFormat(char ch){
+	public static boolean isSimpleColorOrFormat(char ch){
 		switch(ch){
 			case '0': case '1': case '2': case '3': case '4':
 			case '5': case '6': case '7': case '8': case '9':
@@ -70,7 +68,7 @@ public class TextUtils{
 			else if(!colorPending) builder.append(msg[i]);
 			else{
 				colorPending = false;
-				if(isColorOrFormat(msg[i])){
+				if(isSimpleColorOrFormat(msg[i])){
 					builder.append(ChatColor.COLOR_CHAR).append(msg[i]);
 				}
 				else if(msg[i] == '#' || msg[i] == 'x' && i+3 < msg.length){//§x§0§0§9§9§0§0
@@ -119,15 +117,8 @@ public class TextUtils{
 		if(colorPending) builder.append(altColorChar);
 		return builder.toString();
 	}
-	public static String translateAlternateColorCodes(char altColorChar, String textToTranslate, char resetColor){//TODO: doesn't support hex colors
-		char[] msg = textToTranslate.toCharArray();
-		for(int i=1; i<msg.length; ++i){
-			if(msg[i-1] == altColorChar && isColorOrFormat(msg[i]) && !isEscaped(msg, i-1)){
-				msg[i-1] = ChatColor.COLOR_CHAR;
-				if(msg[i] == ChatColor.RESET.getChar()) msg[i] = resetColor;
-			}
-		}
-		return new String(msg);
+	public static String translateAlternateColorCodes(char altColorChar, String textToTranslate, String resetColor){
+		return translateAlternateColorCodes(altColorChar, textToTranslate).replace(ChatColor.RESET.toString(), resetColor);
 	}
 
 	public static String minimizeColorCodes(String legacyStr){
@@ -152,7 +143,8 @@ public class TextUtils{
 
 	public static String stripColorsOnly(String str, char altColorChar){
 		//(?:§x(?:§[0-9a-fA-FrR]){6})|(?:§#(?:[0-9a-fA-FrR]{3}){1,2})|(?:§[0-9a-fA-FrR])
-		return str.replaceAll("(?:"+altColorChar+"x(?:"+altColorChar+"[0-9a-fA-FrR]){6})|(?:"+altColorChar+"[0-9a-fA-FrR])", "");
+		//return str.replaceAll("(?:"+altColorChar+"x(?:"+altColorChar+"[0-9a-fA-FrR]){6})|(?:"+altColorChar+"[0-9a-fA-FrR])", "");
+		return str.replaceAll(altColorChar+"(?:x(?:"+altColorChar+"[0-9a-fA-FrR]){6})|[0-9a-fA-FrR]", "");
 	}
 	public static String stripColorsOnly(String str){return stripColorsOnly(str, ChatColor.COLOR_CHAR);}
 	public static String stripFormatsOnly(String str, char altColorChar){
@@ -162,33 +154,42 @@ public class TextUtils{
 	public static String stripFormatsOnly(String str){return stripFormatsOnly(str, ChatColor.COLOR_CHAR);}
 
 	//Returns NULL if no color is present at end of string
-	public static ChatColor getCurrentColor(String str){
-		char[] msg = str.toCharArray();
+	public static String getCurrentColor(String str){
+		final char[] msg = str.toCharArray();
 		for(int i=msg.length-1; i>0; --i){
-			if(msg[i-1] == ChatColor.COLOR_CHAR && isColor(msg[i])) return ChatColor.getByChar(msg[i]);
+			if(msg[i-1] == ChatColor.COLOR_CHAR){
+				if(isSimpleColor(msg[i])) return str.substring(i-1, i+1);
+				else if(msg[i] == 'x') return str.substring(i-1, i+13);
+			}
 		}
 		return null;
 	}
 	//Returns NULL if no format is present at end of string
-	public static ChatColor getCurrentFormat(String str){
-		char[] msg = str.toCharArray();
-		for(int i=msg.length-1; i>0; --i){
-			if(msg[i-1] == ChatColor.COLOR_CHAR && isColorOrFormat(msg[i])){
-				return isColor(msg[i]) ? null : ChatColor.getByChar(msg[i]);
-			}
+	public static String getCurrentFormats(String str){
+		StringBuilder builder = new StringBuilder();
+		final char[] msg = str.toCharArray();
+		int i=msg.length-1;
+		for(; i>0; --i) if(msg[i-1] == ChatColor.COLOR_CHAR && (isSimpleColor(msg[i]) || msg[i] == 'x')){++i; break;}
+		for(++i; i<msg.length; ++i) if(msg[i-1] == ChatColor.COLOR_CHAR && isFormat(msg[i])){
+			final String formatStr = str.substring(i-1, i+1);
+			if(builder.indexOf(formatStr) == -1) builder.append(formatStr);
 		}
-		return null;
+		return builder.length() == 0 ? null : builder.toString();
 	}
-	public static String getCurrentColorAndFormat(String str){
-		char[] msg = str.toCharArray();
-		String result = "";
-		for(int i=msg.length-1; i>0; --i){
-			if(msg[i-1] == ChatColor.COLOR_CHAR){
-				if(isColor(msg[i])) return ChatColor.getByChar(msg[i]) + result;
-				if(isFormat(msg[i])) result = ChatColor.getByChar(msg[i--]) + result;
-			}
+	//Returns NULL if no color or format is present at end of string
+	public static String getCurrentColorAndFormats(String str){
+		StringBuilder builder = new StringBuilder();
+		final char[] msg = str.toCharArray();
+		int i=msg.length-1;
+		for(; i>0; --i) if(msg[i-1] == ChatColor.COLOR_CHAR){
+			if(isSimpleColor(msg[i])){builder.append(str.substring(i-1, i+1)); ++i; break;}
+			if(msg[i] == 'x'){builder.append(str.substring(i-1, i+13)); i+=13; break;}
 		}
-		return result;
+		for(++i; i<msg.length; ++i) if(msg[i-1] == ChatColor.COLOR_CHAR && isFormat(msg[i])){
+			final String formatStr = str.substring(i-1, i+1);
+			if(builder.indexOf(formatStr) == -1) builder.append(formatStr);
+		}
+		return builder.length() == 0 ? null : builder.toString();
 	}
 
 	public static boolean isEscaped(char[] str, int x){
@@ -225,14 +226,7 @@ public class TextUtils{
 		return str;
 	}
 
-	public static LinkedList<String> toListFromString(String string){
-		LinkedList<String> list = new LinkedList<String>();
-		list.addAll(Arrays.asList(string.substring(1, string.lastIndexOf(']')).split(", ")));
-		if(list.size() == 1 && list.get(0).isEmpty()) list.clear();
-		return list;
-	}
-
-	public static String locationToStrig(Location loc){
+	public static String locationToString(Location loc){
 		return locationToString(loc, null, null);}
 	public static String locationToString(Location loc, ChatColor coordColor, ChatColor commaColor){
 		return locationToString(loc, coordColor, commaColor, 2);
