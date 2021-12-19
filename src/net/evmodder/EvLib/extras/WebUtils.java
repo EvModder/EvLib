@@ -379,8 +379,7 @@ public class WebUtils {
 
 	static void runGrumm(){
 		String[] targetHeads = new String[]{
-//				"MAGMA_CUBE|LAVA_INSIDE",
-//				"BOAT", "LEASH_HITCH",
+//				"ARMOR_STAND", "BOAT", "LEASH_HITCH",
 		};
 		String[] headsData = FileIO.loadFile("head-textures.txt", "").split("\n");
 		String[] headsToFlip = new String[targetHeads.length];
