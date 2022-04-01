@@ -271,10 +271,10 @@ public class ReflectionUtils{// version = X1.0
 		 */
 		public RefField findField(Class<?> type){
 			if(type==null) type = void.class;
-			List<Field> fields = new ArrayList<Field>();
-			Collections.addAll(fields, clazz.getFields());
-			Collections.addAll(fields, clazz.getDeclaredFields());
-			for(Field f: fields){
+			for(Field f: clazz.getDeclaredFields()){
+				if(type.equals(f.getType())) return new RefField(f);
+			}
+			for(Field f: clazz.getFields()){
 				if(type.equals(f.getType())) return new RefField(f);
 			}
 			throw new RuntimeException("no such field");

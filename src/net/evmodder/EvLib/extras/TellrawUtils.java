@@ -784,7 +784,7 @@ public class TellrawUtils{
 				do{
 					++i;
 					Pair<Component, Integer> nextComp = parseNextComponentFromString(str, i);
-					if(nextComp.a == null) return null;
+					if(nextComp == null || nextComp.a == null) return null;
 					listComp.addComponent(nextComp.a);
 					i = nextComp.b;
 					while(Character.isWhitespace(str.charAt(i))) ++i;
