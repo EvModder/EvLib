@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -109,19 +111,8 @@ public class TellrawUtils{
 			}
 		}
 	}
-	public final static class FormatFlag{
-		public final Format format;
-		public final boolean value;
-		public FormatFlag(@Nonnull Format format, boolean value){this.format = format; this.value = value;}
-		@Override public String toString(){
-			return new StringBuilder().append('"').append(format.toString().toLowerCase()).append("\":").append(value).toString();
-		}
-		@Override public boolean equals(Object other){
-			return other != null && other instanceof FormatFlag && ((FormatFlag)other).format.equals(format) && ((FormatFlag)other).value == value;
-		}
-	}
 
-	public static Component getCurrentColorAndFormatProperties(String str){
+	public static RawTextComponent getCurrentColorAndFormatProperties(String str){
 		String colorAndFormatsStr = TextUtils.getCurrentColorAndFormats(str).replace("§", "");
 		if(colorAndFormatsStr.isEmpty()) return null;
 		final char colorChar = colorAndFormatsStr.charAt(0);
@@ -135,9 +126,9 @@ public class TellrawUtils{
 			colorAndFormatsStr = colorAndFormatsStr.substring(1);
 		}
 		final String formatsStr = colorAndFormatsStr;
-		final FormatFlag[] formats = color == null
-			? Arrays.stream(Format.values()).map(f -> new FormatFlag(f, formatsStr.indexOf(f.toChar) != -1)).toArray(FormatFlag[]::new)
-			: colorAndFormatsStr.chars().mapToObj(c -> new FormatFlag(Format.fromChar((char)c), true)).toArray(FormatFlag[]::new);
+		final Map<Format, Boolean> formats = color == null
+			? Arrays.stream(Format.values()).collect(Collectors.toMap(f -> f, f -> formatsStr.indexOf(f.toChar) != -1))
+			: colorAndFormatsStr.chars().mapToObj(c -> Format.fromChar((char)c)).collect(Collectors.toMap(f -> f, f -> true));
 //		Bukkit.getLogger().info("properties for str('"+str+"'): color: "+color+", formats: "
 //			+Arrays.stream(formats).map(f -> f.format.toChar+":"+f.value).collect(Collectors.joining(",", "{", "}")));
 		return new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null, color, formats);
@@ -149,21 +140,18 @@ public class TellrawUtils{
 		final private TextClickAction clickAction;
 		final private TextHoverAction hoverAction;
 		final private String color;
-		final private FormatFlag[] formats;
+		final private Map<Format, Boolean> formats;
 		final boolean hasProperties;
 
 		String getInsertion(){return insertion;}
 		TextClickAction getClickAction(){return clickAction;}
 		TextHoverAction getHoverAction(){return hoverAction;}
 		public String getColor(){return color;}
-		public FormatFlag[] getFormats(){return formats;}
+		public Map<Format, Boolean> getFormats(){return formats;}
 
-		private Component(String insertion, TextClickAction clickAction, TextHoverAction hoverAction, String color, FormatFlag... formats){
+		private Component(String insertion, TextClickAction clickAction, TextHoverAction hoverAction, String color, Map<Format, Boolean> formats){
 			this.insertion = insertion; this.clickAction = clickAction; this.hoverAction = hoverAction; this.color = color; this.formats = formats;
-			hasProperties = insertion != null || clickAction != null || hoverAction != null || color != null || (formats != null && formats.length > 0);
-			if(formats != null && Arrays.stream(formats).map(formatFlag -> formatFlag.format).distinct().count() < formats.length){
-				throw new IllegalArgumentException("Multiple FormatFlags in a Component cannot reference the same Format type");
-			}
+			hasProperties = insertion != null || clickAction != null || hoverAction != null || color != null || (formats != null && formats.size() > 0);
 		}
 		private Component(){this(/*insertion=*/null, /*clickAction=*/null, /*hoverAction=*/null, /*color=*/null, /*formats=*/null);}
 
@@ -172,8 +160,12 @@ public class TellrawUtils{
 			StringBuilder builder = new StringBuilder();
 			if(insertion != null) builder.append(",\"insertion\":\"").append(TextUtils.escape(insertion, "\"","\n")).append('"');
 			if(color != null) builder.append(",\"color\":\"").append(color).append('"');
-			if(formats != null && formats.length > 0) builder.append(',')
-									.append(Arrays.stream(formats).map(FormatFlag::toString).collect(Collectors.joining(",")));
+			if(formats != null && !formats.isEmpty()){
+				builder.append(',').append(
+						formats.entrySet().stream()
+						.map(e -> new StringBuilder().append('"').append(e.getKey().toString().toLowerCase()).append("\":").append(e.getValue()).toString())
+						.collect(Collectors.joining(",")));
+			}
 			if(clickAction != null) builder.append(",\"clickEvent\":{\"action\":\"").append(clickAction.event)
 									.append("\",\"value\":\"").append(TextUtils.escape(clickAction.value, "\"","\n")).append("\"}");
 			if(hoverAction != null) builder.append(",\"hoverEvent\":{\"action\":\"").append(hoverAction.event)
@@ -204,10 +196,11 @@ public class TellrawUtils{
 					(getClickAction() == null ? other.getClickAction() == null : getClickAction().equals(other.getClickAction())) &&
 					(getHoverAction() == null ? other.getHoverAction() == null : getHoverAction().equals(other.getHoverAction())) &&
 					(getColor() == null ? other.getColor() == null : getColor().equals(other.getColor())) &&
-					(getFormats() == null ? (other.getFormats() == null || other.getFormats().length == 0)
-							: (other.getFormats() != null &&
-							Arrays.asList(getFormats()).containsAll(Arrays.asList(other.getFormats())) &&
-							Arrays.asList(other.getFormats()).containsAll(Arrays.asList(getFormats()))
+					(
+						(getFormats() == null || getFormats().isEmpty()) ? (other.getFormats() == null || other.getFormats().isEmpty())
+						: (other.getFormats() != null &&
+							getFormats().entrySet().containsAll(other.getFormats().entrySet()) &&
+							other.getFormats().entrySet().containsAll(getFormats().entrySet()))
 					) &&
 					(potentialSingleMatchSelector() == null ? other.potentialSingleMatchSelector() == null
 						: potentialSingleMatchSelector().equals(other.potentialSingleMatchSelector()));
@@ -218,8 +211,8 @@ public class TellrawUtils{
 					(getHoverAction() == null) == (other.getHoverAction() == null) &&
 					(getColor() == null) == (other.getColor() == null) &&
 					(
-						(getFormats() == null && other.getFormats() == null) ||
-						(getFormats().length == other.getFormats().length && )
+						((getFormats() == null || getFormats().isEmpty()) && (other.getFormats() == null || other.getFormats().isEmpty())) || 
+						(getFormats() != null && other.getFormats() != null && getFormats().keySet().equals(other.getFormats().keySet()))
 					) &&
 					(potentialSingleMatchSelector() == null) == (other.potentialSingleMatchSelector() == null);
 		}
@@ -229,19 +222,19 @@ public class TellrawUtils{
 					(other.getClickAction() == null || other.getClickAction().equals(getClickAction())) &&
 					(other.getHoverAction() == null || other.getHoverAction().equals(getHoverAction())) &&
 					(other.getColor() == null || other.getColor().equals(getColor())) &&
-					(other.getFormats() == null || other.getFormats().length == 0 ||
-						(getFormats() != null && Arrays.asList(getFormats()).containsAll(Arrays.asList(other.getFormats())))) &&
+					(other.getFormats() == null || other.getFormats().isEmpty() ||
+						(getFormats() != null && getFormats().entrySet().containsAll(other.getFormats().entrySet()))) &&
 					(other.potentialSingleMatchSelector() == null || other.potentialSingleMatchSelector().equals(potentialSingleMatchSelector()));
 		}
 
 		public abstract String toString();
 		public abstract String toPlainText();
-		abstract Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats);
+		abstract Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats);
 	};
 	public final static class RawTextComponent extends Component{
 		final String text;
 		public RawTextComponent(@Nonnull String text){this.text = text;}
-		public RawTextComponent(@Nonnull String text, String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+		public RawTextComponent(@Nonnull String text, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
 			this.text = text;
 		}
@@ -262,7 +255,7 @@ public class TellrawUtils{
 					? new StringBuilder().append('"').append(escapedText).append('"').toString()
 					: new StringBuilder("{\"text\":\"").append(escapedText).append('"').append(getProperties()).append('}').toString();
 		}
-		@Override Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+		@Override RawTextComponent copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			return new RawTextComponent(text, insert, click, hover, color, formats);
 		}
 	}
@@ -274,7 +267,7 @@ public class TellrawUtils{
 		public TranslationComponent(@Nonnull String jsonKey){this.jsonKey = jsonKey; with = null;}
 		public TranslationComponent(@Nonnull String jsonKey, @Nonnull Component... with){this.jsonKey = jsonKey; this.with = with;}
 		public TranslationComponent(@Nonnull String jsonKey, Component[] with,
-				String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+				String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
 			this.jsonKey = jsonKey;
 			this.with = with;
@@ -316,7 +309,7 @@ public class TellrawUtils{
 					Arrays.stream(with).map(Component::toString).collect(Collectors.joining(","))).append(']');
 			return builder.append(getProperties()).append('}').toString();
 		}
-		@Override Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+		@Override TranslationComponent copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			return new TranslationComponent(jsonKey, with, insert, click, hover, color, formats);
 		}
 		Component convertStringFormatters(){
@@ -332,7 +325,7 @@ public class TellrawUtils{
 					else if(!s.isEmpty()) listComp.addComponent(s);
 					if(i < with.length) listComp.addComponent(with[i++]);
 				}
-				return listComp;
+				return listComp.equivalentSimplifiedComponent();
 			}
 			return this;
 		}
@@ -352,7 +345,7 @@ public class TellrawUtils{
 					new TranslationComponent("color.minecraft."+ccp.bodyColor.name().toLowerCase()),
 					new TranslationComponent("entity.minecraft.tropical_fish.type."+ccp.pattern.name().toLowerCase())});
 	}
-	public static Component getBestGuessLocalizedDisplayName(@Nonnull EntityType eType){
+	public static TranslationComponent getBestGuessLocalizedDisplayName(@Nonnull EntityType eType){
 		switch(eType){
 			case MUSHROOM_COW: return new TranslationComponent("entity.minecraft.mooshroom");
 			case SNOWMAN: return new TranslationComponent("entity.minecraft.snow_golem");
@@ -504,7 +497,7 @@ public class TellrawUtils{
 		public ScoreComponent(@Nonnull Object selector, @Nonnull Objective objective){this.selector = selector; this.objective = objective;}
 		public ScoreComponent(@Nonnull String name, @Nonnull Objective objective){this.selector = name; this.objective = objective;}
 		public ScoreComponent(@Nonnull Object selector, @Nonnull Objective objective, String value,
-				String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+				String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
 			this.selector = selector;
 			this.objective = objective;
@@ -537,7 +530,7 @@ public class TellrawUtils{
 			if(value != null) builder.append(",\"value\":\"").append(TextUtils.escape(value, "\"","\n")).append('"');
 			return builder.append('}').append(getProperties()).append('}').toString();
 		}
-		@Override Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+		@Override ScoreComponent copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			return new ScoreComponent(selector, objective, value, insert, click, hover, color, formats);
 		}
 	}
@@ -548,7 +541,7 @@ public class TellrawUtils{
 		public SelectorComponent(@Nonnull Object selector){this.selector = selector; this.useDisplayName = true;}
 		public SelectorComponent(@Nonnull UUID uuid){this.selector = uuid; this.useDisplayName = true;}
 		public SelectorComponent(@Nonnull Object selector, boolean useDisplayName){this.selector = selector; this.useDisplayName = useDisplayName;}
-		public SelectorComponent(@Nonnull Object selector, String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+		public SelectorComponent(@Nonnull Object selector, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
 			this.selector = selector; this.useDisplayName = true;
 		}
@@ -577,14 +570,14 @@ public class TellrawUtils{
 			return new StringBuilder().append("{\"selector\":\"").append(TextUtils.escape(selector.toString(), "\"","\n"))
 					.append(getProperties()).append("\"}").toString();
 		}
-		@Override Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+		@Override SelectorComponent copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			return new SelectorComponent(selector, insert, click, hover, color, formats);
 		}
 	}
 	public final static class KeybindComponent extends Component{
 		final Keybind keybind;
 		public KeybindComponent(@Nonnull Keybind keybind){this.keybind = keybind;}
-		public KeybindComponent(@Nonnull Keybind keybind, String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+		public KeybindComponent(@Nonnull Keybind keybind, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
 			this.keybind = keybind;
 		}
@@ -593,8 +586,8 @@ public class TellrawUtils{
 		@Override public String toString(){
 			return new StringBuilder().append("{\"keybind\":\"").append(keybind).append('"').append(getProperties()).append('}').toString();
 		}
-		@Override Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
-			return new SelectorComponent(keybind, insert, click, hover, color, formats);
+		@Override KeybindComponent copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
+			return new KeybindComponent(keybind, insert, click, hover, color, formats);
 		}
 	}
 
@@ -603,7 +596,7 @@ public class TellrawUtils{
 		@Override TextClickAction getClickAction(){return components.isEmpty() ? null : components.get(0).getClickAction();}
 		@Override TextHoverAction getHoverAction(){return components.isEmpty() ? null : components.get(0).getHoverAction();}
 		@Override public String getColor(){return components.isEmpty() ? null : components.get(0).getColor();}
-		@Override public FormatFlag[] getFormats(){return components.isEmpty() ? null : components.get(0).getFormats();}
+		@Override public Map<Format, Boolean> getFormats(){return components.isEmpty() ? null : components.get(0).getFormats();}
 		Component last = null;
 		List<Component> components;
 		public ListComponent(@Nonnull Component...components){
@@ -745,7 +738,7 @@ public class TellrawUtils{
 						).append(']').toString();
 			}
 		}
-		@Override Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, FormatFlag... formats){
+		@Override ListComponent copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			ListComponent newListComp = new ListComponent(new RawTextComponent("", insert, click, hover, color, formats));
 			components.forEach(comp -> newListComp.addComponent(comp));
 			return newListComp;
@@ -764,7 +757,7 @@ public class TellrawUtils{
 			lastEnd = matcher.end();
 		}
 		comp.addComponent(new RawTextComponent(str.substring(lastEnd)));
-		return comp;
+		return comp.equivalentSimplifiedComponent();
 	}
 
 	private static class Pair<T, R>{
@@ -822,7 +815,7 @@ public class TellrawUtils{
 					Bukkit.getLogger().warning("TellrawUtils ERROR: expected ] at index "+i+" of string: "+str);
 					return null;
 				}
-				return new Pair<>(listComp, i + 1);
+				return new Pair<>(listComp.equivalentSimplifiedComponent(), i + 1);
 			}
 			case '"': {
 				int j;
@@ -834,7 +827,7 @@ public class TellrawUtils{
 				TextClickAction click = null;
 				TextHoverAction hover = null;
 				String color = null;
-				ArrayList<FormatFlag> formatList = new ArrayList<>();
+				TreeMap<Format, Boolean> formats = new TreeMap<>(); // Using TreeMap instead of HashMap because sorting is nice
 				ComponentType type = null;
 				String text = null;
 				String jsonKey = null;
@@ -877,35 +870,35 @@ public class TellrawUtils{
 						i += 5;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
 						if(boolAndIdx == null) return null;
-						formatList.add(new FormatFlag(Format.BOLD, boolAndIdx.a));
+						formats.put(Format.BOLD, boolAndIdx.a);
 						i = boolAndIdx.b;
 					}
 					else if(str.startsWith("italic\"", i)){
 						i += 7;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
 						if(boolAndIdx == null) return null;
-						formatList.add(new FormatFlag(Format.ITALIC, boolAndIdx.a));
+						formats.put(Format.ITALIC, boolAndIdx.a);
 						i = boolAndIdx.b;
 					}
 					else if(str.startsWith("underlined\"", i)){
 						i += 11;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
 						if(boolAndIdx == null) return null;
-						formatList.add(new FormatFlag(Format.UNDERLINED, boolAndIdx.a));
+						formats.put(Format.UNDERLINED, boolAndIdx.a);
 						i = boolAndIdx.b;
 					}
 					else if(str.startsWith("strikethrough\"", i)){
 						i += 14;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
 						if(boolAndIdx == null) return null;
-						formatList.add(new FormatFlag(Format.STRIKETHROUGH, boolAndIdx.a));
+						formats.put(Format.STRIKETHROUGH, boolAndIdx.a);
 						i = boolAndIdx.b;
 					}
 					else if(str.startsWith("obfuscated\"", i)){
 						i += 11;
 						Pair<Boolean, Integer> boolAndIdx = parseColonThenBoolean(str, i);
 						if(boolAndIdx == null) return null;
-						formatList.add(new FormatFlag(Format.OBFUSCATED, boolAndIdx.a));
+						formats.put(Format.OBFUSCATED, boolAndIdx.a);
 						i = boolAndIdx.b;
 					}
 					else if(str.startsWith("insertion\"", i)){
@@ -1029,7 +1022,7 @@ public class TellrawUtils{
 					Bukkit.getLogger().warning("TellrawUtils ERROR: expected } at index "+i+" of string: "+str);
 					return null;
 				}
-				FormatFlag[] formats = formatList.isEmpty() ? null : formatList.toArray(new FormatFlag[0]);
+				if(formats.isEmpty()) formats = null;
 				Component comp = null;
 				if(type == null){
 					Bukkit.getLogger().warning("TellrawUtils UNKNOWN TYPE parsing component at index "+i+" from string: "+str);
