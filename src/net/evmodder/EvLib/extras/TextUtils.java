@@ -252,8 +252,7 @@ public class TextUtils{
 		String[] data = ChatColor.stripColor(s).split(",");
 		World world = org.bukkit.Bukkit.getWorld(data[0]);
 		if(world != null){
-			try{return new Location(world,
-					Integer.parseInt(data[1]), Integer.parseInt(data[2]), Integer.parseInt(data[3]));}
+			try{return new Location(world, Double.parseDouble(data[1]),Double.parseDouble(data[2]), Double.parseDouble(data[3]));}
 			catch(NumberFormatException ex){}
 		}
 		return null;

@@ -205,9 +205,23 @@ public class TellrawUtils{
 					(getHoverAction() == null ? other.getHoverAction() == null : getHoverAction().equals(other.getHoverAction())) &&
 					(getColor() == null ? other.getColor() == null : getColor().equals(other.getColor())) &&
 					(getFormats() == null ? (other.getFormats() == null || other.getFormats().length == 0)
-							: (other.getFormats() != null && Arrays.equals(getFormats(), other.getFormats()))) &&
+							: (other.getFormats() != null &&
+							Arrays.asList(getFormats()).containsAll(Arrays.asList(other.getFormats())) &&
+							Arrays.asList(other.getFormats()).containsAll(Arrays.asList(getFormats()))
+					) &&
 					(potentialSingleMatchSelector() == null ? other.potentialSingleMatchSelector() == null
 						: potentialSingleMatchSelector().equals(other.potentialSingleMatchSelector()));
+		}
+		boolean overridesAllSameProperties(Component other){
+			return (getInsertion() == null) == (other.getInsertion() == null) &&
+					(getClickAction() == null) == (other.getClickAction() == null) &&
+					(getHoverAction() == null) == (other.getHoverAction() == null) &&
+					(getColor() == null) == (other.getColor() == null) &&
+					(
+						(getFormats() == null && other.getFormats() == null) ||
+						(getFormats().length == other.getFormats().length && )
+					) &&
+					(potentialSingleMatchSelector() == null) == (other.potentialSingleMatchSelector() == null);
 		}
 		// True if @other doesn't override any of the properties of this component
 		boolean isPropertiesSupersetOf(@Nonnull Component other){
@@ -699,6 +713,20 @@ public class TellrawUtils{
 			return updated;
 		}
 
+		/** If this list component (in its current state) behaves identically to a simpler component, return that instead. */
+		public Component equivalentSimplifiedComponent(){
+			if(components.size() == 1) return components.get(0);
+			if(components.size() > 1 && !components.get(0).hasProperties && components.get(0).toPlainText().isEmpty()){
+				for(int i=2; i<components.size(); ++i){
+					if(!components.get(i).overridesAllSameProperties(components.get(1))) return this;
+				}
+				ListComponent withoutFirstComp = new ListComponent();
+				for(int i=1; i<components.size(); ++i) withoutFirstComp.addComponent(components.get(i));
+				return withoutFirstComp.equivalentSimplifiedComponent();
+			}
+			return this;
+		}
+
 		@Override public String toPlainText(){
 			StringBuilder builder = new StringBuilder();
 			for(Component comp : components) builder.append(comp.toPlainText());
@@ -724,7 +752,8 @@ public class TellrawUtils{
 		}
 	}
 
-	public final static ListComponent convertHexColorsToComponents(String str){
+	public final static Component convertHexColorsToComponentsWithReset(String str){
+		// §x§0§0§0§0§0§0 
 		Matcher matcher = Pattern.compile("§x((?:§[0-9a-fA-F]){6})(?:[^§]|(?:§[k-o]))+").matcher(str);
 		ListComponent comp = new ListComponent();
 		int lastEnd = 0;
