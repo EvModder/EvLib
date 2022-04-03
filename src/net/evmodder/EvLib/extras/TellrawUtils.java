@@ -205,15 +205,13 @@ public class TellrawUtils{
 					(potentialSingleMatchSelector() == null ? other.potentialSingleMatchSelector() == null
 						: potentialSingleMatchSelector().equals(other.potentialSingleMatchSelector()));
 		}
-		boolean overridesAllSameProperties(Component other){
-			return (getInsertion() == null) == (other.getInsertion() == null) &&
-					(getClickAction() == null) == (other.getClickAction() == null) &&
-					(getHoverAction() == null) == (other.getHoverAction() == null) &&
-					(getColor() == null) == (other.getColor() == null) &&
-					(
-						((getFormats() == null || getFormats().isEmpty()) && (other.getFormats() == null || other.getFormats().isEmpty())) || 
-						(getFormats() != null && other.getFormats() != null && getFormats().keySet().equals(other.getFormats().keySet()))
-					) &&
+		boolean overridesAllPropertiesOf(Component other){
+			return (other.getInsertion() == null || getInsertion() != null) &&
+					(other.getClickAction() == null || getClickAction() != null) &&
+					(other.getHoverAction() == null || getHoverAction() != null) &&
+					(other.getColor() == null || getColor() != null) &&
+					(other.getFormats() == null || other.getFormats().isEmpty() ||
+						(getFormats() != null && getFormats().keySet().containsAll(other.getFormats().keySet()))) &&
 					(potentialSingleMatchSelector() == null) == (other.potentialSingleMatchSelector() == null);
 		}
 		// True if @other doesn't override any of the properties of this component
@@ -325,7 +323,7 @@ public class TellrawUtils{
 					else if(!s.isEmpty()) listComp.addComponent(s);
 					if(i < with.length) listComp.addComponent(with[i++]);
 				}
-				return listComp.equivalentSimplifiedComponent();
+				return listComp;
 			}
 			return this;
 		}
@@ -706,18 +704,15 @@ public class TellrawUtils{
 			return updated;
 		}
 
-		/** If this list component (in its current state) behaves identically to a simpler component, return that instead. */
-		public Component equivalentSimplifiedComponent(){
-			if(components.size() == 1) return components.get(0);
-			if(components.size() > 1 && !components.get(0).hasProperties && components.get(0).toPlainText().isEmpty()){
+		/** If the first component is properties-only and all those properties are overridden, then we can discard it. */
+		private boolean canDiscardFirstComponent(){
+			if(components.size() > 1 && components.get(0).toPlainText().isEmpty() && components.get(1).overridesAllPropertiesOf(components.get(0))){
 				for(int i=2; i<components.size(); ++i){
-					if(!components.get(i).overridesAllSameProperties(components.get(1))) return this;
+					if(!components.get(i).overridesAllPropertiesOf(components.get(1))) return false;
 				}
-				ListComponent withoutFirstComp = new ListComponent();
-				for(int i=1; i<components.size(); ++i) withoutFirstComp.addComponent(components.get(i));
-				return withoutFirstComp.equivalentSimplifiedComponent();
+				return true;
 			}
-			return this;
+			return false;
 		}
 
 		@Override public String toPlainText(){
@@ -730,6 +725,7 @@ public class TellrawUtils{
 				components.remove(components.size()-1);
 				last = components.isEmpty() ? null : components.get(components.size()-1);
 			}
+			if(canDiscardFirstComponent()) components.remove(0);
 			switch(components.size()){
 				case 0: return "\"\"";
 				case 1: return components.get(0).toString();
@@ -745,7 +741,7 @@ public class TellrawUtils{
 		}
 	}
 
-	public final static Component convertHexColorsToComponentsWithReset(String str){
+	public final static ListComponent convertHexColorsToComponentsWithReset(String str){
 		// §x§0§0§0§0§0§0 
 		Matcher matcher = Pattern.compile("§x((?:§[0-9a-fA-F]){6})(?:[^§]|(?:§[k-o]))+").matcher(str);
 		ListComponent comp = new ListComponent();
@@ -757,7 +753,7 @@ public class TellrawUtils{
 			lastEnd = matcher.end();
 		}
 		comp.addComponent(new RawTextComponent(str.substring(lastEnd)));
-		return comp.equivalentSimplifiedComponent();
+		return comp;
 	}
 
 	private static class Pair<T, R>{
@@ -815,7 +811,7 @@ public class TellrawUtils{
 					Bukkit.getLogger().warning("TellrawUtils ERROR: expected ] at index "+i+" of string: "+str);
 					return null;
 				}
-				return new Pair<>(listComp.equivalentSimplifiedComponent(), i + 1);
+				return new Pair<>(listComp, i + 1);
 			}
 			case '"': {
 				int j;
