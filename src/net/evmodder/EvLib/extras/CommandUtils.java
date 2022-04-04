@@ -17,7 +17,7 @@ public class CommandUtils {
 	static Map<String, String[]> pluginCommands = null;
 	static void initFancyHelp(){
 		//load commands from all plugins
-		pluginCommands = new HashMap<String, String[]>();
+		pluginCommands = new HashMap<>();
 		for(Plugin plugin : Bukkit.getPluginManager().getPlugins()){
 			if(plugin.getDescription().getCommands() == null) continue;
 			for(String cmdName : plugin.getDescription().getCommands().keySet()){
@@ -40,7 +40,7 @@ public class CommandUtils {
 
 	public static void showFancyHelp(CommandSender sender, int pageNum){
 		if (pluginCommands == null) initFancyHelp();
-		List<String> commandNames = new ArrayList<String>();
+		List<String> commandNames = new ArrayList<>();
 		for(String cmdName : pluginCommands.keySet()){
 			if(sender.hasPermission(pluginCommands.get(cmdName)[0])) commandNames.add(cmdName);
 		}

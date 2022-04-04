@@ -414,12 +414,12 @@ public class WebUtils {
 	}
 
 	static void checkMissingTextures(){
-		TreeSet<String> expectedTxr = new TreeSet<String>();
-		TreeSet<String> foundTxr = new TreeSet<String>();
-		TreeSet<String> extraTxr = new TreeSet<String>();
-		TreeSet<String> duplicateTxr = new TreeSet<String>();
-		TreeSet<String> xxxTxr = new TreeSet<String>();
-		TreeSet<String> missingDrpC = new TreeSet<String>(), extraDrpC = new TreeSet<String>();
+		TreeSet<String> expectedTxr = new TreeSet<>();
+		TreeSet<String> foundTxr = new TreeSet<>();
+		TreeSet<String> extraTxr = new TreeSet<>();
+		TreeSet<String> duplicateTxr = new TreeSet<>();
+		TreeSet<String> xxxTxr = new TreeSet<>();
+		TreeSet<String> missingDrpC = new TreeSet<>(), extraDrpC = new TreeSet<>();
 		for(EntityType type : EntityType.values()){
 			if(type.isAlive()){expectedTxr.add(type.name()); missingDrpC.add(type.name());}
 		}
@@ -458,8 +458,8 @@ public class WebUtils {
 		System.out.println("Extra drop rates for: "+extraDrpC);
 	}
 	static void checkMissingGrummTextures(){
-		TreeSet<String> regularTxtrs = new TreeSet<String>();
-		TreeSet<String> grummTxtrs = new TreeSet<String>();
+		TreeSet<String> regularTxtrs = new TreeSet<>();
+		TreeSet<String> grummTxtrs = new TreeSet<>();
 		for(String headData : FileIO.loadFile("head-textures.txt", "").split("\n")){
 			int i = headData.indexOf(':'), j = headData.indexOf('|');
 			if(i != -1){
@@ -474,7 +474,7 @@ public class WebUtils {
 				else regularTxtrs.add(headName);
 			}
 		}
-		TreeSet<String> missingGrumms = new TreeSet<String>();
+		TreeSet<String> missingGrumms = new TreeSet<>();
 		for(String headName : regularTxtrs){
 			if(headName.startsWith("SHULKER|") && headName.contains("|SIDE")) continue;
 			if(!grummTxtrs.contains(headName)) missingGrumms.add(headName);

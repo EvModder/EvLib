@@ -10,7 +10,7 @@ public abstract class ParticleComboEffect {
 
 	public void display(Location loc, long range){
 		range *= range;
-		List<Player> pplInRange = new ArrayList<Player>();
+		List<Player> pplInRange = new ArrayList<>();
 		for(Player p : Bukkit.getServer().getOnlinePlayers()){
 			if(p.getWorld().getName().endsWith(loc.getWorld().getName()) && p.getLocation().distanceSquared(loc) <= range
 					&& p.getWorld().getName().equals(loc.getWorld().getName())) pplInRange.add(p);

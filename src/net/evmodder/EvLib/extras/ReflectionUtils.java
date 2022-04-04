@@ -176,7 +176,7 @@ public class ReflectionUtils{// version = X1.0
 				else classes[i] = e.getClass();
 				++i;
 			}
-			List<Method> methods = new ArrayList<Method>();
+			List<Method> methods = new ArrayList<>();
 			Collections.addAll(methods, clazz.getMethods());
 			Collections.addAll(methods, clazz.getDeclaredMethods());
 			for(Method m : methods){
@@ -195,7 +195,7 @@ public class ReflectionUtils{// version = X1.0
 		 * @throws RuntimeException if method not found
 		 */
 		public RefMethod findMethodByName(String... names){
-			List<Method> methods = new ArrayList<Method>();
+			List<Method> methods = new ArrayList<>();
 			Collections.addAll(methods, clazz.getMethods());
 			Collections.addAll(methods, clazz.getDeclaredMethods());
 			for(Method m: methods){
@@ -214,7 +214,7 @@ public class ReflectionUtils{// version = X1.0
 		 */
 		public RefMethod findMethodByReturnType(Class<?> type){
 			if(type==null) type = void.class;
-			List<Method> methods = new ArrayList<Method>();
+			List<Method> methods = new ArrayList<>();
 			Collections.addAll(methods, clazz.getMethods());
 			Collections.addAll(methods, clazz.getDeclaredMethods());
 			for(Method m: methods){
@@ -238,7 +238,7 @@ public class ReflectionUtils{// version = X1.0
 		 * @throws RuntimeException if constructor not found
 		 */
 		public RefConstructor findConstructor(int number){
-			List<Constructor<?>> constructors = new ArrayList<Constructor<?>>();
+			List<Constructor<?>> constructors = new ArrayList<>();
 			Collections.addAll(constructors, clazz.getConstructors());
 			Collections.addAll(constructors, clazz.getDeclaredConstructors());
 			for(Constructor<?> m: constructors){

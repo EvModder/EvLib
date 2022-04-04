@@ -9,7 +9,7 @@ import java.util.List;
 public abstract class SongPlayer{
 	protected Song song;
 	protected short tick = -1;
-	protected ArrayList<String> playerList = new ArrayList<String>();
+	protected ArrayList<String> playerList = new ArrayList<>();
 	protected boolean loop, autoDestroy = false, destroyed = false, playing = false;
 	protected Thread playerThread;
 	protected byte fadeTarget = 100, volume = 100, fadeStart = 100;
@@ -120,7 +120,7 @@ public abstract class SongPlayer{
 			if(!playerList.contains(p.getName())) {
 				playerList.add(p.getName());
 				ArrayList<SongPlayer> songs = NoteBlockPlayerMain.plugin.playingSongs.get(p.getName());
-				if(songs == null) songs = new ArrayList<SongPlayer>();
+				if(songs == null) songs = new ArrayList<>();
 				songs.add(this);
 				NoteBlockPlayerMain.plugin.playingSongs.put(p.getName(), songs);
 			}
@@ -187,7 +187,7 @@ public abstract class SongPlayer{
 		synchronized(this){
 			playerList.remove(p.getName());
 			if(NoteBlockPlayerMain.plugin.playingSongs.get(p.getName()) == null) return;
-			ArrayList<SongPlayer> songs = new ArrayList<SongPlayer>(NoteBlockPlayerMain.plugin.playingSongs.get(p.getName()));
+			ArrayList<SongPlayer> songs = new ArrayList<>(NoteBlockPlayerMain.plugin.playingSongs.get(p.getName()));
 			songs.remove(this);
 			NoteBlockPlayerMain.plugin.playingSongs.put(p.getName(), songs);
 			if(playerList.isEmpty() && autoDestroy) {

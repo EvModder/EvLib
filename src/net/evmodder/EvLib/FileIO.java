@@ -48,7 +48,7 @@ public class FileIO{// version = X1.0
 	}
 
 	public static Vector<String> installedEvPlugins(){
-		Vector<String> evPlugins = new Vector<String>();
+		Vector<String> evPlugins = new Vector<>();
 		for(Plugin pl : Bukkit.getServer().getPluginManager().getPlugins()){
 			try{
 				@SuppressWarnings("unused")
@@ -61,7 +61,7 @@ public class FileIO{// version = X1.0
 		return evPlugins;
 	}
 
-	static void verifyDir(JavaPlugin evPl){
+	static void verifyDir(Plugin evPl){
 		Vector<String> evPlugins = FileIO.installedEvPlugins();
 		final String CUSTOM_DIR = "./plugins/"+evPl.getName()+"/";
 		if(!new File(EV_DIR).exists() && (evPl.getName().equals("DropHeads") || evPlugins.size() < MERGE_EV_DIR_THRESHOLD)){
@@ -298,7 +298,7 @@ public class FileIO{// version = X1.0
 			String jarPath = dirURL.getPath().substring(5, dirURL.getPath().indexOf("!")); // strip out only the JAR file
 			JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"));
 			Enumeration<JarEntry> entries = jar.entries(); // gives ALL entries in jar
-			Set<String> result = new HashSet<String>(); // avoid duplicates in case it is a subdirectory
+			Set<String> result = new HashSet<>(); // avoid duplicates in case it is a subdirectory
 			while(entries.hasMoreElements()){
 				String name = entries.nextElement().getName();
 				if(name.startsWith(path)){ // filter according to the path

@@ -25,7 +25,7 @@ public class NoteBlockSongPlayer extends SongPlayer{
 			if(note == null) continue;
 
 			p.playNote(noteBlock.getLocation(), Instrument.getBukkitInstrument(note.getInstrument()), new org.bukkit.Note(note.getKey() - 33));
-			p.playSound(noteBlock.getLocation(), Instrument.getInstrument(note.getInstrument()), (l.getVolume() * (int)volume * (int)playerVolume) / 1000000f,
+			p.playSound(noteBlock.getLocation(), Instrument.getInstrument(note.getInstrument()), (l.getVolume() * volume * playerVolume) / 1000000f,
 					NotePitch.getPitch(note.getKey() - 33));
 		}
 	}

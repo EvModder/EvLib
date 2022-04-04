@@ -19,7 +19,7 @@ public class SongEndEvent extends Event{
 		return song;
 	}
 
-	public HandlerList getHandlers(){
+	@Override public HandlerList getHandlers(){
 		return handlers;
 	}
 }

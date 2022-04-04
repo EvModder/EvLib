@@ -52,7 +52,7 @@ public class EntityUtils{
 	final static HashMap<CCP, String> cachedTropicalFishNames;//Cached names for the 2700 other varieties (15*15*12)
 	@Deprecated static final HashMap<DyeColor, String> fishColorNames;//Names used by color
 	static{
-		commonTropicalFishIds = new HashMap<CCP, Integer>();
+		commonTropicalFishIds = new HashMap<>();
 		commonTropicalFishIds.put(new CCP(DyeColor.ORANGE, DyeColor.GRAY, Pattern.STRIPEY), 0);
 		commonTropicalFishIds.put(new CCP(DyeColor.GRAY, DyeColor.GRAY, Pattern.FLOPPER), 1);
 		commonTropicalFishIds.put(new CCP(DyeColor.GRAY, DyeColor.BLUE, Pattern.FLOPPER), 2);
@@ -75,7 +75,7 @@ public class EntityUtils{
 		commonTropicalFishIds.put(new CCP(DyeColor.GRAY, DyeColor.WHITE, Pattern.SUNSTREAK), 19);
 		commonTropicalFishIds.put(new CCP(DyeColor.CYAN, DyeColor.YELLOW, Pattern.DASHER), 20);
 		commonTropicalFishIds.put(new CCP(DyeColor.YELLOW, DyeColor.YELLOW, Pattern.FLOPPER), 21);
-		commonTropicalFishNames = new HashMap<CCP, String>();
+		commonTropicalFishNames = new HashMap<>();
 		commonTropicalFishNames.put(new CCP(DyeColor.ORANGE, DyeColor.GRAY, Pattern.STRIPEY), "Anemone");
 		commonTropicalFishNames.put(new CCP(DyeColor.GRAY, DyeColor.GRAY, Pattern.FLOPPER), "Black Tang");
 		commonTropicalFishNames.put(new CCP(DyeColor.GRAY, DyeColor.BLUE, Pattern.FLOPPER), "Blue Tang");
@@ -98,10 +98,10 @@ public class EntityUtils{
 		commonTropicalFishNames.put(new CCP(DyeColor.GRAY, DyeColor.WHITE, Pattern.SUNSTREAK), "Triggerfish");
 		commonTropicalFishNames.put(new CCP(DyeColor.CYAN, DyeColor.YELLOW, Pattern.DASHER), "Yellowtail Parrotfish");
 		commonTropicalFishNames.put(new CCP(DyeColor.YELLOW, DyeColor.YELLOW, Pattern.FLOPPER), "Yellow Tang");
-		commonTropicalFishNamesReverse = new HashMap<String, CCP>();
+		commonTropicalFishNamesReverse = new HashMap<>();
 		commonTropicalFishNames.entrySet().stream().forEach(
 				e -> commonTropicalFishNamesReverse.put(e.getValue().toUpperCase().replace(' ', '_'), e.getKey()));
-		fishColorNames = new HashMap<DyeColor, String>();
+		fishColorNames = new HashMap<>();
 		fishColorNames.put(DyeColor.BLACK, "Black");
 		fishColorNames.put(DyeColor.BLUE, "Blue");
 		fishColorNames.put(DyeColor.BROWN, "Brown");
@@ -118,7 +118,7 @@ public class EntityUtils{
 		fishColorNames.put(DyeColor.RED, "Red");
 		fishColorNames.put(DyeColor.WHITE, "White");
 		fishColorNames.put(DyeColor.YELLOW, "Yellow");
-		cachedTropicalFishNames = new HashMap<CCP, String>();
+		cachedTropicalFishNames = new HashMap<>();
 	}
 	@Deprecated public static String getTropicalFishEnglishName(@Nonnull CCP ccp){
 		String name = commonTropicalFishNames.get(ccp);

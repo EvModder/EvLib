@@ -225,7 +225,7 @@ public class TellrawUtils{
 					(other.potentialSingleMatchSelector() == null || other.potentialSingleMatchSelector().equals(potentialSingleMatchSelector()));
 		}
 
-		public abstract String toString();
+		@Override public abstract String toString();
 		public abstract String toPlainText();
 		abstract Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats);
 	};
@@ -274,25 +274,38 @@ public class TellrawUtils{
 
 		private static Constructor<?> chatMessageConstructor, chatMessageConstructorWith;
 		private static Method chatMessageGetString;
-		private boolean callNMS = true;
-		@Override public String toPlainText(){
-			if(callNMS) try{
-				if(chatMessageGetString == null){
-					try{
-						Server server = Bukkit.getServer();
-						String nmsVersion  = server.getClass().getDeclaredMethod("getHandle").invoke(server).getClass().getName().split("\\.")[3];
-						Class<?> clazz = Class.forName("net.minecraft.server."+nmsVersion+".ChatMessage");
-						chatMessageConstructor = clazz.getConstructor(String.class);
-						chatMessageConstructorWith = clazz.getConstructor(String.class, Object[].class);
-						chatMessageGetString = clazz.getMethod("getString");
-					}
-					catch(NoSuchMethodException | SecurityException | ClassNotFoundException e){callNMS = false; throw new InstantiationException();}
+		private static boolean callNMS = true;
+		private static boolean initChatMessageRefMethod(){
+			Class<?> clazz;
+			try{clazz = Class.forName("net.minecraft.network.chat.ChatMessage");}
+			catch(ClassNotFoundException e){
+				try{
+					Server server = Bukkit.getServer();
+					String nmsVersion = server.getClass().getDeclaredMethod("getHandle").invoke(server).getClass().getName().split("\\.")[3];
+					clazz = Class.forName("net.minecraft.server."+nmsVersion+".ChatMessage");
 				}
-				return (String)chatMessageGetString.invoke(with == null
-						? chatMessageConstructor.newInstance(jsonKey)
-						: chatMessageConstructorWith.newInstance(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray()));
+				catch(NoSuchMethodException | SecurityException | ClassNotFoundException | IllegalAccessException
+						| IllegalArgumentException | InvocationTargetException e2){
+					return false;
+				}
 			}
-			catch(InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e){}
+			try{
+				chatMessageConstructor = clazz.getConstructor(String.class);
+				chatMessageConstructorWith = clazz.getConstructor(String.class, Object[].class);
+				chatMessageGetString = clazz.getMethod("getString");
+			}
+			catch(NoSuchMethodException | SecurityException e){return false;}
+			return true;
+		}
+		@Override public String toPlainText(){
+			if(callNMS){
+				if(chatMessageGetString != null || (callNMS=initChatMessageRefMethod())) try{
+					return (String)chatMessageGetString.invoke(with == null
+							? chatMessageConstructor.newInstance(jsonKey)
+							: chatMessageConstructorWith.newInstance(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray()));
+				}
+				catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException e){}
+			}
 			// This is ONLY correct when the key is invalid/unknown to the client!
 			return with == null ? jsonKey.replace("%s", "") : String.format(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
 		}

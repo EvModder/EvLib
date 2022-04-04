@@ -34,7 +34,7 @@ public class HeadUtils {
 
 	public static final HashMap<EntityType, String> customHeads;//People who have set their skin to an Entity's head
 	static{
-		customHeads = new HashMap<EntityType, String>();
+		customHeads = new HashMap<>();
 		customHeads.put(EntityType.BAT, "ManBatPlaysMC");
 		customHeads.put(EntityType.ELDER_GUARDIAN, "MHF_EGuardian");//made by player
 		customHeads.put(EntityType.ENDERMITE, "MHF_Endermites");//made by player

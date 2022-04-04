@@ -21,7 +21,7 @@ public class SongDestroyingEvent extends Event implements Cancellable{
 		return song;
 	}
 
-	public HandlerList getHandlers(){
+	@Override public HandlerList getHandlers(){
 		return handlers;
 	}
 

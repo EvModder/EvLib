@@ -37,7 +37,7 @@ public class GhostUtils{
 	private Team ghostTeam;
 	
 	// Players that are actually ghosts
-	private Set<String> ghosts = new HashSet<String>();
+	private Set<String> ghosts = new HashSet<>();
 	private Set<String> trueInvis;
 
 	/**
@@ -132,7 +132,7 @@ public class GhostUtils{
 		
 		//Previously empty.  Start up GhostManager
 		if(wasEmpty || ghosts.isEmpty() == false){
-			trueInvis = new HashSet<String>();
+			trueInvis = new HashSet<>();
 			for(Player p : players[0].getServer().getOnlinePlayers()){
 				//Add all players as ghosts by default
 				viewerTeam.addEntry(p.getName());
@@ -211,7 +211,7 @@ public class GhostUtils{
 	 */
 	@SuppressWarnings("deprecation")
 	public Set<OfflinePlayer> getGhosts() {
-		Set<OfflinePlayer> players = new HashSet<OfflinePlayer>();
+		Set<OfflinePlayer> players = new HashSet<>();
 		for(String ghostName : ghosts) players.add(Bukkit.getServer().getOfflinePlayer(ghostName));
 		return players;
 	}
@@ -222,7 +222,7 @@ public class GhostUtils{
 	 */
 	@SuppressWarnings("deprecation")
 	public Set<OfflinePlayer> getGhostViewers() {
-		Set<OfflinePlayer> players = new HashSet<OfflinePlayer>();
+		Set<OfflinePlayer> players = new HashSet<>();
 		for(String ghostName : viewerTeam.getEntries()) players.add(Bukkit.getServer().getOfflinePlayer(ghostName));
 		return players;
 	}

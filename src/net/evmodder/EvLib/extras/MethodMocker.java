@@ -35,7 +35,7 @@ public class MethodMocker{
 		final CommandSender proxy;
 
 		public MessageInterceptor(final CommandSender p, boolean hideInterceptedMessages){
-			msgs = new ArrayList<String>();
+			msgs = new ArrayList<>();
 			final ClassLoader classLoader = p.getClass().getClassLoader();
 			final Class<?>[] interfaces = new Class<?>[]{
 				p instanceof Player ? Player.class :
@@ -68,8 +68,8 @@ public class MethodMocker{
 			for(String perm : addPerms) if(takePerms.contains(perm)){
 				System.err.println("Cannot add AND remove the same permission!: "+perm);
 			}
-			plusPerms = new HashSet<String>(addPerms);
-			minusPerms = new HashSet<String>(takePerms);
+			plusPerms = new HashSet<>(addPerms);
+			minusPerms = new HashSet<>(takePerms);
 			final ClassLoader classLoader = p.getClass().getClassLoader();
 			final Class<?>[] interfaces = new Class<?>[]{
 				p instanceof Player ? Player.class :
@@ -79,8 +79,8 @@ public class MethodMocker{
 				@Override
 				public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
 					if(method.getName().equals("hasPermission")){
-						if(plusPerms.contains((String)args[0])) return true;
-						if(minusPerms.contains((String)args[0])) return false;
+						if(plusPerms.contains(args[0])) return true;
+						if(minusPerms.contains(args[0])) return false;
 					}
 					return method.invoke(p, args);
 				}

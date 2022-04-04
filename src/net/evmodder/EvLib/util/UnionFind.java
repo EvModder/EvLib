@@ -9,7 +9,7 @@ public class UnionFind<T>{
 
 	public UnionFind(){
 //		map = new HashMap<T, HashSet<T>>();
-		parent = new HashMap<T, T>();
+		parent = new HashMap<>();
 	}
 
 //	@SuppressWarnings("serial")

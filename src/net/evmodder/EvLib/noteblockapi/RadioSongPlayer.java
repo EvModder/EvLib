@@ -14,7 +14,7 @@ public class RadioSongPlayer extends SongPlayer{
 		for(Layer l : song.getLayerHashMap().values()){
 			Note note = l.getNote(tick);
 			if(note == null) continue;
-			p.playSound(p.getEyeLocation(), Instrument.getInstrument(note.getInstrument()), (l.getVolume() * (int)volume * (int)playerVolume) / 1000000f,
+			p.playSound(p.getEyeLocation(), Instrument.getInstrument(note.getInstrument()), (l.getVolume() * volume * playerVolume) / 1000000f,
 					NotePitch.getPitch(note.getKey() - 33));
 		}
 	}

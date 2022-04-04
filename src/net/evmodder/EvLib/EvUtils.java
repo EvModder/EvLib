@@ -94,7 +94,7 @@ public class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,WebUti
 
 	public static ArrayList<Player> getNearbyPlayers(Location loc, int max_dist, boolean allowCrossDimension){//+
 		max_dist = max_dist * max_dist;
-		ArrayList<Player> ppl = new ArrayList<Player>();
+		ArrayList<Player> ppl = new ArrayList<>();
 		for(Player p : Bukkit.getServer().getOnlinePlayers()){
 			double dist = allowCrossDimension ? crossDimensionalDistanceSquared(p.getLocation(), loc)
 					: p.getWorld().getUID().equals(loc.getWorld().getUID()) ? p.getLocation().distanceSquared(loc) : Double.MAX_VALUE;
@@ -150,9 +150,9 @@ public class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,WebUti
 	}
 
 	public static List<Block> getConnectedBlocks(Block block0, Function<Block, Boolean> test, List<BlockFace> dirs, int MAX_SIZE){//+
-		HashSet<Block> visited = new HashSet<Block>();
-		List<Block> results = new ArrayList<Block>();
-		ArrayDeque<Block> toProcess = new ArrayDeque<Block>();
+		HashSet<Block> visited = new HashSet<>();
+		List<Block> results = new ArrayList<>();
+		ArrayDeque<Block> toProcess = new ArrayDeque<>();
 		toProcess.addLast(block0);
 		while(results.size() < MAX_SIZE && !toProcess.isEmpty()){
 			Block b = toProcess.pollFirst();

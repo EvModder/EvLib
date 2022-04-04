@@ -3,7 +3,7 @@ package net.evmodder.EvLib.noteblockapi;
 import java.util.HashMap;
 
 public class Layer{
-	private HashMap<Integer, Note> hashMap = new HashMap<Integer, Note>();
+	private HashMap<Integer, Note> hashMap = new HashMap<>();
 	private byte volume = 100;
 	private String name = "";
 

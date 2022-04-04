@@ -39,7 +39,7 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 	private double[] tabs;
 	private int numPages;
 	private String[] lines;
-	private static Map<Integer, String> charList = new HashMap<Integer, String>();
+	private static Map<Integer, String> charList = new HashMap<>();
 
 	// CONSTRUCTOR METHOD
 	public TabText(String multilineString){

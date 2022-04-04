@@ -7,8 +7,8 @@ import java.util.HashMap;
 
 public class NoteBlockPlayerMain extends JavaPlugin{
 	static NoteBlockPlayerMain plugin;
-	HashMap<String, ArrayList<SongPlayer>> playingSongs = new HashMap<String, ArrayList<SongPlayer>>();
-	HashMap<String, Byte> playerVolume = new HashMap<String, Byte>();
+	HashMap<String, ArrayList<SongPlayer>> playingSongs = new HashMap<>();
+	HashMap<String, Byte> playerVolume = new HashMap<>();
 
 	@Override public void onEnable(){
 		plugin = this;

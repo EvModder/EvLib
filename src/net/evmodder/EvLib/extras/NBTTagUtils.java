@@ -33,8 +33,8 @@ public final class NBTTagUtils{// version = X1.0
 	}
 //	static final RefMethod methodTagIsEmpty = classNBTTagCompound.getMethod("isEmpty");
 	static final RefMethod methodTagIsEmpty = classNBTTagCompound.findMethod(/*isStatic=*/false, boolean.class);
-	static final HashMap<Class<?>, RefMethod> tagSetters = new HashMap<Class<?>, RefMethod>();
-	static final HashMap<Class<?>, RefMethod> tagGetters = new HashMap<Class<?>, RefMethod>();
+	static final HashMap<Class<?>, RefMethod> tagSetters = new HashMap<>();
+	static final HashMap<Class<?>, RefMethod> tagGetters = new HashMap<>();
 	static final Class<?> realNBTTagCompoundClass = classNBTTagCompound.getRealClass();
 	static final Class<?> realNBTBaseClass = classNBTBase.getRealClass();
 	static{
