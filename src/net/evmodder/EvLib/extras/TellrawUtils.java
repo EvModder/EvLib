@@ -174,6 +174,9 @@ public class TellrawUtils{
 		}
 		// Returns null if this component could NOT possibly be a Selector matching exactly 1 target
 		UUID potentialSingleMatchSelector(){
+			if(this instanceof ListComponent && !((ListComponent)this).isEmpty()){
+				return ((ListComponent)this).components.get(0).potentialSingleMatchSelector();
+			}
 			if(this instanceof SelectorComponent == false) return null;
 			Object selector = ((SelectorComponent)this).selector;
 			try{
@@ -687,30 +690,38 @@ public class TellrawUtils{
 				// Necessary to prevent overriding this ListComponent's group properties
 				if(i == 0 && emptyBefore && !this.samePropertiesAs(replacement)){components.add(0, copyWithNewText(txComp, "")); i = 1;}
 
-				Component replacementInst = replacement;
+				Component thisReplacement = replacement;
 				if(replacementIsRawText){
-					String replacementText = replacement.toPlainText();
-					if(emptyBefore) replacementInst = copyWithNewText((RawTextComponent)replacement, textBefore + replacementText);
-					if(emptyAfter) replacementInst = copyWithNewText((RawTextComponent)replacement, replacementText + textAfter);
+					if(emptyBefore) thisReplacement = copyWithNewText((RawTextComponent)thisReplacement, textBefore + thisReplacement.toPlainText());
+					if(emptyAfter) thisReplacement = copyWithNewText((RawTextComponent)thisReplacement, thisReplacement.toPlainText() + textAfter);
+				}
+				if(!emptyBefore){
+					RawTextComponent propertiesAtReplacement = getCurrentColorAndFormatProperties(textBefore);
+					if(!this.isPropertiesSupersetOf(propertiesAtReplacement)){
+						ListComponent subListComp = new ListComponent();
+						subListComp.addComponent(propertiesAtReplacement);
+						subListComp.addComponent(thisReplacement);
+						thisReplacement = subListComp;
+					}
 				}
 				if(emptyBefore && emptyAfter){
-					if(i == components.size()-1) last = replacementInst;
-					components.set(i, replacementInst);
+					if(i == components.size()-1) last = thisReplacement;
+					components.set(i, thisReplacement);
 				}
 				else if(emptyBefore){
 					components.set(i, copyWithNewText(txComp, textAfter));
-					components.add(i, replacementInst);
+					components.add(i, thisReplacement);
 				}
 				else if(emptyAfter){
 					components.set(i, new RawTextComponent(textBefore));
-					if(++i == components.size()) components.add(last = replacementInst);
-					else components.add(i, replacementInst);
+					if(++i == components.size()) components.add(last = thisReplacement);
+					else components.add(i, thisReplacement);
 				}
 				else{
 					components.set(i, copyWithNewText(txComp, textBefore));
 					RawTextComponent textAfterComp = copyWithNewText(txComp, textAfter);
-					if(++i == components.size()){components.add(replacementInst); components.add(last = textAfterComp);}
-					else{components.add(i, textAfterComp); components.add(i, replacementInst);}
+					if(++i == components.size()){components.add(thisReplacement); components.add(last = textAfterComp);}
+					else{components.add(i, textAfterComp); components.add(i, thisReplacement);}
 				}
 				updated = true;
 			}
