@@ -876,7 +876,9 @@ public class TellrawUtils{
 						++i;
 						Pair<Component, Integer> extraAndIdx = parseNextComponentFromString(str, i);
 						if(extraAndIdx == null) return null;
-						extra = (ListComponent)extraAndIdx.a;
+						extra = new ListComponent();
+						extra.addComponent("");
+						extra.addComponent(extraAndIdx.a);
 						i = extraAndIdx.b;
 					}
 					else if(str.startsWith("color\"", i)){
