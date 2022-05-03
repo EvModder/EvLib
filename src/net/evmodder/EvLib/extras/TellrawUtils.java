@@ -551,13 +551,13 @@ public class TellrawUtils{
 	public final static class SelectorComponent extends Component{
 //		final Selector selector;
 		final Object selector;
-		final boolean useDisplayName;
-		public SelectorComponent(@Nonnull Object selector){this.selector = selector; this.useDisplayName = true;}
-		public SelectorComponent(@Nonnull UUID uuid){this.selector = uuid; this.useDisplayName = true;}
-		public SelectorComponent(@Nonnull Object selector, boolean useDisplayName){this.selector = selector; this.useDisplayName = useDisplayName;}
+		final boolean useDisplayNameInToPlaintext;
+		public SelectorComponent(@Nonnull Object selector){this.selector = selector; this.useDisplayNameInToPlaintext = true;}
+		public SelectorComponent(@Nonnull UUID uuid){this.selector = uuid; this.useDisplayNameInToPlaintext = true;}
+		public SelectorComponent(@Nonnull Object selector, boolean useDisplayName){this.selector = selector; useDisplayNameInToPlaintext = useDisplayName;}
 		public SelectorComponent(@Nonnull Object selector, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
-			this.selector = selector; this.useDisplayName = true;
+			this.selector = selector; this.useDisplayNameInToPlaintext = true;
 		}
 //		public SelectorComponent(@Nonnull SelectorType type, @Nonnull SelectorArgument...arguments){this.selector = new Selector(type, arguments);}
 		//tellraw @a {"selector":"@a"}
@@ -567,7 +567,7 @@ public class TellrawUtils{
 			try{
 				UUID uuid = selector instanceof UUID ? (UUID)selector : UUID.fromString(selector.toString());
 				Entity entity = Bukkit.getEntity(uuid);
-				if(entity != null) names = Arrays.asList(getLocalizedDisplayName(entity, useDisplayName).toPlainText());
+				if(entity != null) names = Arrays.asList(getLocalizedDisplayName(entity, useDisplayNameInToPlaintext).toPlainText());
 			}
 			catch(IllegalArgumentException ex){};
 			if(names == null) try{
@@ -575,7 +575,7 @@ public class TellrawUtils{
 				@SuppressWarnings("unchecked")
 				Collection<Entity> entities = (Collection<Entity>)clazz.getMethod("resolve").invoke(selector);
 				names = entities.stream().filter(e -> e != null)
-						.map(e -> getLocalizedDisplayName(e, useDisplayName).toPlainText()).collect(Collectors.toList());
+						.map(e -> getLocalizedDisplayName(e, useDisplayNameInToPlaintext).toPlainText()).collect(Collectors.toList());
 			}
 			catch(Exception ex){names = Arrays.asList(selector.toString());}
 			return String.join(ChatColor.GRAY+", "+ChatColor.RESET, names);
@@ -814,29 +814,36 @@ public class TellrawUtils{
 		Bukkit.getLogger().warning("TellrawUtils ERROR: expected true/false at index "+i+" of string: "+str);
 		return null;
 	}
+	private final static Pair<Component, Integer> parseListComponent(String str, int i, Component insert_comp0){
+		//while(i < str.length() && Character.isWhitespace(str.charAt(i))) ++i;
+		if(str.charAt(i) != '['){
+			Bukkit.getLogger().warning("TellrawUtils ERROR: expected [ at index "+i+" of string: "+str);
+			return null;
+		}
+		ListComponent listComp = new ListComponent();
+		if(insert_comp0 != null) listComp.addComponent(insert_comp0);
+//		if(str.charAt('i') == ']') return comp; //TODO: Apparently empty lists are not supported in tellraw (1.18)
+		do{
+			++i;
+			Pair<Component, Integer> nextComp = parseNextComponentFromString(str, i);
+			if(nextComp == null || nextComp.a == null) return null;
+			listComp.addComponent(nextComp.a);
+			i = nextComp.b;
+			while(Character.isWhitespace(str.charAt(i))) ++i;
+		} while(str.charAt(i) == ',');
+		if(str.charAt(i) != ']'){
+			Bukkit.getLogger().warning("TellrawUtils ERROR: expected ] at index "+i+" of string: "+str);
+			return null;
+		}
+		return new Pair<>(listComp, i + 1);
+	}
 	enum ComponentType{TEXT, TRANSLATE, SCORE, SELECTOR, KEYBIND};
 	private final static Pair<Component, Integer> parseNextComponentFromString(String str, int i){
 		while(i < str.length() && Character.isWhitespace(str.charAt(i))) ++i;
 		if(i == str.length()) return null;
 		switch(str.charAt(i)){
-			case '[': {
-//				while(i < str.length() && Character.isWhitespace(str.charAt(i))) ++i;
-				ListComponent listComp = new ListComponent();
-//				if(str.charAt('i') == ']') return comp;
-				do{
-					++i;
-					Pair<Component, Integer> nextComp = parseNextComponentFromString(str, i);
-					if(nextComp == null || nextComp.a == null) return null;
-					listComp.addComponent(nextComp.a);
-					i = nextComp.b;
-					while(Character.isWhitespace(str.charAt(i))) ++i;
-				} while(str.charAt(i) == ',');
-				if(str.charAt(i) != ']'){
-					Bukkit.getLogger().warning("TellrawUtils ERROR: expected ] at index "+i+" of string: "+str);
-					return null;
-				}
-				return new Pair<>(listComp, i + 1);
-			}
+			case '[':
+				return parseListComponent(str, i, /*insert_comp0=*/null);
 			case '"': {
 				int j;
 				for(j = ++i; str.charAt(j) != '"' || TextUtils.isEscaped(str, j); ++j);
@@ -856,7 +863,8 @@ public class TellrawUtils{
 				Object selector = null;
 				Objective objective = null;
 				String value = null;
-				ListComponent extra = null;
+				//ListComponent extra = null;
+				Integer extraListStart = null;
 				do{ // while(str.charAt(i) != '}')
 					++i;
 					while(Character.isWhitespace(str.charAt(i))) ++i;
@@ -874,11 +882,11 @@ public class TellrawUtils{
 							return null;
 						}
 						++i;
-						Pair<Component, Integer> extraAndIdx = parseNextComponentFromString(str, i);
+						while(Character.isWhitespace(str.charAt(i))) ++i;
+						extraListStart = i;
+						Pair<Component, Integer> extraAndIdx = parseListComponent(str, i, /*insert_comp0*/null);
 						if(extraAndIdx == null) return null;
-						extra = new ListComponent();
-						extra.addComponent("");
-						extra.addComponent(extraAndIdx.a);
+						//extra = (ListComponent)extraAndIdx.a;
 						i = extraAndIdx.b;
 					}
 					else if(str.startsWith("color\"", i)){
@@ -1058,11 +1066,8 @@ public class TellrawUtils{
 					case KEYBIND: comp = new KeybindComponent(keybind, insert, click, hover, color, formats); break;
 				}
 				++i;
-				if(extra == null || extra.isEmpty()) return new Pair<>(comp, i);
-				else{
-					extra.components.add(0, comp);
-					return new Pair<>(extra, i);
-				}
+				if(extraListStart == null) return new Pair<>(comp, i);
+				else return new Pair<>(parseListComponent(str, extraListStart, comp).a, i);
 			}
 			default:
 				Bukkit.getLogger().warning("TellrawUtils ERROR parsing component at index "+i+" from string: "+str);

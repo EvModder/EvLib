@@ -153,7 +153,7 @@ public class TextUtils{
 	}
 	public static String stripFormatsOnly(String str){return stripFormatsOnly(str, ChatColor.COLOR_CHAR);}
 
-	//Returns NULL if no color is present at end of string
+	//Returns empty-string if no color is present at end of string
 	public static String getCurrentColor(String str){
 		final char[] msg = str.toCharArray();
 		for(int i=msg.length-1; i>0; --i){
@@ -162,9 +162,9 @@ public class TextUtils{
 				else if(msg[i] == 'x') return str.substring(i-1, i+13);
 			}
 		}
-		return null;
+		return "";
 	}
-	//Returns NULL if no format is present at end of string
+	//Returns empty-string if no format is present at end of string
 	public static String getCurrentFormats(String str){
 		StringBuilder builder = new StringBuilder();
 		final char[] msg = str.toCharArray();
@@ -174,9 +174,9 @@ public class TextUtils{
 			final String formatStr = str.substring(i-1, i+1);
 			if(builder.indexOf(formatStr) == -1) builder.append(formatStr);
 		}
-		return builder.length() == 0 ? null : builder.toString();
+		return builder.toString();
 	}
-	//Returns NULL if no color or format is present at end of string
+	//Returns empty-string if no color or format is present at end of string
 	public static String getCurrentColorAndFormats(String str){
 		StringBuilder builder = new StringBuilder();
 		final char[] msg = str.toCharArray();
@@ -189,7 +189,7 @@ public class TextUtils{
 			final String formatStr = str.substring(i-1, i+1);
 			if(builder.indexOf(formatStr) == -1) builder.append(formatStr);
 		}
-		return builder.length() == 0 ? null : builder.toString();
+		return builder.toString();
 	}
 
 	public static boolean isEscaped(char[] str, int x){

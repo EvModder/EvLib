@@ -307,7 +307,7 @@ public class ReflectionUtils{// version = X1.0
 		 * @return class of method return type
 		 */
 		public RefClass getReturnRefClass(){ return new RefClass(method.getReturnType()); }
-		private RefMethod (Method method){
+		private RefMethod(Method method){
 			this.method = method;
 			method.setAccessible(true);
 		}
