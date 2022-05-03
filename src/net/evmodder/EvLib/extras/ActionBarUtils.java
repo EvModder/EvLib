@@ -33,10 +33,10 @@ public class ActionBarUtils{
 	private static final RefConstructor makePacketPlayOutChat =
 			classPacketPlayOutChat.getConstructor(classIChatBaseComponent, classChatMessageType, UUID.class);
 
-	final static UUID UHHHHH_UUID = UUID.randomUUID();
+	final static UUID SENDER_UUID = UUID.randomUUID();
 	public static void sendToPlayer(String message, Player... ppl){
 		Object chatCompontentText = makeChatComponentText.create(message);
-		Object packet = makePacketPlayOutChat.create(chatCompontentText, chatMessageType, UHHHHH_UUID);
+		Object packet = makePacketPlayOutChat.create(chatCompontentText, chatMessageType, SENDER_UUID);
 		for(Player p : ppl){
 			Object entityPlayer = methodGetHandle.of(p).call();
 			Object playerConnection = fieldPlayerConnection.of(entityPlayer).get();
