@@ -95,7 +95,7 @@ public final class NBTTagUtils{// version = X1.0
 	static final Class<?> realNBTTagListClass = classNBTTagList.getRealClass();
 	static final RefMethod methodAdd;
 	static{
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_16") < 0){
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_13") < 0){ // if version <= 1.16
 			methodAdd = classNBTTagList.getMethod("add", realNBTBaseClass);
 		}
 		else{
@@ -112,10 +112,10 @@ public final class NBTTagUtils{// version = X1.0
 
 	// String tag
 	static final RefClass classNBTTagString = ReflectionUtils.getRefClass("{nms}.NBTTagString", "{nm}.nbt.NBTTagString");
-	static final RefMethod cnstrNBTTagString = classNBTTagString.findMethod(/*static=*/true, /*return=*/classNBTTagString, /*param0=*/String.class);
+	static final RefConstructor cnstrNBTTagString = classNBTTagString.getConstructor(String.class);
 	static final Class<?> realNBTTagStringClass = classNBTTagString.getRealClass();
 	public static final class RefNBTTagString extends RefNBTBase{
-		public RefNBTTagString(String str){nmsTag = cnstrNBTTagString.of(null).call(str);}
+		public RefNBTTagString(String str){nmsTag = cnstrNBTTagString.create(str);}
 	}
 
 	// List tag

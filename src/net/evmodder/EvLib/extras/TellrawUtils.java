@@ -114,7 +114,7 @@ public class TellrawUtils{
 
 	public static RawTextComponent getCurrentColorAndFormatProperties(String str){
 		String colorAndFormatsStr = TextUtils.getCurrentColorAndFormats(str).replace("§", "");
-		if(colorAndFormatsStr.isEmpty()) return null;
+		if(colorAndFormatsStr.isEmpty()) return new RawTextComponent(""); // no color/format properties
 		final char colorChar = colorAndFormatsStr.charAt(0);
 		String color = null;
 		if(colorChar == 'x'){
