@@ -27,7 +27,6 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.EntityType;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.EvLib.FileIO;
@@ -402,7 +401,7 @@ public class WebUtils {
 		String token = authenticateMojang(email, passw);
 		System.out.println("token = "+token);
 
-		System.out.println(StringUtils.join(headsToFlip, "\n"));
+		System.out.println(String.join("\n", headsToFlip));
 		System.out.println("Beginning conversion...");
 		System.out.println("Approximate duration in minutes: "+(40F*headsToFlip.length)/60F);// 40s/head
 		TreeMap<String, String> newHeads = makeUpsideDownCopies(headsToFlip, "tmp_textures", uuid, token);
