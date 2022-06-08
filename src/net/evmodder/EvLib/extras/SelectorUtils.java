@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -67,7 +66,7 @@ public class SelectorUtils{
 		final CommandSender executer;
 		final Location origin;//can be null
 
-		private Location getOrigin(@Nonnull CommandSender sender){
+		private Location getOrigin(CommandSender sender){
 			return
 					executer instanceof Entity ? ((Entity)executer).getLocation() :
 					executer instanceof BlockCommandSender ? ((BlockCommandSender)executer).getBlock().getLocation() :
@@ -77,7 +76,7 @@ public class SelectorUtils{
 					new Location(Bukkit.getWorlds().get(0), 0, 0, 0);// No joke, this is actually what it does (checked 2020-04-22)
 //					null;
 		}
-		public Selector(@Nonnull SelectorType type, @Nonnull CommandSender executer, @Nonnull SelectorArgument...arguments){
+		public Selector(SelectorType type, CommandSender executer, SelectorArgument...arguments){
 			if(type == SelectorType.UUID) throw new IllegalArgumentException("Please provide just the UUID of the entity to select");
 			this.type = type;
 			this.arguments = Arrays.asList(arguments);
@@ -85,7 +84,7 @@ public class SelectorUtils{
 			this.origin = getOrigin(executer);
 //			this.uuid = null;
 		}
-		public Selector(@Nonnull UUID uuid){
+		public Selector(UUID uuid){
 			this.type = SelectorType.UUID;
 //			this.uuid = uuid;
 			this.executer = Bukkit.getEntity(uuid);
@@ -93,7 +92,7 @@ public class SelectorUtils{
 			this.arguments = null;
 		}
 
-		public void addArgument(@Nonnull SelectorArgument argument){arguments.add(argument);}
+		public void addArgument(SelectorArgument argument){arguments.add(argument);}
 
 		public Collection<Entity> resolve(){
 			final ArrayList<Entity> entities = new ArrayList<>();
@@ -322,7 +321,7 @@ public class SelectorUtils{
 		}
 
 		@SuppressWarnings("deprecation") // TODO: add "throws X, Y, Z" for all possible exceptions
-		public static Selector fromString(@Nonnull final CommandSender sender, @Nonnull final String str){
+		public static Selector fromString(final CommandSender sender, final String str){
 			// Attempt to parse as UUID selector
 			try{return new Selector(UUID.fromString(str));}
 			catch(IllegalArgumentException ex){}
@@ -360,7 +359,7 @@ public class SelectorUtils{
 			return new Selector(type, sender, arguments.toArray(new SelectorArgument[0]));
 		}
 
-		public static List<String> getTabComplete(@Nonnull final CommandSender sender, @Nonnull final String selectorSubstr){
+		public static List<String> getTabComplete(final CommandSender sender, final String selectorSubstr){
 			List<String> tabCompletes = new ArrayList<>();
 			final boolean startsWithAt = selectorSubstr.startsWith("@");
 			if(selectorSubstr.length() <= 1){

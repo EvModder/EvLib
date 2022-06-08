@@ -2,7 +2,6 @@ package net.evmodder.EvLib.extras;
 
 import java.util.HashMap;
 import java.util.Map.Entry;
-import javax.annotation.Nonnull;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
@@ -28,9 +27,9 @@ public class EntityUtils{
 		for(Entry<Material, EntityType> e : eggToEntity.entrySet()) entityToEgg.put(e.getValue(), e.getKey());
 	}
 
-	public static boolean isSpawnEgg(@Nonnull Material mat){return eggToEntity.keySet().contains(mat);}
-	public static EntityType getSpawnedMob(@Nonnull Material spawnEggType){return eggToEntity.get(spawnEggType);}
-	public static Material getSpawnEgg(@Nonnull EntityType eType){return entityToEgg.get(eType);}
+	public static boolean isSpawnEgg(Material mat){return eggToEntity.keySet().contains(mat);}
+	public static EntityType getSpawnedMob(Material spawnEggType){return eggToEntity.get(spawnEggType);}
+	public static Material getSpawnEgg(EntityType eType){return entityToEgg.get(eType);}
 
 	public static class CCP{
 		public DyeColor bodyColor, patternColor;
@@ -120,7 +119,7 @@ public class EntityUtils{
 		fishColorNames.put(DyeColor.YELLOW, "Yellow");
 		cachedTropicalFishNames = new HashMap<>();
 	}
-	@Deprecated public static String getTropicalFishEnglishName(@Nonnull CCP ccp){
+	@Deprecated public static String getTropicalFishEnglishName(CCP ccp){
 		String name = commonTropicalFishNames.get(ccp);
 		if(name == null) name = cachedTropicalFishNames.get(ccp);
 		if(name == null){
@@ -132,16 +131,16 @@ public class EntityUtils{
 		}
 		return name;
 	}
-	public static CCP getCCP(@Nonnull TropicalFish fish){
+	public static CCP getCCP(TropicalFish fish){
 		System.out.println("CCP: "+fish.getBodyColor()+","+ fish.getPatternColor()+","+ fish.getPattern());
 		return new CCP(fish.getBodyColor(), fish.getPatternColor(), fish.getPattern());
 	}
-	public static CCP getCCP(@Nonnull String commonTropicalFishName){
+	public static CCP getCCP(String commonTropicalFishName){
 		return commonTropicalFishNamesReverse.get(commonTropicalFishName.toUpperCase().replace(' ', '_'));
 	}
-	public static Integer getCommonTropicalFishId(@Nonnull CCP ccp){return commonTropicalFishIds.get(ccp);}
+	public static Integer getCommonTropicalFishId(CCP ccp){return commonTropicalFishIds.get(ccp);}
 
-	public static String getPandaTrait(@Nonnull String mainGene, @Nonnull String hiddenGene){
+	public static String getPandaTrait(String mainGene, String hiddenGene){
 		if(mainGene.equals(hiddenGene)) return mainGene;
 		switch(mainGene){
 			case "BROWN":
@@ -152,7 +151,7 @@ public class EntityUtils{
 		}
 	}
 
-	public static EntityType getEntityByName(@Nonnull String name){
+	public static EntityType getEntityByName(String name){
 		//TODO: improve this function / test for errors
 		//TODO: uncomment and access HeadUtils using reflection:
 		//if(name.toUpperCase().startsWith("MHF_")) name = HeadUtils.normalizedNameFromMHFName(name);
@@ -177,7 +176,7 @@ public class EntityUtils{
 		}
 	}
 
-	public static String getNormalizedEntityName(@Nonnull String name){
+	public static String getNormalizedEntityName(String name){
 		//TODO: improve this function / test for errors
 		switch(name.toUpperCase()){
 			case "MUSHROOM_COW": return "mooshroom";
@@ -194,7 +193,7 @@ public class EntityUtils{
 		}
 	}
 
-	public static boolean isSkeletal(@Nonnull EntityType eType){
+	public static boolean isSkeletal(EntityType eType){
 		switch(eType){
 			case SKELETON:
 			case SKELETON_HORSE:

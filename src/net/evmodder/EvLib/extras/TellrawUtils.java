@@ -13,7 +13,6 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
@@ -61,7 +60,7 @@ public class TellrawUtils{
 	public final static class TextClickAction{
 		public final ClickEvent event;
 		public final String value;
-		public TextClickAction(@Nonnull ClickEvent event, @Nonnull String value){this.event = event; this.value = value;}
+		public TextClickAction(ClickEvent event, String value){this.event = event; this.value = value;}
 		@Override public boolean equals(Object other){
 			return other != null && other instanceof TextClickAction
 					&& ((TextClickAction)other).event.equals(event) && ((TextClickAction)other).value.equals(value);
@@ -70,8 +69,8 @@ public class TellrawUtils{
 	public final static class TextHoverAction{
 		public final HoverEvent event;
 		public final Component value;
-		public TextHoverAction(@Nonnull HoverEvent event, @Nonnull Component value){this.event = event; this.value = value;}
-		public TextHoverAction(@Nonnull HoverEvent event, @Nonnull String value){this.event = event; this.value = new RawTextComponent(value);}
+		public TextHoverAction(HoverEvent event, Component value){this.event = event; this.value = value;}
+		public TextHoverAction(HoverEvent event, String value){this.event = event; this.value = new RawTextComponent(value);}
 		@Override public boolean equals(Object other){
 			return other != null && other instanceof TextHoverAction
 					&& ((TextHoverAction)other).event.equals(event) && ((TextHoverAction)other).value.equals(value);
@@ -218,7 +217,7 @@ public class TellrawUtils{
 					(potentialSingleMatchSelector() == null) == (other.potentialSingleMatchSelector() == null);
 		}
 		// True if @other doesn't override any of the properties of this component
-		boolean isPropertiesSupersetOf(@Nonnull Component other){
+		boolean isPropertiesSupersetOf(Component other){
 			return (other.getInsertion() == null || other.getInsertion().equals(getInsertion())) &&
 					(other.getClickAction() == null || other.getClickAction().equals(getClickAction())) &&
 					(other.getHoverAction() == null || other.getHoverAction().equals(getHoverAction())) &&
@@ -234,15 +233,15 @@ public class TellrawUtils{
 	};
 	public final static class RawTextComponent extends Component{
 		final String text;
-		public RawTextComponent(@Nonnull String text){this.text = text;}
-		public RawTextComponent(@Nonnull String text, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
+		public RawTextComponent(String text){this.text = text;}
+		public RawTextComponent(String text, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
 			this.text = text;
 		}
-		public RawTextComponent(@Nonnull String text, @Nonnull TextClickAction click){
+		public RawTextComponent(String text, TextClickAction click){
 			this(text, /*insert=*/null, click, /*hover=*/null, /*color=*/null, /*formats=*/null);
 		}
-		public RawTextComponent(@Nonnull String text, @Nonnull TextHoverAction hover){
+		public RawTextComponent(String text, TextHoverAction hover){
 			this(text, /*insert=*/null, /*click=*/null, hover, /*color=*/null, /*formats=*/null);
 		}
 		//tellraw @a "test"
@@ -265,9 +264,9 @@ public class TellrawUtils{
 		final Component[] with; // Used to replace "%s" placeholders in the translation text.
 		public String getJsonKey(){return jsonKey;}
 		public Component[] getWith(){return with;}
-		public TranslationComponent(@Nonnull String jsonKey){this.jsonKey = jsonKey; with = null;}
-		public TranslationComponent(@Nonnull String jsonKey, @Nonnull Component... with){this.jsonKey = jsonKey; this.with = with;}
-		public TranslationComponent(@Nonnull String jsonKey, Component[] with,
+		public TranslationComponent(String jsonKey){this.jsonKey = jsonKey; with = null;}
+		public TranslationComponent(String jsonKey, Component... with){this.jsonKey = jsonKey; this.with = with;}
+		public TranslationComponent(String jsonKey, Component[] with,
 				String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
 			this.jsonKey = jsonKey;
@@ -347,7 +346,7 @@ public class TellrawUtils{
 
 	final static String tropicalFishLocaleCCP = /*custom.tropical_fish.ccp*/"%s-%s %s";
 	final static String tropicalFishLocaleCP = /*custom.tropical_fish.cp*/"%s %s";
-	public static TranslationComponent getLocalizedDisplayName(@Nonnull CCP ccp){
+	public static TranslationComponent getLocalizedDisplayName(CCP ccp){
 		Integer id = EntityUtils.commonTropicalFishIds.get(ccp);
 		if(id != null) return new TranslationComponent("entity.minecraft.tropical_fish.predefined."+id);
 		return ccp.bodyColor != ccp.patternColor
@@ -359,7 +358,7 @@ public class TellrawUtils{
 					new TranslationComponent("color.minecraft."+ccp.bodyColor.name().toLowerCase()),
 					new TranslationComponent("entity.minecraft.tropical_fish.type."+ccp.pattern.name().toLowerCase())});
 	}
-	public static TranslationComponent getBestGuessLocalizedDisplayName(@Nonnull EntityType eType){
+	public static TranslationComponent getBestGuessLocalizedDisplayName(EntityType eType){
 		switch(eType){
 			case MUSHROOM_COW: return new TranslationComponent("entity.minecraft.mooshroom");
 			case SNOWMAN: return new TranslationComponent("entity.minecraft.snow_golem");
@@ -375,7 +374,7 @@ public class TellrawUtils{
 						.replace("pig_zombie", "zombie_pigman"));
 		}
 	}
-	public static Component getLocalizedDisplayName(@Nonnull Entity entity, boolean useDisplayName){
+	public static Component getLocalizedDisplayName(Entity entity, boolean useDisplayName){
 		if(entity.getName() != null) return new RawTextComponent(
 				(entity instanceof Player && useDisplayName) ? ((Player)entity).getDisplayName() : entity.getName());
 		switch(entity.getType()){
@@ -392,7 +391,7 @@ public class TellrawUtils{
 				return getBestGuessLocalizedDisplayName(entity.getType());
 		}
 	}
-	static String getVanillaPotionEffectTypeName(@Nonnull PotionEffectType type){
+	static String getVanillaPotionEffectTypeName(PotionEffectType type){
 		switch(type.getName()){
 			case "AWKWARD": return "awkward";
 			case "FIRE_RESISTANCE": return "fire_resistance";
@@ -442,7 +441,7 @@ public class TellrawUtils{
 		}
 		return meta.getOwningPlayer().getName();
 	}
-	public static TranslationComponent getLocalizedDisplayName(@Nonnull BlockState block){
+	public static TranslationComponent getLocalizedDisplayName(BlockState block){
 		switch(block.getType()){
 			case PLAYER_HEAD:
 			case PLAYER_WALL_HEAD:
@@ -470,7 +469,7 @@ public class TellrawUtils{
 				return new TranslationComponent("block.minecraft."+block.getType().name().toLowerCase()); 
 		}
 	}
-	public static Component getLocalizedDisplayName(@Nonnull ItemStack item){
+	public static Component getLocalizedDisplayName(ItemStack item){
 		if(item.hasItemMeta() && item.getItemMeta().hasDisplayName()) return new RawTextComponent(item.getItemMeta().getDisplayName());
 		if(item.getType().isBlock()){
 			if(item.hasItemMeta() && item.getItemMeta() instanceof BlockStateMeta){
@@ -508,9 +507,9 @@ public class TellrawUtils{
 		final Object selector;
 		final Objective objective;
 		String value; // Optional; overwrites output of score selector
-		public ScoreComponent(@Nonnull Object selector, @Nonnull Objective objective){this.selector = selector; this.objective = objective;}
-		public ScoreComponent(@Nonnull String name, @Nonnull Objective objective){this.selector = name; this.objective = objective;}
-		public ScoreComponent(@Nonnull Object selector, @Nonnull Objective objective, String value,
+		public ScoreComponent(Object selector, Objective objective){this.selector = selector; this.objective = objective;}
+		public ScoreComponent(String name, Objective objective){this.selector = name; this.objective = objective;}
+		public ScoreComponent(Object selector, Objective objective, String value,
 				String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
 			this.selector = selector;
@@ -552,14 +551,14 @@ public class TellrawUtils{
 //		final Selector selector;
 		final Object selector;
 		final boolean useDisplayNameInToPlaintext;
-		public SelectorComponent(@Nonnull Object selector){this.selector = selector; this.useDisplayNameInToPlaintext = true;}
-		public SelectorComponent(@Nonnull UUID uuid){this.selector = uuid; this.useDisplayNameInToPlaintext = true;}
-		public SelectorComponent(@Nonnull Object selector, boolean useDisplayName){this.selector = selector; useDisplayNameInToPlaintext = useDisplayName;}
-		public SelectorComponent(@Nonnull Object selector, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
+		public SelectorComponent(Object selector){this.selector = selector; this.useDisplayNameInToPlaintext = true;}
+		public SelectorComponent(UUID uuid){this.selector = uuid; this.useDisplayNameInToPlaintext = true;}
+		public SelectorComponent(Object selector, boolean useDisplayName){this.selector = selector; useDisplayNameInToPlaintext = useDisplayName;}
+		public SelectorComponent(Object selector, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
 			this.selector = selector; this.useDisplayNameInToPlaintext = true;
 		}
-//		public SelectorComponent(@Nonnull SelectorType type, @Nonnull SelectorArgument...arguments){this.selector = new Selector(type, arguments);}
+//		public SelectorComponent(SelectorType type, SelectorArgument...arguments){this.selector = new Selector(type, arguments);}
 		//tellraw @a {"selector":"@a"}
 
 		@Override public String toPlainText(){
@@ -590,8 +589,8 @@ public class TellrawUtils{
 	}
 	public final static class KeybindComponent extends Component{
 		final Keybind keybind;
-		public KeybindComponent(@Nonnull Keybind keybind){this.keybind = keybind;}
-		public KeybindComponent(@Nonnull Keybind keybind, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
+		public KeybindComponent(Keybind keybind){this.keybind = keybind;}
+		public KeybindComponent(Keybind keybind, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
 			this.keybind = keybind;
 		}
@@ -613,16 +612,16 @@ public class TellrawUtils{
 		@Override public Map<Format, Boolean> getFormats(){return components.isEmpty() ? null : components.get(0).getFormats();}
 		Component last = null;
 		List<Component> components;
-		public ListComponent(@Nonnull Component...components){
+		public ListComponent(Component...components){
 			this.components = new ArrayList<>();
 			for(Component comp : components) addComponent(comp);
 		}
 		public boolean isEmpty(){return components.isEmpty();}
 
-		private RawTextComponent copyWithNewText(@Nonnull RawTextComponent comp, @Nonnull String text){
+		private RawTextComponent copyWithNewText(RawTextComponent comp, String text){
 			return new RawTextComponent(text, comp.getInsertion(), comp.getClickAction(), comp.getHoverAction(), comp.getColor(), comp.getFormats());
 		}
-		public boolean addComponent(@Nonnull Component component){
+		public boolean addComponent(Component component){
 			// Currently the only component is just properties, so see if we can delete it and move the properties to the new component
 			if(components.size() == 1 && last.toPlainText().isEmpty() && last.isPropertiesSupersetOf(component)){
 				components.set(0, last=component.copyWithNewProperties(
@@ -656,7 +655,7 @@ public class TellrawUtils{
 			}
 			return components.add(last = component);
 		}
-		public boolean addComponent(@Nonnull String text){return addComponent(new RawTextComponent(text));}
+		public boolean addComponent(String text){return addComponent(new RawTextComponent(text));}
 
 		/**
 		 * Loops through all RawTextComponents in this instance and replaces all occurances of @textToReplace with the @replacement component
@@ -664,7 +663,7 @@ public class TellrawUtils{
 		 * @param replacement The component substituted in place of each instance of matching text
 		 * @return true if one or more replacements occurred
 		 */
-		public boolean replaceRawDisplayTextWithComponent(@Nonnull final String textToReplace, @Nonnull final Component replacement){
+		public boolean replaceRawDisplayTextWithComponent(final String textToReplace, final Component replacement){
 			if(textToReplace.isEmpty()) return false;
 			boolean updated = false;
 			for(int i=0; i<components.size(); ++i){
@@ -1074,7 +1073,7 @@ public class TellrawUtils{
 				return null;
 		}
 	}
-	public final static Component parseComponentFromString(@Nonnull String str){
+	public final static Component parseComponentFromString(String str){
 		Pair<Component, Integer> compAndIdx = parseNextComponentFromString(str, 0);
 		return compAndIdx == null ? null : compAndIdx.a;
 	}
