@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.bukkit.Bukkit;
@@ -24,7 +25,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
-import com.google.common.base.Predicate;
 
 public class SelectorUtils{
 	enum SelectorArgumentType{
@@ -282,7 +282,7 @@ public class SelectorUtils{
 						};
 						// Note: TECHNICALLY vanilla doesn't currently support matching non-players for scores argument.. (but this will likely be fixed)
 						// TODO: Once it does get fixed, make sure we handle "name==null" the same way as minecraft vanilla
-						entities.removeIf(e -> e.getCustomName() == null || !checkScores.apply(e.getCustomName()));
+						entities.removeIf(e -> e.getCustomName() == null || !checkScores.test(e.getCustomName()));
 						break;
 					}
 					case NBT:
