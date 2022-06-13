@@ -11,6 +11,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginDescriptionFile;
 
 public class CommandUtils {
 	//map<command name, String[]{permission, description}>
@@ -71,14 +72,31 @@ public class CommandUtils {
 		sender.sendMessage(helpPage.toString());
 	}
 
+	private static final String graySep = ChatColor.GOLD+", "+ChatColor.GRAY;
+	private static final String helpHeader = ChatColor.YELLOW+" ---- "+ChatColor.GOLD+"Help"+ChatColor.YELLOW+" ----------------\n";
 	public static void showCommandHelp(CommandSender sender, Command cmd){
-		sender.sendMessage(new StringBuilder(ChatColor.GOLD+"Help for command ")
-			.append(ChatColor.RED).append(cmd.getName()).append(ChatColor.GOLD).append(":\n").append(ChatColor.GOLD)
-
+		StringBuilder builder = new StringBuilder(helpHeader)
+			.append(ChatColor.GOLD).append("Command ").append(ChatColor.RED).append('/').append(cmd.getName()).append(ChatColor.GOLD).append(":\n")
 			.append("Description: ").append(ChatColor.WHITE).append(cmd.getDescription()).append('\n').append(ChatColor.GOLD)
-			.append("Usage: ").append(ChatColor.WHITE).append(cmd.getUsage()).append('\n').append(ChatColor.GOLD)
-			.append("Aliases: ").append(ChatColor.WHITE).append(cmd.getAliases()).append('\n').append(ChatColor.GOLD)
-			.append("Permission: ").append(ChatColor.WHITE).append(cmd.getPermission())
-			.toString());
+			.append("Usage: ").append(ChatColor.WHITE).append(cmd.getUsage()).append('\n').append(ChatColor.GOLD);
+		if(cmd.getAliases() != null && !cmd.getAliases().isEmpty())
+			builder.append("Aliases: ").append(ChatColor.WHITE).append(cmd.getAliases()).append('\n').append(ChatColor.GOLD);
+		builder.append("Permission: ").append(ChatColor.WHITE).append(cmd.getPermission());
+		sender.sendMessage(builder.toString());
+	}
+
+	public static void showPluginHelp(CommandSender sender, Plugin pl){
+		PluginDescriptionFile desc = pl.getDescription();
+		StringBuilder builder = new StringBuilder(helpHeader)
+			.append(ChatColor.GOLD).append("Plugin ").append(pl.isEnabled() ? ChatColor.GREEN : ChatColor.RED).append(pl.getName())
+			.append(ChatColor.GOLD).append(" version ").append(ChatColor.GRAY).append(desc.getVersion()).append(ChatColor.GOLD).append(":\n")
+			.append("Authors: ").append(ChatColor.GRAY).append(String.join(graySep, desc.getAuthors())).append(ChatColor.GOLD);
+		if(desc.getWebsite() != null && !desc.getWebsite().isEmpty())
+			builder.append("\nWebsite: ").append(ChatColor.AQUA).append(desc.getWebsite()).append(ChatColor.GOLD);
+		builder.append("\nDescription: ").append(ChatColor.WHITE).append(desc.getDescription()).append(ChatColor.GOLD);
+		if(desc.getCommands() != null && !desc.getCommands().isEmpty())
+			builder.append("\nCommands: ").append(ChatColor.GRAY).append('/')
+			.append(String.join(graySep+'/', desc.getCommands().keySet())).append(ChatColor.GOLD);
+		sender.sendMessage(builder.toString());
 	}
 }
