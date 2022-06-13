@@ -3,6 +3,7 @@ package net.evmodder.EvLib.extras;
 import java.util.AbstractList;
 import java.util.HashMap;
 import java.util.Set;
+import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefConstructor;
@@ -10,9 +11,10 @@ import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 
 public final class NBTTagUtils{// version = X1.0
 	//-------------------------------------------------- ReflectionUtils used by RefNBTTag: --------------------------------------------------//
-	static final RefClass classItemStack = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
 	static final RefClass classNBTTagCompound = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
 	static final RefClass classNBTBase = ReflectionUtils.getRefClass("{nms}.NBTBase", "{nm}.nbt.NBTBase"); 
+	//ItemStack
+	static final RefClass classItemStack = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
 	static final RefClass classCraftItemStack = ReflectionUtils.getRefClass("{cb}.inventory.CraftItemStack");
 	static final RefMethod methodAsNMSCopy = classCraftItemStack.getMethod("asNMSCopy", ItemStack.class);
 	static final RefMethod methodAsCraftMirror = classCraftItemStack.getMethod("asCraftMirror", classItemStack);
@@ -20,11 +22,20 @@ public final class NBTTagUtils{// version = X1.0
 //	static final RefMethod methodSetTag = classItemStack.getMethod("setTag", classNBTTagCompound);
 	static final RefMethod methodGetTag = classItemStack.findMethod(/*isStatic=*/false, classNBTTagCompound);
 	static final RefMethod methodSetTag = classItemStack.findMethod(/*isStatic=*/false, Void.TYPE, classNBTTagCompound);
+	//Entity
+	static final RefMethod methodGetHandle = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity").getMethod("getHandle");
+	static final RefClass classEntity = ReflectionUtils.getRefClass("{nms}.Entity", "{nm}.world.entity.Entity");
+//	static final RefMethod methodSaveToTag = classEntity.findMethodByName("save");
+//	static final RefMethod methodLoadFromTag = classEntity.findMethodByName("load");
+	static final RefMethod methodSaveToTag = classEntity.findMethod(/*isStatic=*/false, boolean.class, classNBTTagCompound);
+	static final RefMethod methodLoadFromTag = classEntity.findMethod(/*isStatic=*/false, Void.TYPE, classNBTTagCompound);
+	static final RefMethod methodGetBukkitEntity = classEntity.findMethodByName("getBukkitEntity");
+
 //	static final RefMethod methodTagRemove = classNBTTagCompound.getMethod("remove", String.class);
 //	static final RefMethod methodHasKey = classNBTTagCompound.getMethod("hasKey", String.class);
 	static final RefMethod methodTagRemove = classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class);
 	static RefMethod methodHasKey = null, methodGetAllKeys = null;
-	static {
+	static{
 		try{methodHasKey = classNBTTagCompound.getMethod("hasKey");}
 		catch(RuntimeException e){
 			try{methodGetAllKeys = classNBTTagCompound.findMethod(/*isStatic=*/false, Set.class);}
@@ -198,6 +209,23 @@ public final class NBTTagUtils{// version = X1.0
 	public static RefNBTTagCompound getTag(ItemStack item){
 		Object nmsItem = methodAsNMSCopy.of(null).call(item);
 		Object nmsTag = methodGetTag.of(nmsItem).call();
+		return nmsTag == null ? new RefNBTTagCompound() : new RefNBTTagCompound(nmsTag);
+	};
+
+	// For Entities ----------------------------------------------------
+	public static Entity setTag(Entity entity, RefNBTTagCompound tag){
+		Object nmsTag = (tag == null || methodTagIsEmpty.of(tag.nmsTag).call().equals(true)) ? null : tag.nmsTag;
+		Object nmsEntity = methodGetHandle.of(entity).call();
+		methodLoadFromTag.of(nmsEntity).call(nmsTag);
+		entity = (Entity)methodGetBukkitEntity.of(nmsEntity).call();
+		return entity;
+	}
+	public static RefNBTTagCompound getTag(Entity entity){
+		Object nmsEntity = methodGetHandle.of(entity).call();
+		Object nmsTag = classNBTTagCompound.getConstructor().create();
+//		NBTTagCompound tag = new NBTTagCompound();
+//		net.minecraft.world.entity.Entity ee = null; ee.save(tag);
+		methodSaveToTag.of(nmsEntity).call(nmsTag);
 		return nmsTag == null ? new RefNBTTagCompound() : new RefNBTTagCompound(nmsTag);
 	};
 }
