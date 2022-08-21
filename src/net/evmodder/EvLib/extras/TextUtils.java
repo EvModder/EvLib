@@ -322,10 +322,11 @@ public class TextUtils{
 	 * @param formattedTime an Ev-style formatted time string
 	 * @return a {@code long} representing the time interval in milliseconds.
 	 */
-	public static long parseTime(String formattedTime){
+	public static long parseTimeInMillis(String formattedTime, long defaultScale){
 		formattedTime = formattedTime.toLowerCase();
 		//formattedTime.matches("(?:y[1-9][0-9]*)?(?:ew[1-9][0-9]*)?(?:d[1-9][0-9]*)?(?:h[1-9][0-9]*)?(?:m[1-9][0-9]*)?(?:s[1-9][0-9]*)?");
 		long time = 0;
+		// Note: 'units' is sorted largest -> smallest
 		for(int i=0; i<units.length && !formattedTime.isEmpty(); ++i){
 			int idx = formattedTime.indexOf(units[i]);
 			if(idx != -1){
@@ -333,8 +334,11 @@ public class TextUtils{
 				formattedTime = formattedTime.substring(idx+1);
 			}
 		}
+		// If there is a leftover number (with no unit specified), assume Milliseconds (if defaultScale is 1)
+		if(!formattedTime.isEmpty()) time += Long.parseLong(formattedTime)*defaultScale;
 		return time;
 	}
+	public static long parseTimeInMillis(String formattedTime){return parseTimeInMillis(formattedTime, /*defaultScale=*/1);}
 
 
 	public static String capitalizeAndSpacify(String str, char toSpace){

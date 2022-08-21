@@ -1036,11 +1036,11 @@ public class TellrawUtils{
 						for(Keybind k : Keybind.values()) if(k.toString().equals(keybindStr)) keybind = k;
 						i = textAndIdx.b;
 					}
+					// TODO: else if(str.startsWith("nbt\"", i)){
 					else{
 						Bukkit.getLogger().warning("TellrawUtils ERROR: unknown comp-key at index "+i+" of : "+str);
 						return null;
 					}
-					// TODO: else if(str.startsWith("nbt\"", i)){
 					if(newType != null){
 						if(type != null) Bukkit.getLogger().warning("TellrawUtils MULTIPLE-TYPES parsing component at index "+i+" from string: "+str);
 						type = newType;
