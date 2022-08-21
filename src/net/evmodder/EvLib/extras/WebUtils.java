@@ -13,14 +13,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.Scanner;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -28,8 +29,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import org.bukkit.entity.EntityType;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.EvLib.FileIO;
+import net.evmodder.EvLib.extras.TellrawUtils.Component;
 
 public class WebUtils {
 	private final static String authserver = "https://authserver.mojang.com";
@@ -126,6 +129,26 @@ public class WebUtils {
 
 		return getStringBetween(output, authBeg, authEnd);
 	}
+	static String authenticateMicrosoft(String email, String password) throws UnsupportedEncodingException{
+		final String genClientToken = UUID.randomUUID().toString();
+		final String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8.toString());
+		final String encodedPassw = URLEncoder.encode(password, StandardCharsets.UTF_8.toString());
+
+		// Setting up json POST request
+		final String payload =
+				"{\"login\": \""+encodedEmail+"\",\"loginfmt\": \""+encodedEmail
+				+"\",\"type\": 11,\"LoginOptions\": 3,\"ps\": 2,\"passwd\": \""+encodedPassw+"\","
+				+"\"PPSX\": \"Pass\",\"PPFT\": \""+genClientToken+"\"}";
+
+		String output = postReadURL(payload, "https://login.live.com");
+		System.out.println("auth server response:\n"+output);
+
+		// Setting up patterns
+		String authBeg = "\"accessToken\":\"";
+		String authEnd = "\",\"";
+
+		return getStringBetween(output, authBeg, authEnd);
+	}
 
 	static String addDashesForUUID(String uuidStr){
 		return uuidStr.substring(0, 8)+"-"+uuidStr.substring(8, 12)+"-"+uuidStr.substring(12, 16)
@@ -135,8 +158,8 @@ public class WebUtils {
 	//Names are [3,16] characters from [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]
 	static HashMap<String, GameProfile> playerExists = new HashMap<>();
 	public static GameProfile getGameProfile(final String player){
-		if(playerExists.containsKey(player)) return playerExists.get(player);
-		GameProfile profile = null;
+		GameProfile profile = playerExists.get(player);
+		if(profile != null) return profile;
 		try{
 			String uuidStr = player;
 			if(uuidStr.matches("^[a-f0-9]{32}$")) uuidStr = addDashesForUUID(player);
@@ -266,7 +289,37 @@ public class WebUtils {
 		return newImg;
 	}
 
-	static TreeMap<String, String> makeUpsideDownCopies(String[] heads, String outfolder, String uuid, String token){
+	static String getTextureVal(String uuidNoDashes){
+		try{
+			HttpURLConnection conn = (HttpURLConnection)new URL(
+					"https://sessionserver.mojang.com/session/minecraft/profile/"+uuidNoDashes).openConnection();
+			conn.setDoOutput(true);
+			BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			StringBuilder builder = new StringBuilder();
+			String line;
+			while((line=in.readLine()) != null) builder.append(line);
+			String resp = builder.toString().replaceAll(" ", "");
+			//System.out.println("response: "+resp);
+			String textureBeg = "\"name\":\"textures\",\"value\":\"", textureEnd = "\"}]}";
+			String newVal = resp.substring(resp.indexOf(textureBeg)+textureBeg.length());
+			newVal = newVal.substring(0, newVal.indexOf(textureEnd));
+			//System.out.println("new val: "+newVal);
+			String newJson = new String(Base64.getDecoder().decode(newVal));
+			String textureVal = newJson.substring(newJson.lastIndexOf("texture/")+8);
+			textureVal = textureVal.substring(0, textureVal.indexOf('"')).trim();
+			return textureVal;
+		}
+		catch(IOException e){e.printStackTrace();}
+		return null;
+	}
+	static String getBase64FromTextureVal(String textureVal){
+		final String shortJson = "{\"textures\":{\"SKIN\":{\"url\":\"http://textures.minecraft.net/texture/"+textureVal+"\"}}}";
+		//System.out.println("Short Json: " + shortJson);
+		String newBase64Val = Base64.getEncoder().encodeToString(shortJson.getBytes());
+		return newBase64Val;
+	}
+	// returns Map<HEAD|NAME, base64Value>
+	static TreeMap<String, String> makeUpsideDownCopies(String[] heads, String outfolder, String uuidNoDashes, String token){
 		TreeMap<String, String> newHeadsTexutureVal = new TreeMap<>(); // Map from HEAD|NAME -> mojangTextureVal
 		TreeMap<String, String> newHeadsBase64Val = new TreeMap<>(); // Map from HEAD|NAME -> base64Val
 		for(String line : heads){
@@ -294,7 +347,7 @@ public class WebUtils {
 
 					ImageIO.write(image, "png", outfile);
 					System.out.println("2. Saved upside down img: "+url+" ("+name+")");
-//					if(null == null) continue;// Uncomment to generate grumm image file only
+					if(token == null) continue;// Generate grumm image file only (no URL for texture code)
 
 					//===========================================================================================
 					try{Thread.sleep(8000);}catch(InterruptedException e1){e1.printStackTrace();}//8s
@@ -335,35 +388,11 @@ public class WebUtils {
 					try{Thread.sleep(25000);}catch(InterruptedException e1){e1.printStackTrace();}//25s
 					//===========================================================================================
 					System.out.println("4. Getting new texture url");
-					conn = (HttpURLConnection)new URL(
-							"https://sessionserver.mojang.com/session/minecraft/profile/"+uuid).openConnection();
-					conn.setDoOutput(true);
-					BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-					StringBuilder builder = new StringBuilder();
-					while((line=in.readLine()) != null) builder.append(line);
-					String resp = builder.toString().replaceAll(" ", "");
-					//System.out.println("response: "+resp);
-					String textureBeg = "\"name\":\"textures\",\"value\":\"";
-					String textureEnd = "\"}]}";
-					String newVal = resp.substring(resp.indexOf(textureBeg)+textureBeg.length());
-					newVal = newVal.substring(0, newVal.indexOf(textureEnd));
-					//System.out.println("new val: "+newVal);
-
-					String newJson = new String(Base64.getDecoder().decode(newVal));
-					//System.out.println("New Json: " + newJson);
-					//===========================================================================================
-
-					String textureVal = newJson.substring(newJson.lastIndexOf("texture/")+8);
-					textureVal = textureVal.substring(0, textureVal.indexOf('"')).trim();
-					String shortJson = "{\"textures\":{\"SKIN\":{\"url\":"
-							+ "\"http://textures.minecraft.net/texture/"
-							+ textureVal + "\"}}}";
-					//System.out.println("Short Json: " + shortJson);
-					String newBase64Val = Base64.getEncoder().encodeToString(shortJson.getBytes());
+					final String textureVal = getTextureVal(uuidNoDashes);
+					final String newBase64Val = getBase64FromTextureVal(textureVal);
 					System.out.println("5. New Base64 val: " + newBase64Val);
 					newHeadsTexutureVal.put(name+"|GRUMM", textureVal);
 					newHeadsBase64Val.put(name+"|GRUMM", newBase64Val);
-					//newHeads.put(name, val);
 					try{Thread.sleep(5000);}catch(InterruptedException e1){e1.printStackTrace();}//5s
 				}
 				catch(IOException e){e.printStackTrace();}
@@ -373,12 +402,16 @@ public class WebUtils {
 		for(String e : newHeadsTexutureVal.keySet()){
 			System.out.println(e + ": " + newHeadsTexutureVal.get(e));
 		}
+		System.out.println("Results 2: ");
+		for(String e : newHeadsBase64Val.keySet()){
+			System.out.println(e + ": " + newHeadsBase64Val.get(e));
+		}
 		return newHeadsBase64Val;
 	}
 
 	static void runGrumm(){
 		String[] targetHeads = new String[]{
-//				"ARMOR_STAND", "BOAT", "LEASH_HITCH",
+//				"BOAT", "LEASH_HITCH",
 		};
 		String[] headsData = FileIO.loadFile("head-textures.txt", "").split("\n");
 		String[] headsToFlip = new String[targetHeads.length];
@@ -393,26 +426,23 @@ public class WebUtils {
 		}
 
 		System.out.print("runGrumm() auth for "+targetHeads.length+" heads...\n"); 
-		Scanner scanner = new Scanner(System.in); 
+		/*Scanner scanner = new Scanner(System.in); 
 		System.out.print("Enter account email: "); String email = scanner.nextLine();//nl@nl.com
 		System.out.print("Enter account passw: "); String passw = scanner.nextLine();//y
 		System.out.print("Enter account uuid: "); String uuid = scanner.nextLine();//0e314b6029c74e35bef33c652c8fb467
 		scanner.close();
 		String token = authenticateMojang(email, passw);
-		System.out.println("token = "+token);
+		System.out.println("token = "+token);*/
+		String uuid = "0e314b6029c74e35bef33c652c8fb467";
+		String token = "eyJhbGciOiJIUzI1NiJ9.eyJ4dWlkIjoiMjUzNTQ2NjM1MzY2NjY2NiIsImFnZyI6IkFkdWx0Iiwic3ViIjoiMWUzYTgyNDYtNTNmMC00ODBmLWIwYjMtMTFiNGU5ZDVkNTY0IiwibmJmIjoxNjU1ODYwNjM5LCJhdXRoIjoiWEJPWCIsInJvbGVzIjpbXSwiaXNzIjoiYXV0aGVudGljYXRpb24iLCJleHAiOjE2NTU5NDcwMzksImlhdCI6MTY1NTg2MDYzOSwicGxhdGZvcm0iOiJVTktOT1dOIiwieXVpZCI6IjY1ODY5ZWMwOGMxZGM1ZDM2YzVjMWMzY2M5YzlmODkwIn0.-NoxeCfsTWF2cI6Wc7rVIJjlYrYsIVMOB30WIipyJkU";
 
 		System.out.println(String.join("\n", headsToFlip));
 		System.out.println("Beginning conversion...");
 		System.out.println("Approximate duration in minutes: "+(40F*headsToFlip.length)/60F);// 40s/head
-		TreeMap<String, String> newHeads = makeUpsideDownCopies(headsToFlip, "tmp_textures", uuid, token);
-
-		System.out.println("Results 2: ");
-		for(String e : newHeads.keySet()){
-			System.out.println(e + ": " + newHeads.get(e));
-		}
+		makeUpsideDownCopies(headsToFlip, "tmp_textures", uuid, token);
 	}
 
-	static void checkMissingTextures(){
+	static void checkMissingTexturesDropratesAndSpawnModifiers(){
 		TreeSet<String> expectedTxr = new TreeSet<>();
 		TreeSet<String> foundTxr = new TreeSet<>();
 		TreeSet<String> extraTxr = new TreeSet<>();
@@ -422,6 +452,7 @@ public class WebUtils {
 		for(EntityType type : EntityType.values()){
 			if(type.isAlive()){expectedTxr.add(type.name()); missingDrpC.add(type.name());}
 		}
+		expectedTxr.remove(EntityType.PLAYER.name());
 		for(EntityType type : Arrays.asList(EntityType.ARMOR_STAND, EntityType.LEASH_HITCH, EntityType.MINECART, EntityType.MINECART_CHEST,
 				EntityType.MINECART_COMMAND, EntityType.MINECART_FURNACE, EntityType.MINECART_HOPPER, EntityType.MINECART_MOB_SPAWNER,
 				EntityType.MINECART_TNT, EntityType.UNKNOWN)){
@@ -455,6 +486,17 @@ public class WebUtils {
 		}
 		System.out.println("Missing drop rates for: "+missingDrpC);
 		System.out.println("Extra drop rates for: "+extraDrpC);
+
+		TreeSet<String> alrInConf = new TreeSet<>();
+		for(String spawnMod : FileIO.loadFile("spawn-cause-modifiers.txt", "").split("\n")){
+			final int i = spawnMod.indexOf(':');
+			if(i != -1) alrInConf.add(spawnMod.substring(0, i));
+		}
+		TreeSet<String> missingFromConf = new TreeSet<>();
+		for(SpawnReason reason : SpawnReason.values()){
+			if(!alrInConf.contains(reason.name())) missingFromConf.add(reason.name());
+		}
+		System.out.println("Missing SpawnReason modifiers for: ["+String.join(", ", missingFromConf)+"]");
 	}
 	static void checkMissingGrummTextures(){
 		TreeSet<String> regularTxtrs = new TreeSet<>();
@@ -591,20 +633,25 @@ public class WebUtils {
 			String name = line.substring(0, i);
 			String after = line.substring(i + 1);
 			builder.append(name).append(':');
-			for(int j = 0; j < 47 - name.length(); ++j)
-				builder.append(' ');
+			for(int j = 0; j < 47 - name.length(); ++j) builder.append(' ');
 			builder.append(after).append('\n');
 		}
 		System.out.print(builder.toString());
 	}
 
 	public static void main(String... args){
+		System.out.println("a");
+		Component c = TellrawUtils.parseComponentFromString(
+				"{\"italic\":false,\"extra\":[{\"italic\":false,\"extra\":[{\"translate\":\"item.minecraft.netherite_sword\"}],\"text\":\"\"}],\"text\":\"\"}");
+		System.out.println("b");
+		System.out.println(c.toString());
+		System.out.println("c");
 		//com.sun.org.apache.xml.internal.security.Init.init();
 		FileIO.DIR = "./";
 //		reformatTexturesFile();
 //		printUUIDsForTextureKeys();
 //		printUUIDsForPlayerNames();
-		checkMissingTextures();
+		checkMissingTexturesDropratesAndSpawnModifiers();
 		checkMissingGrummTextures();
 //		checkAbnormalHeadTextures();
 //		runGrumm();
