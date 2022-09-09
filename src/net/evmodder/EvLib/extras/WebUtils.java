@@ -31,6 +31,7 @@ import javax.imageio.ImageIO;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 
@@ -157,42 +158,53 @@ public class WebUtils {
 
 	//Names are [3,16] characters from [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]
 	static HashMap<String, GameProfile> playerExists = new HashMap<>();
-	public static GameProfile getGameProfile(final String player){
-		GameProfile profile = playerExists.get(player);
-		if(profile != null) return profile;
-		try{
-			String uuidStr = player;
-			if(uuidStr.matches("^[a-f0-9]{32}$")) uuidStr = addDashesForUUID(player);
-			UUID uuid = UUID.fromString(uuidStr);
-			String data = getReadURL("https://sessionserver.mojang.com/session/minecraft/profile/"+uuidStr);
+	public static GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin){
+		if(nameOrUUID.matches("^[a-f0-9]{32}$")) nameOrUUID = addDashesForUUID(nameOrUUID);
+		nameOrUUID = nameOrUUID.toLowerCase();
+		GameProfile profile = playerExists.get(nameOrUUID);
+		if(profile != null){
+			if(fetchSkin && !profile.getProperties().containsKey("textures")) nameOrUUID = profile.getId().toString();
+			else return profile;
+		}
+		try{//Lookup by UUID
+			final UUID uuid = UUID.fromString(nameOrUUID);
+			String data = getReadURL("https://sessionserver.mojang.com/session/minecraft/profile/"+nameOrUUID);
 			if(data != null){
-				data = data.replace(" ", "");
-				if(data.contains("\"name\":\"")){
-					int nameStart = data.indexOf("\"name\":\"")+8;
-					int nameEnd = data.indexOf("\"", nameStart+1);
-					String name = data.substring(nameStart, nameEnd);
-					profile = new GameProfile(uuid, name);
+				data = data.replaceAll("\\s+", "");
+				final int nameStart = data.indexOf("\"name\":\"")+8;
+				final int nameEnd = data.indexOf("\"", nameStart+1);
+				final String name = data.substring(nameStart, nameEnd);
+				profile = new GameProfile(uuid, name);
+				if(fetchSkin){
+					final int codeStart = data.indexOf("{\"name\":\"textures\",\"value\":\"")+28;
+					final int codeEnd = data.indexOf("\"}", codeStart+1);
+					final String base64 = data.substring(codeStart, codeEnd);
+					profile.getProperties().put("textures", new Property("textures", base64));
 				}
+				playerExists.put(name.toLowerCase(), profile);
 			}
 		}
-		catch(IllegalArgumentException e){
+		catch(IllegalArgumentException e){// Lookup by Name
 			//Sample data: {"id":"34471e8dd0c547b9b8e1b5b9472affa4","name":"EvDoc"}
-			String data = getReadURL("https://api.mojang.com/users/profiles/minecraft/"+player);
+			String data = getReadURL("https://api.mojang.com/users/profiles/minecraft/"+nameOrUUID);
 			if(data != null){
 				data = data.replace(" ", "");
-				if(data.contains("\"id\":\"")){
-					int idStart = data.indexOf("\"id\":\"")+6;
-					int idEnd = data.indexOf("\"", idStart+1);
+//				if(data.contains("\"id\":\"")){
+					final int idStart = data.indexOf("\"id\":\"")+6;
+					final int idEnd = data.indexOf("\"", idStart+1);
 					String uuidStr = data.substring(idStart, idEnd);
 					if(uuidStr.matches("^[a-f0-9]{32}$")) uuidStr = addDashesForUUID(uuidStr);
-					int nameStart = data.indexOf("\"name\":\"")+8;
-					int nameEnd = data.indexOf("\"", nameStart+1);
-					String name = data.substring(nameStart, nameEnd);
-					profile = new GameProfile(UUID.fromString(uuidStr), name);
-				}
+					final UUID uuid = UUID.fromString(uuidStr);// Important to validate UUID before recursive call
+					if(fetchSkin) return getGameProfile(uuidStr, fetchSkin);
+					final int nameStart = data.indexOf("\"name\":\"")+8;
+					final int nameEnd = data.indexOf("\"", nameStart+1);
+					final String name = data.substring(nameStart, nameEnd);
+					profile = new GameProfile(uuid, name);
+					playerExists.put(uuidStr.toLowerCase(), profile);
+//				}
 			}
 		}
-		playerExists.put(player, profile);
+		playerExists.put(nameOrUUID, profile);
 		return profile;
 	}
 
@@ -615,7 +627,7 @@ public class WebUtils {
 		TreeSet<String> badNames = new TreeSet<>();
 		for(String line : nameAndStuff){
 			String name = line.split(",")[0];
-			GameProfile profile = getGameProfile(name);
+			GameProfile profile = getGameProfile(name, /*fetchSkin=*/false);
 			if(profile != null && profile.getId() != null) System.out.println(profile.getId()+","+line);
 			else badNames.add(name);
 		}
