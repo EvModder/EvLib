@@ -104,11 +104,11 @@ public class HeadUtils {
 //		return item;
 //	}
 
-	public static ItemStack getPlayerHead(GameProfile profile){
+	public static ItemStack makeCustomHead(GameProfile profile, boolean setOwner){
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
 		setGameProfile(meta, profile);
-		if(profile.getId() != null){
+		if(setOwner && profile.getId() != null){
 			OfflinePlayer p = Bukkit.getOfflinePlayer(profile.getId());
 			if(p != null){
 				meta.setOwningPlayer(p);
@@ -118,14 +118,15 @@ public class HeadUtils {
 		head.setItemMeta(meta);
 		return head;
 	}
-	public static ItemStack getPlayerHead(OfflinePlayer player){
-		GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
-		ItemStack head = getPlayerHead(profile);
-		SkullMeta meta = (SkullMeta) head.getItemMeta();
-		meta.setOwningPlayer(player);
-		head.setItemMeta(meta);
-		return head;
-	}
+	// unused
+//	public static ItemStack makePlayerHead(OfflinePlayer player){
+//		GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
+//		ItemStack head = makeCustomHead(profile);
+//		SkullMeta meta = (SkullMeta) head.getItemMeta();
+//		meta.setOwningPlayer(player);
+//		head.setItemMeta(meta);
+//		return head;
+//	}
 
 	// TODO: Move to TypeUtils perhaps?
 	public static boolean isHead(Material type){
