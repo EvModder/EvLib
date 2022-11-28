@@ -179,12 +179,15 @@ public class ReflectionUtils{// version = X1.0
 			List<Method> methods = new ArrayList<>();
 			Collections.addAll(methods, clazz.getMethods());
 			Collections.addAll(methods, clazz.getDeclaredMethods());
+			Method deprecatedM = null;
 			for(Method m : methods){
 				if(Modifier.isStatic(m.getModifiers()) != isStatic) continue;
 				if(!m.getReturnType().equals(returnTypeClass)) continue;
 				if(!Arrays.equals(classes, m.getParameterTypes())) continue;
-				return new RefMethod(m);
+				if(m.getAnnotation(Deprecated.class) == null) return new RefMethod(m);
+				deprecatedM = m;
 			}
+			if(deprecatedM != null) return new RefMethod(deprecatedM);
 			throw new RuntimeException("no such method");
 		}
 
@@ -265,12 +268,13 @@ public class ReflectionUtils{// version = X1.0
 
 		/**
 		 * find field by type
-		 * @param type field type
+		 * @param type field type (Class<> or RefClass)
 		 * @return RefField
 		 * @throws RuntimeException if field not found
 		 */
-		public RefField findField(Class<?> type){
+		public RefField findField(Object type){
 			if(type==null) type = void.class;
+			if(type instanceof RefClass) type = ((RefClass)type).clazz;
 			for(Field f: clazz.getDeclaredFields()){
 				if(type.equals(f.getType())) return new RefField(f);
 			}
@@ -282,11 +286,26 @@ public class ReflectionUtils{// version = X1.0
 
 		/**
 		 * find field by type
-		 * @param type field type
+		 * @param type field type (Class<> or RefClass)
+		 * @param isStatic restrict matching on static modifier
 		 * @return RefField
 		 * @throws RuntimeException if field not found
 		 */
-		public RefField findField(RefClass type){ return findField(type.clazz); }
+		public RefField findField(Object type, boolean isStatic, boolean isPublic){
+			if(type==null) type = void.class;
+			if(type instanceof RefClass) type = ((RefClass)type).clazz;
+			for(Field f: clazz.getDeclaredFields()){
+				if(Modifier.isStatic(f.getModifiers()) != isStatic) continue;
+				if(Modifier.isPublic(f.getModifiers()) != isPublic) continue;
+				if(type.equals(f.getType())) return new RefField(f);
+			}
+			for(Field f: clazz.getFields()){
+				if(Modifier.isStatic(f.getModifiers()) != isStatic) continue;
+				if(Modifier.isPublic(f.getModifiers()) != isPublic) continue;
+				if(type.equals(f.getType())) return new RefField(f);
+			}
+			throw new RuntimeException("no such field");
+		}
 	}
 
 	/**
@@ -324,7 +343,7 @@ public class ReflectionUtils{// version = X1.0
 		 * @return return value
 		 */
 		public Object call(Object... params){
-			try{return method.invoke(null,params);}
+			try{return method.invoke(null, params);}
 			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException e){
 				throw new RuntimeException(e);
 			}
@@ -341,7 +360,7 @@ public class ReflectionUtils{// version = X1.0
 			 * @throws RuntimeException if something went wrong
 			 */
 			public Object call(Object... params){
-				try{return method.invoke(e,params);}
+				try{return method.invoke(e, params);}
 				catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException e){
 					throw new RuntimeException(e);
 				}
