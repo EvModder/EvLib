@@ -3,6 +3,7 @@ package net.evmodder.EvLib.extras;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -275,9 +276,10 @@ public class TellrawUtils{
 		//tellraw @a {"translate":"multiplayer.player.joined","with":["EvDoc", "unused"]} -> en_us.json: "%s joined the game"
 
 		private static Constructor<?> chatMessageConstructor, chatMessageConstructorWith;
-		private static Method chatMessageGetString;
+		private static Method chatMessageGetString, makeIChatMutableComponent = null;
 		private static boolean callNMS = true;
 		private static boolean initChatMessageRefMethod(){
+			boolean post_1_19 = false;
 			Class<?> clazz;
 			try{clazz = Class.forName("net.minecraft.network.chat.ChatMessage");}
 			catch(ClassNotFoundException e){
@@ -288,23 +290,44 @@ public class TellrawUtils{
 				}
 				catch(NoSuchMethodException | SecurityException | ClassNotFoundException | IllegalAccessException
 						| IllegalArgumentException | InvocationTargetException e2){
-					return false;
+					try{
+						clazz = Class.forName("net.minecraft.network.chat.contents.TranslatableContents");
+						post_1_19 = true;
+					}
+					catch(ClassNotFoundException e1){
+						return false;
+					}
 				}
 			}
 			try{
 				chatMessageConstructor = clazz.getConstructor(String.class);
 				chatMessageConstructorWith = clazz.getConstructor(String.class, Object[].class);
-				chatMessageGetString = clazz.getMethod("getString");
+				if(post_1_19){
+					chatMessageGetString = Class.forName("net.minecraft.network.chat.IChatBaseComponent").getMethod("getString");
+					Class<?> clazzComponentContents = Class.forName("net.minecraft.network.chat.ComponentContents");
+					Class<?> clazzIChatMutableComponent = Class.forName("net.minecraft.network.chat.IChatMutableComponent");
+					Class<?>[] params = new Class[]{clazzComponentContents};
+					for(Method m : clazzIChatMutableComponent.getDeclaredMethods()){//findMethod
+						if(!Modifier.isStatic(m.getModifiers())) continue;
+						if(!m.getReturnType().equals(clazzIChatMutableComponent)) continue;
+						if(!Arrays.equals(params, m.getParameterTypes())) continue;
+						makeIChatMutableComponent = m;
+						break;
+					}
+				}
+				else chatMessageGetString = clazz.getMethod("getString");
 			}
-			catch(NoSuchMethodException | SecurityException e){return false;}
+			catch(NoSuchMethodException | SecurityException | ClassNotFoundException e){return false;}
 			return true;
 		}
 		@Override public String toPlainText(){
 			if(callNMS){
 				if(chatMessageGetString != null || (callNMS=initChatMessageRefMethod())) try{
-					return (String)chatMessageGetString.invoke(with == null
+					Object translateComp = with == null
 							? chatMessageConstructor.newInstance(jsonKey)
-							: chatMessageConstructorWith.newInstance(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray()));
+							: chatMessageConstructorWith.newInstance(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
+					if(makeIChatMutableComponent != null) translateComp = makeIChatMutableComponent.invoke(null, translateComp);
+					return (String)(chatMessageGetString.invoke(translateComp));
 				}
 				catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException e){}
 			}
