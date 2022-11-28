@@ -3,11 +3,9 @@ package net.evmodder.EvLib.extras;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Nameable;
 import org.bukkit.OfflinePlayer;
@@ -205,27 +203,6 @@ public class HeadUtils {
 			default:
 				return false;
 		}
-	}
-
-	@Deprecated
-	public static ItemStack makeSkull(EntityType entity){
-		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-		SkullMeta meta = (SkullMeta) head.getItemMeta();
-
-		String MHFName = HeadUtils.getMHFHeadName(entity.name());
-		if(MHF_Lookup.containsKey(MHFName.toUpperCase())){
-			meta.setOwningPlayer(org.bukkit.Bukkit.getOfflinePlayer(MHFName));
-			meta.setDisplayName(ChatColor.YELLOW+MHFName);
-		}
-		else{
-			GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(entity.name().getBytes()), entity.name()/*TODO: use null*/);
-			HeadUtils.setGameProfile(meta, profile);
-			String headTypeName = getDroppedHeadType(entity).toString();
-			headTypeName = headTypeName.charAt(0) + headTypeName.substring(1).toLowerCase();
-			meta.setDisplayName(ChatColor.YELLOW+TextUtils.getNormalizedName(entity)+" "+headTypeName);
-		}
-		head.setItemMeta(meta);
-		return head;
 	}
 
 	public static boolean hasGrummName(Nameable e){
