@@ -32,6 +32,7 @@ public class ActionBarUtils{
 	private static RefConstructor makeLiteralContents = null;
 	private static RefMethod makeIChatMutableComponent = null;
 	private static RefConstructor makeClientboundSystemChatPacket = null;
+	private static boolean useBool = false;
 	static{
 		try{
 			RefClass classChatComponentText = ReflectionUtils.getRefClass("{nms}.ChatComponentText", "{nm}.network.chat.ChatComponentText");
@@ -54,7 +55,11 @@ public class ActionBarUtils{
 			RefClass classClientboundSystemChatPacket = ReflectionUtils.getRefClass("{nm}.network.protocol.game.ClientboundSystemChatPacket");
 			makeLiteralContents = classLiteralContents.getConstructor(String.class);
 			makeIChatMutableComponent = classIChatMutableComponent.findMethod(/*isStatic=*/true, classIChatMutableComponent, classComponentContents);
-			makeClientboundSystemChatPacket = classClientboundSystemChatPacket.getConstructor(classIChatBaseComponent, int.class);
+			try{makeClientboundSystemChatPacket = classClientboundSystemChatPacket.getConstructor(classIChatBaseComponent, int.class);}//1.19.0-1.19.1
+			catch(RuntimeException e){
+				makeClientboundSystemChatPacket = classClientboundSystemChatPacket.getConstructor(classIChatBaseComponent, boolean.class);
+				useBool = true;
+			}
 		}
 	}
 
@@ -66,7 +71,7 @@ public class ActionBarUtils{
 		}
 		else{
 			Object chatComp = makeIChatMutableComponent.call(makeLiteralContents.create(message));
-			packet = makeClientboundSystemChatPacket.create(chatComp, /*typeId=*/2); // 2=GAME_INFO, I think
+			packet = makeClientboundSystemChatPacket.create(chatComp, useBool ? true : /*typeId=*/2); // 2=GAME_INFO, I think
 		}
 		for(Player p : ppl){
 			Object entityPlayer = methodGetHandle.of(p).call();

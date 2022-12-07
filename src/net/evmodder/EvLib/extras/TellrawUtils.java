@@ -282,21 +282,20 @@ public class TellrawUtils{
 			boolean post_1_19 = false;
 			Class<?> clazz;
 			try{clazz = Class.forName("net.minecraft.network.chat.ChatMessage");}
-			catch(ClassNotFoundException e){
+			catch(ClassNotFoundException e0){
 				try{
 					Server server = Bukkit.getServer();
 					String nmsVersion = server.getClass().getDeclaredMethod("getHandle").invoke(server).getClass().getName().split("\\.")[3];
 					clazz = Class.forName("net.minecraft.server."+nmsVersion+".ChatMessage");
 				}
+				catch(NullPointerException e3){return false;} // Unable to find nmsVersion -- indicates this is not running on a Bukkit server
 				catch(NoSuchMethodException | SecurityException | ClassNotFoundException | IllegalAccessException
-						| IllegalArgumentException | InvocationTargetException e2){
+						| IllegalArgumentException | InvocationTargetException e1){
 					try{
 						clazz = Class.forName("net.minecraft.network.chat.contents.TranslatableContents");
 						post_1_19 = true;
 					}
-					catch(ClassNotFoundException e1){
-						return false;
-					}
+					catch(ClassNotFoundException e2){return false;}
 				}
 			}
 			try{
