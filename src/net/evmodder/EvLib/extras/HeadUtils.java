@@ -143,6 +143,7 @@ public class HeadUtils {
 			case WITHER_SKELETON_WALL_SKULL:
 				return true;
 			default:
+				if(type.name().equals("PIGLIN_HEAD") || type.name().equals("PIGLIN_WALL_HEAD")) return true;
 				return false;
 		}
 	}
@@ -172,6 +173,7 @@ public class HeadUtils {
 			case WITHER_SKELETON_WALL_SKULL:
 				return EntityType.WITHER_SKELETON;
 			default:
+				if(type.name().equals("PIGLIN_HEAD") || type.name().equals("PIGLIN_WALL_HEAD")) return EntityType.valueOf("PIGLIN");
 				throw new IllegalArgumentException("Unkown head type: "+type);
 		}
 	}
@@ -201,7 +203,7 @@ public class HeadUtils {
 			//case ZOMBIE_VILLAGER: // Surprisingly not, actually.
 				return true;
 			default:
-				return false;
+				return eType.name().equals("PIGLIN");
 		}
 	}
 
