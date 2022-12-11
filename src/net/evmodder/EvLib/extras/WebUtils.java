@@ -33,7 +33,6 @@ import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.evmodder.EvLib.FileIO;
-import net.evmodder.EvLib.extras.TellrawUtils.Component;
 
 public class WebUtils {
 	private final static String authserver = "https://authserver.mojang.com";
@@ -652,12 +651,12 @@ public class WebUtils {
 	}
 
 	public static void main(String... args){
-		System.out.println("a");
-		Component c = TellrawUtils.parseComponentFromString(
-				"{\"italic\":false,\"extra\":[{\"italic\":false,\"extra\":[{\"translate\":\"item.minecraft.netherite_sword\"}],\"text\":\"\"}],\"text\":\"\"}");
-		System.out.println("b");
-		System.out.println(c.toString());
-		System.out.println("c");
+//		System.out.println("a");
+//		Component c = TellrawUtils.parseComponentFromString(
+//				"{\"italic\":false,\"extra\":[{\"italic\":false,\"extra\":[{\"translate\":\"item.minecraft.netherite_sword\"}],\"text\":\"\"}],\"text\":\"\"}");
+//		System.out.println("b");
+//		System.out.println(c.toString());
+//		System.out.println("c");
 		//com.sun.org.apache.xml.internal.security.Init.init();
 		FileIO.DIR = "./";
 //		reformatTexturesFile();
