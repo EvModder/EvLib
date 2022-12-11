@@ -462,7 +462,14 @@ public class Updater {
 	 * @return true if Updater should consider the remote version an update, false if not.
 	 */
 	public boolean shouldUpdate(String localVersion, String remoteVersion){
-		return localVersion.compareTo(remoteVersion) < 0; // TODO: <eg: 1.11 vs 1.9> returns incorrect result
+		String[] thisParts = localVersion.replaceAll("[^\\d.]", "").split("\\.");
+		String[] thatParts = remoteVersion.replaceAll("[^\\d.]", "").split("\\.");
+		int minLen = Math.min(thisParts.length,  thatParts.length), i;
+		for(i=0; i<minLen; ++i){
+			int thisV = Integer.parseInt(thisParts[i]), thatV = Integer.parseInt(thatParts[i]);
+			if(thisV != thatV) return thisV < thatV;
+		}
+		return thisParts.length < thatParts.length;
 	}
 	/**
 	 * Evaluate whether the version number is marked showing that it should not be updated by this program.
