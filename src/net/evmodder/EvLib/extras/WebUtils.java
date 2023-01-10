@@ -129,10 +129,14 @@ public class WebUtils {
 
 		return getStringBetween(output, authBeg, authEnd);
 	}
-	static String authenticateMicrosoft(String email, String password) throws UnsupportedEncodingException{
+	static String authenticateMicrosoft(String email, String password){
 		final String genClientToken = UUID.randomUUID().toString();
-		final String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8.toString());
-		final String encodedPassw = URLEncoder.encode(password, StandardCharsets.UTF_8.toString());
+		String encodedEmail = null, encodedPassw = null;
+		try{
+			encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8.toString());
+			encodedPassw = URLEncoder.encode(password, StandardCharsets.UTF_8.toString());
+		}
+		catch(UnsupportedEncodingException e){};
 
 		// Setting up json POST request
 		final String payload =
@@ -157,6 +161,10 @@ public class WebUtils {
 
 	//Names are [3,16] characters from [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]
 	static HashMap<String, GameProfile> playerExists = new HashMap<>();
+	public static GameProfile addGameProfileToCache(String nameOrUUID, GameProfile profile){
+		if(nameOrUUID.matches("^[a-f0-9]{32}$")) nameOrUUID = addDashesForUUID(nameOrUUID);
+		return playerExists.put(nameOrUUID.toLowerCase(), profile);
+	}
 	public static GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin){
 		if(nameOrUUID.matches("^[a-f0-9]{32}$")) nameOrUUID = addDashesForUUID(nameOrUUID);
 		nameOrUUID = nameOrUUID.toLowerCase();
@@ -401,6 +409,7 @@ public class WebUtils {
 					System.out.println("4. Getting new texture url");
 					final String textureVal = getTextureVal(uuidNoDashes);
 					final String newBase64Val = getBase64FromTextureVal(textureVal);
+					System.out.println("5. New texture url: " + textureVal);
 					System.out.println("5. New Base64 val: " + newBase64Val);
 					newHeadsTexutureVal.put(name+"|GRUMM", textureVal);
 					newHeadsBase64Val.put(name+"|GRUMM", newBase64Val);
@@ -436,16 +445,16 @@ public class WebUtils {
 			if(headsToFlip[i] == null) System.err.println("Could not find target head: "+targetHeads[i]);
 		}
 
-		System.out.print("runGrumm() auth for "+targetHeads.length+" heads...\n"); 
-		/*Scanner scanner = new Scanner(System.in); 
-		System.out.print("Enter account email: "); String email = scanner.nextLine();//nl@nl.com
-		System.out.print("Enter account passw: "); String passw = scanner.nextLine();//y
-		System.out.print("Enter account uuid: "); String uuid = scanner.nextLine();//0e314b6029c74e35bef33c652c8fb467
-		scanner.close();
-		String token = authenticateMojang(email, passw);
-		System.out.println("token = "+token);*/
+//		System.out.print("runGrumm() auth for "+targetHeads.length+" heads...\n"); 
+//		Scanner scanner = new Scanner(System.in); 
+//		System.out.print("Enter account email: "); String email = scanner.nextLine();//nl@nl.com
+//		System.out.print("Enter account passw: "); String passw = scanner.nextLine();//y
+//		System.out.print("Enter account uuid: "); String uuid = scanner.nextLine();//0e314b6029c74e35bef33c652c8fb467
+//		scanner.close();
+//		String token = /*authenticateMicrosoft*/authenticateMojang(email, passw);
+//		System.out.println("token = "+token);
 		String uuid = "0e314b6029c74e35bef33c652c8fb467";
-		String token = "eyJhbGciOiJIUzI1NiJ9.eyJ4dWlkIjoiMjUzNTQ2NjM1MzY2NjY2NiIsImFnZyI6IkFkdWx0Iiwic3ViIjoiMWUzYTgyNDYtNTNmMC00ODBmLWIwYjMtMTFiNGU5ZDVkNTY0IiwibmJmIjoxNjU1ODYwNjM5LCJhdXRoIjoiWEJPWCIsInJvbGVzIjpbXSwiaXNzIjoiYXV0aGVudGljYXRpb24iLCJleHAiOjE2NTU5NDcwMzksImlhdCI6MTY1NTg2MDYzOSwicGxhdGZvcm0iOiJVTktOT1dOIiwieXVpZCI6IjY1ODY5ZWMwOGMxZGM1ZDM2YzVjMWMzY2M5YzlmODkwIn0.-NoxeCfsTWF2cI6Wc7rVIJjlYrYsIVMOB30WIipyJkU";
+		String token = "eyJhbGciOiJIUzI1NiJ9.eyJ4dWlkIjoiMjUzNTQ2NjM1MzY2NjY2NiIsImFnZyI6IkFkdWx0Iiwic3ViIjoiMWUzYTgyNDYtNTNmMC00ODBmLWIwYjMtMTFiNGU5ZDVkNTY0IiwibmJmIjoxNjczMzQwMDg4LCJhdXRoIjoiWEJPWCIsInJvbGVzIjpbXSwiaXNzIjoiYXV0aGVudGljYXRpb24iLCJleHAiOjE2NzM0MjY0ODgsImlhdCI6MTY3MzM0MDA4OCwicGxhdGZvcm0iOiJVTktOT1dOIiwieXVpZCI6IjY1ODY5ZWMwOGMxZGM1ZDM2YzVjMWMzY2M5YzlmODkwIn0.8vuEp1JXnePsWnRN30ggbQhsIfFZDiuJVH9ImfdANzU";
 
 		System.out.println(String.join("\n", headsToFlip));
 		System.out.println("Beginning conversion...");
@@ -665,7 +674,7 @@ public class WebUtils {
 		checkMissingTexturesDropratesAndSpawnModifiers();
 		checkMissingGrummTextures();
 //		checkAbnormalHeadTextures();
-//		runGrumm();
+		runGrumm();
 //		System.out.println("Test: "+Vehicle.class.isAssignableFrom(EntityType.PLAYER.getEntityClass()));
 	}
 }
