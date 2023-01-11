@@ -61,7 +61,7 @@ public class FileIO{// version = X1.0
 		return evPlugins;
 	}
 
-	public static void verifyDir(Plugin evPl){
+	static void verifyDir(Plugin evPl){
 		Vector<String> evPlugins = FileIO.installedEvPlugins();
 		final String CUSTOM_DIR = "./plugins/"+evPl.getName()+"/";
 		if(!new File(EV_DIR).exists() && (evPl.getName().equals("DropHeads") || evPlugins.size() < MERGE_EV_DIR_THRESHOLD)){
