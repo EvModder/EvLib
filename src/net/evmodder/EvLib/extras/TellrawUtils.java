@@ -331,7 +331,8 @@ public class TellrawUtils{
 				catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException e){}
 			}
 			// This is ONLY correct when the key is invalid/unknown to the client!
-			return with == null ? jsonKey.replace("%s", "") : String.format(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
+			return with == null ? jsonKey.replace("%%", "<thingie_cuz_lazy>").replace("%s", "").replace("<thingie_cuz_lazy>", "%")
+					: String.format(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
 		}
 		@Override public String toString(){
 			// For TranslationComponents that are actually just String formatters, convert to a list
@@ -348,21 +349,30 @@ public class TellrawUtils{
 			return new TranslationComponent(jsonKey, with, insert, click, hover, color, formats);
 		}
 		Component convertStringFormatters(){
-			if(jsonKey.replaceAll("%s", "").trim().isEmpty()){
-				ListComponent listComp = new ListComponent();
-				int i = 0;
-				boolean isFirstComp = true;
-				for(String s : jsonKey.split("%s")){
-					if(isFirstComp){
-						isFirstComp = false;
-						listComp.addComponent(new RawTextComponent(s, getInsertion(), getClickAction(), getHoverAction(), getColor(), getFormats()));
-					}
-					else if(!s.isEmpty()) listComp.addComponent(s);
-					if(i < with.length) listComp.addComponent(with[i++]);
+			if(jsonKey.indexOf('%') == -1) return this; //todo: more formal check to see if this key exists or not
+
+			final String formatText = jsonKey.replace("%%", "<thingie_cuz_lazy>").replace("%s", "").replace("<thingie_cuz_lazy>", "%");
+			ListComponent listComp = new ListComponent();
+			int textStart = 0, nextSub = formatText.indexOf("%s");
+			int i = 0;
+			boolean isFirstComp = true;
+			while(nextSub != -1){
+				final String s = formatText.substring(textStart, nextSub);
+				if(isFirstComp){
+					isFirstComp = false;
+					listComp.addComponent(new RawTextComponent(s, getInsertion(), getClickAction(), getHoverAction(), getColor(), getFormats()));
 				}
-				return listComp;
+				else if(!s.isEmpty()) listComp.addComponent(s);
+				if(i < with.length) listComp.addComponent(with[i++]);
+				else Bukkit.getLogger().warning("TellrawUtils ERROR: too few 'with' arguments for format text: "+formatText);
+
+				textStart = nextSub + 2;//cut the %s
+				nextSub = formatText.indexOf("%s", textStart);
 			}
-			return this;
+			final String s = formatText.substring(textStart);
+			if(isFirstComp) listComp.addComponent(new RawTextComponent(s, getInsertion(), getClickAction(), getHoverAction(), getColor(), getFormats()));
+			else if(!s.isEmpty()) listComp.addComponent(s);
+			return listComp;
 		}
 	}
 
