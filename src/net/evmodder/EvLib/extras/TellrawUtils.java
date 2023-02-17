@@ -336,7 +336,7 @@ public class TellrawUtils{
 		}
 		@Override public String toString(){
 			// For TranslationComponents that are actually just String formatters, convert to a list
-			Component convertedComp = convertStringFormatters();
+			Component convertedComp = convertStringFormattersAndRawText();
 			if(convertedComp instanceof ListComponent) return convertedComp.toString();
 			// Otherwise, proceed with toString() as a {"translate"} component
 			String escapedJsonKey = TextUtils.escape(jsonKey, "\"","\n");
@@ -348,16 +348,19 @@ public class TellrawUtils{
 		@Override TranslationComponent copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			return new TranslationComponent(jsonKey, with, insert, click, hover, color, formats);
 		}
-		Component convertStringFormatters(){
-			if(jsonKey.indexOf('%') == -1) return this; //todo: more formal check to see if this key exists or not
+		Component convertStringFormattersAndRawText(){
+			if(jsonKey.indexOf('%') == -1){
+//				if(jsonKey.indexOf('.') == -1) return new RawTextComponent(jsonKey);//todo: more formal check to see if this key exists or not
+				return this;
+			}
 
-			final String formatText = jsonKey.replace("%%", "<thingie_cuz_lazy>").replace("%s", "").replace("<thingie_cuz_lazy>", "%");
+			final String formatText = jsonKey.replace("%%", "<thingie_cuz_lazy>");
 			ListComponent listComp = new ListComponent();
 			int textStart = 0, nextSub = formatText.indexOf("%s");
 			int i = 0;
 			boolean isFirstComp = true;
 			while(nextSub != -1){
-				final String s = formatText.substring(textStart, nextSub);
+				final String s = formatText.substring(textStart, nextSub).replace("<thingie_cuz_lazy>", "%");
 				if(isFirstComp){
 					isFirstComp = false;
 					listComp.addComponent(new RawTextComponent(s, getInsertion(), getClickAction(), getHoverAction(), getColor(), getFormats()));
@@ -674,7 +677,7 @@ public class TellrawUtils{
 			}
 			// For TranslationComponents that are actually just String formatters, not translation keys.
 			if(component instanceof TranslationComponent && last != null && last.samePropertiesAs(component)){
-				final Component strFormatComp = ((TranslationComponent)component).convertStringFormatters();
+				final Component strFormatComp = ((TranslationComponent)component).convertStringFormattersAndRawText();
 				if(!(strFormatComp instanceof TranslationComponent)) return addComponent(strFormatComp);
 			}
 			if(component instanceof ListComponent){
