@@ -372,7 +372,7 @@ public class TellrawUtils{
 				textStart = nextSub + 2;//cut the %s
 				nextSub = formatText.indexOf("%s", textStart);
 			}
-			final String s = formatText.substring(textStart);
+			final String s = formatText.substring(textStart).replace("<thingie_cuz_lazy>", "%");
 			if(isFirstComp) listComp.addComponent(new RawTextComponent(s, getInsertion(), getClickAction(), getHoverAction(), getColor(), getFormats()));
 			else if(!s.isEmpty()) listComp.addComponent(s);
 			return listComp;
