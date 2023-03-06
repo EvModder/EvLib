@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Function;
@@ -24,6 +25,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 
 public class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,WebUtils,TextUtils
 	public static Collection<ItemStack> getEquipmentGuaranteedToDrop(LivingEntity entity){//TODO: move to EntityUtils
@@ -84,6 +86,12 @@ public class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,WebUti
 			int i = adv.getKey().getKey().indexOf('/');
 			return i != -1 && include.contains(adv.getKey().getKey().substring(0, i));
 		}).collect(Collectors.toList());
+	}
+
+	private static Random globalRand;
+	public static void dropItemNaturally(Location loc, ItemStack item, Random rand){
+		if(rand == null) rand = globalRand = (globalRand != null ? globalRand : new Random());
+		loc.getWorld().dropItem(loc, item).setVelocity(new Vector(rand.nextDouble()/5D - 0.1D, 0.2D, rand.nextDouble()/5D - 0.1D));
 	}
 
 	public static int maxCapacity(Inventory inv, Material item){
