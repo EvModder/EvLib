@@ -121,7 +121,7 @@ public class TextUtils{
 		return translateAlternateColorCodes(altColorChar, textToTranslate).replace(ChatColor.RESET.toString(), resetColor);
 	}
 
-	public static String minimizeColorCodes(String legacyStr){
+	public static String minimizeColorCodes(String legacyStr){// TODO: where is this used?
 		// Find (<color>)(\s|<color>)+
 		Pattern colorsAndSpacesPattern = Pattern.compile(
 				"(?:(?:§x(?:§[0-9a-fA-F]){6})|(?:§[0-9a-fA-FrRkKmMnNoO]))(?:(?:§x(?:§[0-9a-fA-F]){6})|(?:§[0-9a-fA-FrRkKmMnNoO])|\\s)*");
@@ -141,6 +141,8 @@ public class TextUtils{
 		return builder.toString();
 	}
 
+	// TODO: implement "remove useless colors/formats" which removes colors/formats at the end of a string that have no visual effect
+
 	public static String stripColorsOnly(String str, char altColorChar){
 		//(?:§x(?:§[0-9a-fA-FrR]){6})|(?:§#(?:[0-9a-fA-FrR]{3}){1,2})|(?:§[0-9a-fA-FrR])
 		//return str.replaceAll("(?:"+altColorChar+"x(?:"+altColorChar+"[0-9a-fA-FrR]){6})|(?:"+altColorChar+"[0-9a-fA-FrR])", "");
@@ -158,8 +160,14 @@ public class TextUtils{
 		final char[] msg = str.toCharArray();
 		for(int i=msg.length-1; i>0; --i){
 			if(msg[i-1] == ChatColor.COLOR_CHAR){
-				if(isSimpleColor(msg[i])) return str.substring(i-1, i+1);
-				else if(msg[i] == 'x') return str.substring(i-1, i+13);
+				if(i >= 13 && msg[i-13] == ChatColor.COLOR_CHAR && msg[i-12] == 'x' 
+						&& msg[i-11] == ChatColor.COLOR_CHAR && isHex(msg[i-10])
+						&& msg[i-9] == ChatColor.COLOR_CHAR && isHex(msg[i-8])
+						&& msg[i-7] == ChatColor.COLOR_CHAR && isHex(msg[i-6])
+						&& msg[i-5] == ChatColor.COLOR_CHAR && isHex(msg[i-4])
+						&& msg[i-3] == ChatColor.COLOR_CHAR && isHex(msg[i-2])
+						&& isHex(msg[i])) return str.substring(i-13, i+1);//&x&1&1&2&2&9&9
+				if(isSimpleColor(msg[i])) return str.substring(i-1, i+1);//&9
 			}
 		}
 		return "";
