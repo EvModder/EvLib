@@ -190,8 +190,14 @@ public class TextUtils{
 		final char[] msg = str.toCharArray();
 		int i=msg.length-1;
 		for(; i>0; --i) if(msg[i-1] == ChatColor.COLOR_CHAR){
+			if(i >= 13 && msg[i-13] == ChatColor.COLOR_CHAR && msg[i-12] == 'x' 
+					&& msg[i-11] == ChatColor.COLOR_CHAR && isHex(msg[i-10])
+					&& msg[i-9] == ChatColor.COLOR_CHAR && isHex(msg[i-8])
+					&& msg[i-7] == ChatColor.COLOR_CHAR && isHex(msg[i-6])
+					&& msg[i-5] == ChatColor.COLOR_CHAR && isHex(msg[i-4])
+					&& msg[i-3] == ChatColor.COLOR_CHAR && isHex(msg[i-2])
+					&& isHex(msg[i])){builder.append(str.substring(i-13, i+1)); ++i; break;}
 			if(isSimpleColor(msg[i])){builder.append(str.substring(i-1, i+1)); ++i; break;}
-			if(msg[i] == 'x'){builder.append(str.substring(i-1, i+13)); i+=13; break;}
 		}
 		for(++i; i<msg.length; ++i) if(msg[i-1] == ChatColor.COLOR_CHAR && isFormat(msg[i])){
 			final String formatStr = str.substring(i-1, i+1);
