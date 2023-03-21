@@ -141,6 +141,7 @@ public class TellrawUtils{
 		final private TextHoverAction hoverAction;
 		final private String color;
 		final private Map<Format, Boolean> formats;
+		private String toString;
 		final boolean hasProperties;
 
 		String getInsertion(){return insertion;}
@@ -228,7 +229,8 @@ public class TellrawUtils{
 					(other.potentialSingleMatchSelector() == null || other.potentialSingleMatchSelector().equals(potentialSingleMatchSelector()));
 		}
 
-		@Override public abstract String toString();
+		protected abstract String toStringInternal();
+		@Override final public String toString(){return toString == null ? (toString = toStringInternal()) : toString;}
 		public abstract String toPlainText();
 		abstract Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats);
 	};
@@ -250,7 +252,7 @@ public class TellrawUtils{
 		//tellraw @a {"text":"test","insertion":"hi there"}
 
 		@Override public String toPlainText(){return text;}
-		@Override public String toString(){
+		@Override protected String toStringInternal(){
 			String escapedText = TextUtils.escape(text, "\"","\n");
 			return !hasProperties
 					? new StringBuilder().append('"').append(escapedText).append('"').toString()
@@ -334,7 +336,7 @@ public class TellrawUtils{
 			return with == null ? jsonKey.replace("%%", "<thingie_cuz_lazy>").replace("%s", "").replace("<thingie_cuz_lazy>", "%")
 					: String.format(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
 		}
-		@Override public String toString(){
+		@Override protected String toStringInternal(){
 			// For TranslationComponents that are actually just String formatters, convert to a list
 			Component convertedComp = convertStringFormattersAndRawText();
 			if(convertedComp instanceof ListComponent) return convertedComp.toString();
@@ -572,7 +574,7 @@ public class TellrawUtils{
 			if(name == null) return "";
 			return ""+objective.getScore(name).getScore();
 		}
-		@Override public String toString(){
+		@Override protected String toStringInternal(){
 			StringBuilder builder = new StringBuilder().append("\"score\":{\"name\":\"")
 					.append(selector.toString()).append("\",\"objective\":\"").append(objective.getName()).append('"');
 			if(value != null) builder.append(",\"value\":\"").append(TextUtils.escape(value, "\"","\n")).append('"');
@@ -614,7 +616,7 @@ public class TellrawUtils{
 			catch(Exception ex){names = Arrays.asList(selector.toString());}
 			return String.join(ChatColor.GRAY+", "+ChatColor.RESET, names);
 		}
-		@Override public String toString(){
+		@Override protected String toStringInternal(){
 			return new StringBuilder().append("{\"selector\":\"").append(TextUtils.escape(selector.toString(), "\"","\n"))
 					.append(getProperties()).append("\"}").toString();
 		}
@@ -631,7 +633,7 @@ public class TellrawUtils{
 		}
 		//tellraw @a {"keybind":"of.key.zoom"}
 		@Override public String toPlainText(){return keybind.toString();}//TODO: KEY SETTING NAME HERE if possible?
-		@Override public String toString(){
+		@Override protected String toStringInternal(){
 			return new StringBuilder().append("{\"keybind\":\"").append(keybind).append('"').append(getProperties()).append('}').toString();
 		}
 		@Override KeybindComponent copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
@@ -778,7 +780,7 @@ public class TellrawUtils{
 			for(Component comp : components) builder.append(comp.toPlainText());
 			return builder.toString();
 		}
-		@Override public String toString(){
+		@Override protected String toStringInternal(){
 			while(last instanceof RawTextComponent && ChatColor.stripColor(last.toPlainText()).isEmpty()){
 				components.remove(components.size()-1);
 				last = components.isEmpty() ? null : components.get(components.size()-1);
