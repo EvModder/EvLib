@@ -132,7 +132,7 @@ public class EntityUtils{
 		return name;
 	}
 	public static CCP getCCP(TropicalFish fish){
-		System.out.println("CCP: "+fish.getBodyColor()+","+ fish.getPatternColor()+","+ fish.getPattern());
+//		System.out.println("CCP: "+fish.getBodyColor()+","+ fish.getPatternColor()+","+ fish.getPattern());
 		return new CCP(fish.getBodyColor(), fish.getPatternColor(), fish.getPattern());
 	}
 	public static CCP getCCP(String commonTropicalFishName){
