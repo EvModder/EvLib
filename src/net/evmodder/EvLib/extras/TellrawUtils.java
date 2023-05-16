@@ -147,8 +147,8 @@ public class TellrawUtils{
 		String getInsertion(){return insertion;}
 		TextClickAction getClickAction(){return clickAction;}
 		TextHoverAction getHoverAction(){return hoverAction;}
-		public String getColor(){return color;}
-		public Map<Format, Boolean> getFormats(){return formats;}
+		String getColor(){return color;}
+		Map<Format, Boolean> getFormats(){return formats;}
 
 		private Component(String insertion, TextClickAction clickAction, TextHoverAction hoverAction, String color, Map<Format, Boolean> formats){
 			this.insertion = insertion; this.clickAction = clickAction; this.hoverAction = hoverAction; this.color = color; this.formats = formats;
