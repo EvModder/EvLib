@@ -4,7 +4,7 @@ import java.util.UUID;
 import org.bukkit.entity.Player;
 import net.evmodder.EvLib.extras.ReflectionUtils.*;
 
-public class ActionBarUtils{
+public final class ActionBarUtils{
 	// Get playerConnection of EntityPlayer
 	private static final RefClass classEntityPlayer = ReflectionUtils.getRefClass("{nms}.EntityPlayer", "{nm}.server.level.EntityPlayer");
 	private static final RefClass classPlayerConnection = ReflectionUtils.getRefClass("{nms}.PlayerConnection", "{nm}.server.network.PlayerConnection");

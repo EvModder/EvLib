@@ -235,6 +235,7 @@ implements NavigableMap<K, Collection<V>>, Cloneable, java.io.Serializable
 	/**
 	 * Returns the number of values in the map associated with the given key
 	 *
+	 * @param key
 	 * @return the number of values in the map associated with the given key
 	 */
 	public int valuesSize(K key){
@@ -691,6 +692,7 @@ implements NavigableMap<K, Collection<V>>, Cloneable, java.io.Serializable
 	 * Returns this map's entry index for the given key, or {@code -1} if the map
 	 * does not contain an entry for the key.
 	 *
+	 * @param key
 	 * @return this map's entry index for the given key, or {@code -1} if the map
 	 *         does not contain an entry for the key
 	 * @throws ClassCastException
@@ -730,6 +732,9 @@ implements NavigableMap<K, Collection<V>>, Cloneable, java.io.Serializable
 	 * for performance. (This is not worth doing for most methods,
 	 * that are less dependent on comparator performance, but is
 	 * worthwhile here.)
+	 * @param key
+	 * @return this map's entry index for the given key, or {@code -1} if the map
+	 *         does not contain an entry for the key
 	 */
 	public final int getKeyIndexUsingComparator(Object key){
 		@SuppressWarnings("unchecked")
@@ -759,6 +764,7 @@ implements NavigableMap<K, Collection<V>>, Cloneable, java.io.Serializable
 	 * Returns this map's lowest value index for the given key, or {@code -1} if the map
 	 * does not contain an entry for the key.
 	 *
+	 * @param key
 	 * @return this map's entry index for the given key, or {@code -1} if the map
 	 *         does not contain an entry for the key
 	 * @throws ClassCastException
@@ -798,6 +804,7 @@ implements NavigableMap<K, Collection<V>>, Cloneable, java.io.Serializable
 	 * for performance. (This is not worth doing for most methods,
 	 * that are less dependent on comparator performance, but is
 	 * worthwhile here.)
+	 * @param key
 	 */
 	public final int getFloorIndexUsingComparator(Object key){
 		@SuppressWarnings("unchecked")
@@ -827,6 +834,7 @@ implements NavigableMap<K, Collection<V>>, Cloneable, java.io.Serializable
 	 * Returns one past this map's highest value index for the given key, or {@code valuesSize}
 	 * if the map does not contain an entry for the key.
 	 *
+	 * @param key
 	 * @return one past this map's highest value index for the given key, or {@code valuesSize}
 	 *         if the map does not contain an entry for the key
 	 * @throws ClassCastException
@@ -866,6 +874,7 @@ implements NavigableMap<K, Collection<V>>, Cloneable, java.io.Serializable
 	 * for performance. (This is not worth doing for most methods,
 	 * that are less dependent on comparator performance, but is
 	 * worthwhile here.)
+	 * @param key
 	 */
 	public final int getCeilingIndexUsingComparator(Object key){
 		@SuppressWarnings("unchecked")

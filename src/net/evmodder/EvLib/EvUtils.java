@@ -27,7 +27,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-public class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,WebUtils,TextUtils
+public final class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,WebUtils,TextUtils
 	public static Collection<ItemStack> getEquipmentGuaranteedToDrop(LivingEntity entity){//TODO: move to EntityUtils
 		ArrayList<ItemStack> itemsThatWillDrop = new ArrayList<>();
 		EntityEquipment equipment = entity.getEquipment();

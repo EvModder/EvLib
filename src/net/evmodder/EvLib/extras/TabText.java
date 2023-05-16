@@ -25,10 +25,10 @@ import net.evmodder.EvLib.extras.TextUtils.StrAndPxLen;
  * - printedText = tt.getPage(desiredPage, (boolean) monospace); // get your formatted page, for console or chat area
  * 
  * see each method javadoc for additional details 
- * 
+ *</pre>
  * @version 5
- * @author atesin#gmail,com evmodder#gmail,com
- * </pre>
+ * @author atesin#gmail, evmodder#gmail
+ *
  */
 public class TabText{//max chat width is 53*6 + 2 = 320
 	final static int CHAT_HEIGHT = 100;//Chat history goes back 100 lines

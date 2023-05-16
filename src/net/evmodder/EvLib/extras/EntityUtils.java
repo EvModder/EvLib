@@ -9,7 +9,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.TropicalFish.Pattern;
 
-public class EntityUtils{
+public final class EntityUtils{
 	static int version = 13;
 	final static HashMap<Material, EntityType> eggToEntity = new HashMap<>();
 	final static HashMap<EntityType, Material> entityToEgg = new HashMap<>();

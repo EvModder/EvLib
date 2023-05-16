@@ -26,7 +26,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class FileIO{// version = X1.0
+public final class FileIO{// version = X1.0
 	static private final String EV_DIR = "./plugins/EvFolder/";
 	static public String DIR = EV_DIR;//TODO: remove public? (only user: EvLib/extras/WebUtils.java)
 	static final int MERGE_EV_DIR_THRESHOLD = 4;
