@@ -132,7 +132,7 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 	// REGULAR METHODS
 	/**
 	 *  append chars with its width to be checked too, default width = 6 so you may only use for width != 6 chars
-	 *  @param chars a string with the chars to be added (careful with unicode or ansi chars, do some tests before)
+	 *  @param charsList a string with the chars to be added (careful with unicode or ansi chars, do some tests before)
 	 *  @param charsWidth horizontal space in pixels each char occupies
 	 */
 	public static void addChars(String charsList, int charsWidth){

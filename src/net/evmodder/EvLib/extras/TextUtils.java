@@ -543,9 +543,9 @@ public class TextUtils{
 		public StrAndPxLen(String s, double l){str = s; pxLen = l;}
 	}
 	/**
-	 * returns substring, in chars(mono) or pixels, ignoring color & format
+	 * returns substring, in chars(mono) or pixels, ignoring color and format
 	 * @param str input string
-	 * @param len desired string maximum length
+	 * @param maxLen desired string maximum length
 	 * @param mono true if length will be in chars (for console) or false if will be in pixels (for chat area)
 	 * @return object array with stripped string [0] and integer length in pixels or chars depending of mono
 	 */

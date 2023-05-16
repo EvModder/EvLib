@@ -268,7 +268,7 @@ public class ReflectionUtils{// version = X1.0
 
 		/**
 		 * find field by type
-		 * @param type field type (Class<> or RefClass)
+		 * @param type field type (Class or RefClass)
 		 * @return RefField
 		 * @throws RuntimeException if field not found
 		 */
@@ -286,7 +286,7 @@ public class ReflectionUtils{// version = X1.0
 
 		/**
 		 * find field by type
-		 * @param type field type (Class<> or RefClass)
+		 * @param type field type (Class or RefClass)
 		 * @param isStatic restrict matching on static modifier
 		 * @return RefField
 		 * @throws RuntimeException if field not found

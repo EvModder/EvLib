@@ -42,9 +42,9 @@ public class GhostUtils{
 
 	/**
 	 * Create a GhostFactory
-	 * @param plugin - the plugin creating the ghostfactory
-	 * @param ghostsVisibleToAll - true to have ghosts visible to all players on the server
+	 * @param pl - the plugin creating the ghostfactory
 	 */
+	//* @param ghostsVisibleToAll - true to have ghosts visible to all players on the server
 	public GhostUtils(JavaPlugin pl){
 		plugin = pl;
 		Scoreboard board = pl.getServer().getScoreboardManager().getMainScoreboard();
@@ -113,7 +113,7 @@ public class GhostUtils{
 	
 	/**
 	 * Add a player to the ghost list
-	 * @param player - the player to add to the ghost manager.
+	 * @param players - the player(s) to add to the ghost manager.
 	 */
 	public void addGhost(Player... players){
 		if(players.length == 0) return;
