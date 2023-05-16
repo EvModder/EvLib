@@ -9,6 +9,11 @@ import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefConstructor;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 
+/**
+ * Utilities for editing NBT in Bukkit plugins.
+ * @author EvModder
+ * @version 1.0
+ */
 public final class NBTTagUtils{// version = X1.0
 	//-------------------------------------------------- ReflectionUtils used by RefNBTTag: --------------------------------------------------//
 	static final RefClass classNBTTagCompound = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
