@@ -101,10 +101,10 @@ import java.util.function.Consumer;
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  *
- * @author Josh Bloch and Doug Lea
- * @see Map
- * @see HashMap
- * @see Hashtable
+ * @author Josh Bloch, Doug Lea, EvModder
+ * @see java.util.Map
+ * @see java.util.HashMap
+ * @see java.util.Hashtable
  * @see Comparable
  * @see Comparator
  * @see Collection

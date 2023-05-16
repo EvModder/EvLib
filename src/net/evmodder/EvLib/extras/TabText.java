@@ -27,7 +27,7 @@ import net.evmodder.EvLib.extras.TextUtils.StrAndPxLen;
  * see each method javadoc for additional details 
  * 
  * @version 5
- * @authors atesin#gmail,com evmodder#gmail,com
+ * @author atesin#gmail,com evmodder#gmail,com
  * </pre>
  */
 public class TabText{//max chat width is 53*6 + 2 = 320

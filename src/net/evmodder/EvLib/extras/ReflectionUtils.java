@@ -13,8 +13,9 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * @author DPOH-VAR
- * @version 1.0
+ * Tool to help with reflection targeting Minecraft server classes.
+ * @author DPOH-VAR and EvModder
+ * @version 1.2
  */
 public class ReflectionUtils{// version = X1.0
 	/**  prefix of bukkit classes */
