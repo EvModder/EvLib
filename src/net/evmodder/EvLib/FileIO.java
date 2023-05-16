@@ -209,11 +209,11 @@ public class FileIO{// version = X1.0
 		return YamlConfiguration.loadConfiguration(file);
 	}
 
-	public static String loadResource(Object pl, String filename/*, boolean keepComments*/){
+	public static String loadResource(Object pl, String filename, String defaultContent){
 		try{
 			InputStream inputStream = pl.getClass().getResourceAsStream("/"+filename);
 			if(inputStream == null) inputStream = pl.getClass().getClassLoader().getResourceAsStream("/"+filename);
-			if(inputStream == null) return "";
+			if(inputStream == null) return defaultContent;
 			BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
 			StringBuilder file = new StringBuilder();
@@ -228,7 +228,7 @@ public class FileIO{// version = X1.0
 			return file.substring(1);
 		}
 		catch(IOException ex){ex.printStackTrace();}
-		return "";
+		return defaultContent;
 	}
 
 	public static YamlConfiguration loadYaml(String filename, String defaultContent){
