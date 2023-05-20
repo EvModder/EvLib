@@ -352,7 +352,7 @@ public class TellrawUtils{
 		}
 		Component convertStringFormattersAndRawText(){
 			if(jsonKey.indexOf('%') == -1){
-//				if(jsonKey.indexOf('.') == -1) return new RawTextComponent(jsonKey);//todo: more formal check to see if this key exists or not
+//				if(jsonKey.indexOf('.') == -1) return new RawTextComponent(jsonKey);//TODO: more formal check to see if this key exists or not
 				return this;
 			}
 
@@ -534,7 +534,7 @@ public class TellrawUtils{
 				if(item.hasItemMeta()) return new TranslationComponent("item.minecraft.shield."
 						+((Banner)((BlockStateMeta)item.getItemMeta()).getBlockState()).getBaseColor().name().toLowerCase());
 			case WRITTEN_BOOK:
-				return new RawTextComponent(((BookMeta)item.getItemMeta()).getTitle());//TODO: book.getTitleComponent()?
+				return new RawTextComponent(((BookMeta)item.getItemMeta()).getTitle());  // Cannot be JSON, only raw String (last checked: 1.20)
 			default:
 				return new TranslationComponent("item.minecraft."+item.getType().name().toLowerCase()); 
 		}
@@ -858,7 +858,7 @@ public class TellrawUtils{
 		}
 		ListComponent listComp = new ListComponent();
 		if(insert_comp0 != null) listComp.addComponent(insert_comp0);
-//		if(str.charAt('i') == ']') return comp; //TODO: Apparently empty lists are not supported in tellraw (1.18)
+//		if(str.charAt('i') == ']') return comp; //TODO: Apparently empty lists are not supported in tellraw (last checked: 1.20)
 		do{
 			++i;
 			Pair<Component, Integer> nextComp = parseNextComponentFromString(str, i);
