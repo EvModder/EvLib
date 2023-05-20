@@ -641,6 +641,45 @@ public class TellrawUtils{
 		}
 	}
 
+	//data modify entity @e[type=item,distance=..5,limit=1] Item.tag.display.Name set value '{"text":"ee"}'
+	public enum NBTSource{BLOCK, ENTITY, STORAGE};
+	public final static class NBTComponent extends Component{
+		// TODO: check if interpret:true counts as a "property" (i.e., affects list descendants)
+
+		final String nbt; // "Item.tag.display.Name"
+//		final String block; //Eg: /tellraw @p {"nbt":"","block":"^ ~ 0"}
+//		final Object entity; //Eg: /tellraw @p {"nbt":"Pos","entity":"@e[type=!player]"}
+//		final String storage; // TODO: uhhhhhhhhh
+		final NBTSource source; // which of the 3 above
+		final String specifier; // the selector
+		// interpret=true => use toPlainText() on selected values
+		final boolean interpret; //Eg: /tellraw @p {"nbt":"CustomName","entity":"@e","interpret":true/false} => 'Grumm' vs '{"text":"Grumm"}'
+		final RawTextComponent separator;
+
+		public NBTComponent(String nbt, NBTSource source, Object specifier){
+			this.nbt = nbt; this.source = source; this.specifier = specifier.toString();
+			interpret = false;
+			separator = new RawTextComponent(", ");
+		}
+		public NBTComponent(String nbt, NBTSource source, Object specifier, boolean interpret, RawTextComponent separator,
+				String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
+			super(insert, click, hover, color, formats);
+			this.nbt = nbt; this.source = source; this.specifier = specifier.toString(); this.interpret = interpret; this.separator = separator;
+		}
+		@Override public String toPlainText(){return "";}
+		@Override protected String toStringInternal(){
+			StringBuilder builder = new StringBuilder()
+					.append("{\"nbt\":\"").append(nbt).append("\",\"")
+					.append(source.name().toLowerCase()).append("\":\"").append(specifier).append('"');
+			if(interpret) builder.append(",\"interpret\":true");
+			if(!separator.toString().equals("\", \"")) builder.append(",\"separator\":").append(separator.toString());
+			return builder.append(getProperties()).append('}').toString();
+		}
+		@Override NBTComponent copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
+			return new NBTComponent(nbt, source, specifier, interpret, separator, insert, click, hover, color, formats);
+		}
+	}
+
 	public final static class ListComponent extends Component{
 		@Override String getInsertion(){return components.isEmpty() ? null : components.get(0).getInsertion();}
 		@Override TextClickAction getClickAction(){return components.isEmpty() ? null : components.get(0).getClickAction();}
