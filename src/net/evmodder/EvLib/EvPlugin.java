@@ -5,8 +5,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public abstract class EvPlugin extends JavaPlugin{
-	public static final String EvLib_ver = "1.2";
-
 	protected FileConfiguration config;
 	@Override public FileConfiguration getConfig(){return config;}
 	@Override public void saveConfig(){
