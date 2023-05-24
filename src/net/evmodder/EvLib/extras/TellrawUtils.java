@@ -134,6 +134,57 @@ public class TellrawUtils{
 		return new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null, color, formats);
 	}
 
+	// for toPlainText() on KeybindComponent and TranslateComponent, we fall back to using the NMS resolver
+	private static Constructor<?> translateConstructor, translateConstructorWith, keybindConstructor;
+	private static Method chatMessageGetString, makeIChatMutableComponent = null;
+	private static boolean nmsInitAttempted = false;
+	private static boolean toPlainTextUseNMS(){
+		return nmsInitAttempted ? chatMessageGetString != null : (nmsInitAttempted=true) && initChatMessageRefMethod();
+	}
+	private static boolean initChatMessageRefMethod(){
+		boolean post_1_19 = false;
+		Class<?> clazz, keybindClazz;
+		try{clazz = keybindClazz = Class.forName("net.minecraft.network.chat.ChatMessage");}
+		catch(ClassNotFoundException e0){
+			try{
+				Server server = Bukkit.getServer();
+				String nmsVersion = server.getClass().getDeclaredMethod("getHandle").invoke(server).getClass().getName().split("\\.")[3];
+				clazz = keybindClazz = Class.forName("net.minecraft.server."+nmsVersion+".ChatMessage");
+			}
+			catch(NullPointerException e3){return false;} // Unable to find nmsVersion -- indicates this is not running on a Bukkit server
+			catch(NoSuchMethodException | SecurityException | ClassNotFoundException | IllegalAccessException
+					| IllegalArgumentException | InvocationTargetException e1){
+				try{
+					clazz = Class.forName("net.minecraft.network.chat.contents.TranslatableContents");
+					keybindClazz = Class.forName("net.minecraft.network.chat.contents.KeybindContents");
+					post_1_19 = true;
+				}
+				catch(ClassNotFoundException e2){return false;}
+			}
+		}
+		try{
+			translateConstructor = clazz.getConstructor(String.class);
+			translateConstructorWith = clazz.getConstructor(String.class, Object[].class);
+			keybindConstructor = keybindClazz.getConstructor(String.class);
+			if(post_1_19){
+				chatMessageGetString = Class.forName("net.minecraft.network.chat.IChatBaseComponent").getMethod("getString");
+				Class<?> clazzComponentContents = Class.forName("net.minecraft.network.chat.ComponentContents");
+				Class<?> clazzIChatMutableComponent = Class.forName("net.minecraft.network.chat.IChatMutableComponent");
+				Class<?>[] params = new Class[]{clazzComponentContents};
+				for(Method m : clazzIChatMutableComponent.getDeclaredMethods()){//findMethod
+					if(!Modifier.isStatic(m.getModifiers())) continue;
+					if(!m.getReturnType().equals(clazzIChatMutableComponent)) continue;
+					if(!Arrays.equals(params, m.getParameterTypes())) continue;
+					makeIChatMutableComponent = m;
+					break;
+				}
+			}
+			else chatMessageGetString = clazz.getMethod("getString");
+		}
+		catch(NoSuchMethodException | SecurityException | ClassNotFoundException e){return false;}
+		return true;
+	}
+
 	// From wiki: Content tags are checked in the order: text, translate, score, selector, keybind, nbt.
 	public static abstract class Component{
 		final private String insertion; // When the text is shift-clicked by a player, this string is inserted in their chat input.
@@ -277,62 +328,17 @@ public class TellrawUtils{
 		}
 		//tellraw @a {"translate":"multiplayer.player.joined","with":["EvDoc", "unused"]} -> en_us.json: "%s joined the game"
 
-		private static Constructor<?> chatMessageConstructor, chatMessageConstructorWith;
-		private static Method chatMessageGetString, makeIChatMutableComponent = null;
-		private static boolean callNMS = true;
-		private static boolean initChatMessageRefMethod(){
-			boolean post_1_19 = false;
-			Class<?> clazz;
-			try{clazz = Class.forName("net.minecraft.network.chat.ChatMessage");}
-			catch(ClassNotFoundException e0){
-				try{
-					Server server = Bukkit.getServer();
-					String nmsVersion = server.getClass().getDeclaredMethod("getHandle").invoke(server).getClass().getName().split("\\.")[3];
-					clazz = Class.forName("net.minecraft.server."+nmsVersion+".ChatMessage");
-				}
-				catch(NullPointerException e3){return false;} // Unable to find nmsVersion -- indicates this is not running on a Bukkit server
-				catch(NoSuchMethodException | SecurityException | ClassNotFoundException | IllegalAccessException
-						| IllegalArgumentException | InvocationTargetException e1){
-					try{
-						clazz = Class.forName("net.minecraft.network.chat.contents.TranslatableContents");
-						post_1_19 = true;
-					}
-					catch(ClassNotFoundException e2){return false;}
-				}
-			}
-			try{
-				chatMessageConstructor = clazz.getConstructor(String.class);
-				chatMessageConstructorWith = clazz.getConstructor(String.class, Object[].class);
-				if(post_1_19){
-					chatMessageGetString = Class.forName("net.minecraft.network.chat.IChatBaseComponent").getMethod("getString");
-					Class<?> clazzComponentContents = Class.forName("net.minecraft.network.chat.ComponentContents");
-					Class<?> clazzIChatMutableComponent = Class.forName("net.minecraft.network.chat.IChatMutableComponent");
-					Class<?>[] params = new Class[]{clazzComponentContents};
-					for(Method m : clazzIChatMutableComponent.getDeclaredMethods()){//findMethod
-						if(!Modifier.isStatic(m.getModifiers())) continue;
-						if(!m.getReturnType().equals(clazzIChatMutableComponent)) continue;
-						if(!Arrays.equals(params, m.getParameterTypes())) continue;
-						makeIChatMutableComponent = m;
-						break;
-					}
-				}
-				else chatMessageGetString = clazz.getMethod("getString");
-			}
-			catch(NoSuchMethodException | SecurityException | ClassNotFoundException e){return false;}
-			return true;
-		}
 		@Override public String toPlainText(){
-			if(callNMS){
-				if(chatMessageGetString != null || (callNMS=initChatMessageRefMethod())) try{
-					Object translateComp = with == null
-							? chatMessageConstructor.newInstance(jsonKey)
-							: chatMessageConstructorWith.newInstance(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
-					if(makeIChatMutableComponent != null) translateComp = makeIChatMutableComponent.invoke(null, translateComp);
-					return (String)(chatMessageGetString.invoke(translateComp));
-				}
-				catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException e){}
+			if(toPlainTextUseNMS()) try{
+				Object translateComp = with == null
+						? translateConstructor.newInstance(jsonKey)
+						: translateConstructorWith.newInstance(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
+				if(makeIChatMutableComponent != null) translateComp = makeIChatMutableComponent.invoke(null, translateComp);
+				return (String)(chatMessageGetString.invoke(translateComp));
 			}
-			// This is ONLY correct when the key is invalid/unknown to the client!
+			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException e){}
+
+			// This is ONLY correct when the key is invalid/unknown to the client
 			return with == null ? jsonKey.replace("%%", "<thingie_cuz_lazy>").replace("%s", "").replace("<thingie_cuz_lazy>", "%")
 					: String.format(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
 		}
@@ -381,6 +387,8 @@ public class TellrawUtils{
 		}
 	}
 
+	// TODO: Split these into a TranslationUtils library? Try resolving toPlainText() for SelectorComponent using NMS?
+	//------------------------------------------------------------------------
 	final static String tropicalFishLocaleCCP = /*custom.tropical_fish.ccp*/"%s-%s %s";
 	final static String tropicalFishLocaleCP = /*custom.tropical_fish.cp*/"%s %s";
 	public static TranslationComponent getLocalizedDisplayName(CCP ccp){
@@ -539,6 +547,7 @@ public class TellrawUtils{
 				return new TranslationComponent("item.minecraft."+item.getType().name().toLowerCase()); 
 		}
 	}
+	//------------------------------------------------------------------------
 
 	public final static class ScoreComponent extends Component{
 		final Object selector;
@@ -632,7 +641,18 @@ public class TellrawUtils{
 			this.keybind = keybind;
 		}
 		//tellraw @a {"keybind":"of.key.zoom"}
-		@Override public String toPlainText(){return keybind.toString();}//TODO: KEY SETTING NAME HERE if possible?
+
+		@Override public String toPlainText(){
+			if(toPlainTextUseNMS()) try{
+				Object translateComp = keybindConstructor.newInstance(keybind.toString());
+				if(makeIChatMutableComponent != null) translateComp = makeIChatMutableComponent.invoke(null, translateComp);
+				return (String)(chatMessageGetString.invoke(translateComp));
+			}
+			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException e){}
+
+			// This is ONLY correct when the key is invalid/unknown to the client
+			return keybind.toString();
+		}
 		@Override protected String toStringInternal(){
 			return new StringBuilder().append("{\"keybind\":\"").append(keybind).append('"').append(getProperties()).append('}').toString();
 		}
@@ -666,7 +686,7 @@ public class TellrawUtils{
 			super(insert, click, hover, color, formats);
 			this.nbt = nbt; this.source = source; this.specifier = specifier.toString(); this.interpret = interpret; this.separator = separator;
 		}
-		@Override public String toPlainText(){return "";}
+		@Override public String toPlainText(){return "";} //TODO: resolve selector target(s) and join using separator
 		@Override protected String toStringInternal(){
 			StringBuilder builder = new StringBuilder()
 					.append("{\"nbt\":\"").append(nbt).append("\",\"")

@@ -28,6 +28,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FileIO{// version = X1.0
 	static private final String EV_DIR = "./plugins/EvFolder/";
+	/** Defaults to <code>"./plugins/\<EvPluginName\>/"</code> */
 	static public String DIR = EV_DIR;//TODO: remove public? (only user: EvLib/extras/WebUtils.java)
 	static final int MERGE_EV_DIR_THRESHOLD = 4;
 
@@ -50,13 +51,7 @@ public final class FileIO{// version = X1.0
 	public static Vector<String> installedEvPlugins(){
 		Vector<String> evPlugins = new Vector<>();
 		for(Plugin pl : Bukkit.getServer().getPluginManager().getPlugins()){
-			try{
-				@SuppressWarnings("unused")
-				String ver = pl.getClass().getDeclaredField("EvLib_ver").get(null).toString();
-				evPlugins.add(pl.getName());
-				//TODO: potentially return list of different EvLib versions being used
-			}
-			catch(Throwable e){}
+			if(pl instanceof EvPlugin) evPlugins.add(pl.getName());
 		}
 		return evPlugins;
 	}

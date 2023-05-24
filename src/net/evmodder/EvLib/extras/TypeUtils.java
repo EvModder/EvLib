@@ -159,8 +159,11 @@ public class TypeUtils{
 			// EPIC:
 			case DRAGON_EGG:
 			case ENCHANTED_GOLDEN_APPLE:
+			case DEBUG_STICK:
 			case COMMAND_BLOCK: case CHAIN_COMMAND_BLOCK: case REPEATING_COMMAND_BLOCK:
+			case COMMAND_BLOCK_MINECART:
 			case STRUCTURE_BLOCK:
+			case STRUCTURE_VOID:
 				return ChatColor.LIGHT_PURPLE;
 			// RARE:
 			case BEACON:
@@ -183,6 +186,12 @@ public class TypeUtils{
 				return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : ChatColor.YELLOW;
 			// COMMON:
 			default:
+				if(version >= 16 && item.getType().name().equals("MUSIC_DISC_PIGSTEP")) return ChatColor.AQUA;
+				if(version >= 17 && item.getType().name().equals("LIGHT")) return ChatColor.LIGHT_PURPLE; 
+				if(version >= 18 && item.getType().name().equals("MUSIC_DISC_OTHERSIDE")) return ChatColor.AQUA;
+				if(version >= 19 && item.getType().name().equals("MUSIC_DISC_5")) return ChatColor.AQUA;
+				if(version >= 20 && item.getType().name().equals("MUSIC_DISC_RELIC")) return ChatColor.AQUA;
+
 				return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : ChatColor.WHITE;
 		}
 	}
@@ -465,8 +474,9 @@ public class TypeUtils{
 				return false;
 		}
 	}
-	public static boolean isSign(Material mat){return mat.name().endsWith("_SIGN") && !mat.name().endsWith("_WALL_SIGN");}
+	public static boolean isSign(Material mat){return mat.name().endsWith("_SIGN") && !mat.name().endsWith("_WALL_SIGN") && !mat.name().endsWith("_HANGING_SIGN");}
 	public static boolean isWallSign(Material mat){return mat.name().endsWith("_WALL_SIGN");}
+	public static boolean isHangingSign(Material mat){return mat.name().endsWith("_HANGING_SIGN");}
 
 	public static boolean isFlowerPot(Material mat){return mat == Material.FLOWER_POT || mat.name().startsWith("POTTED_");}
 
@@ -504,10 +514,11 @@ public class TypeUtils{
 			case JUNGLE_SAPLING:
 			case OAK_SAPLING:
 			case SPRUCE_SAPLING:
-			// Nether fungus?
+			// Nether fungus? Bamboo shoot?
 				return true;
 			default:
-				return false;
+				return (version >= 19 && mat.name().equals("MANGROVE_PROPAGULE")) ||
+						(version >= 20 && mat.name().equals("CHERRY_SAPLING"));
 		}
 	}
 
@@ -522,7 +533,9 @@ public class TypeUtils{
 			case STONE_BUTTON:
 				return true;
 			default:
-				return version >= 16 && (mat.name().equals("WARPED_BUTTON") || mat.name().equals("CRIMSON_BUTTON"));
+				return (version >= 16 && (mat.name().equals("WARPED_BUTTON") || mat.name().equals("CRIMSON_BUTTON"))) ||
+						(version >= 19 && mat.name().equals("MANGROVE_BUTTON")) ||
+						(version >= 20 && (mat.name().equals("CHERRY_BUTTON") || mat.name().equals("BAMBOO_BUTTON")));
 		}
 	}
 
@@ -539,7 +552,9 @@ public class TypeUtils{
 			case LIGHT_WEIGHTED_PRESSURE_PLATE:
 				return true;
 			default:
-				return version >= 16 && (mat.name().equals("WARPED_PRESSURE_PLATE") || mat.name().equals("CRIMSON_PRESSURE_PLATE"));
+				return (version >= 16 && (mat.name().equals("WARPED_PRESSURE_PLATE") || mat.name().equals("CRIMSON_PRESSURE_PLATE"))) ||
+						(version >= 19 && mat.name().equals("MANGROVE_PRESSURE_PLATE")) ||
+						(version >= 20 && (mat.name().equals("CHERRY_PRESSURE_PLATE") || mat.name().equals("BAMBOO_PRESSURE_PLATE")));
 		}
 	}
 
@@ -553,7 +568,9 @@ public class TypeUtils{
 			case SPRUCE_DOOR:
 				return true;
 			default:
-				return version >= 16 && (mat.name().equals("WARPED_DOOR") || mat.name().equals("CRIMSON_DOOR"));
+				return (version >= 16 && (mat.name().equals("WARPED_DOOR") || mat.name().equals("CRIMSON_DOOR"))) ||
+						(version >= 19 && mat.name().equals("MANGROVE_DOOR")) ||
+						(version >= 20 && (mat.name().equals("CHERRY_DOOR") || mat.name().equals("BAMBOO_DOOR")));
 		}
 	}
 
@@ -567,7 +584,9 @@ public class TypeUtils{
 			case SPRUCE_PLANKS:
 				return true;
 			default:
-				return version >= 16 && (mat.name().equals("WARPED_PLANKS") || mat.name().equals("CRIMSON_PLANKS"));
+				return (version >= 16 && (mat.name().equals("WARPED_PLANKS") || mat.name().equals("CRIMSON_PLANKS"))) ||
+						(version >= 19 && mat.name().equals("MANGROVE_PLANKS")) ||
+						(version >= 20 && (mat.name().equals("CHERRY_PLANKS") || mat.name().equals("BAMBOO_PLANKS")));
 		}
 	}
 
@@ -692,7 +711,7 @@ public class TypeUtils{
 		SILK_SPAWNERS, SILK_INFESTED, MOB_EGGS, CMD_BLOCKS,
 		BEDROCK, END_PORTAL_FRAMES, BARRIERS, STRUCTURE_BLOCKS, LIGHT_BLOCKS, PETRIFIED_SLABS,
 		ITEM_LORE, ITEM_NAME_COLOR, CONFLICTING_ENCHANTS, ABOVE_MAX_ENCHANTS, OVERSTACKED,
-		PLAYER_HEADS, TATTERED_BOOKS
+		PLAYER_HEADS, TATTERED_BOOKS, REINFORCED_DEEPSLATE
 	};
 	public static boolean isObtainable(Material mat, ObtainableOptions... opts){
 		HashSet<ObtainableOptions> canObtain = new HashSet<>();
@@ -769,6 +788,9 @@ public class TypeUtils{
 					if(mat.name().equals("BAMBOO_SAPLING")) return false; // Planted-form: Cannot be held
 					if(mat.name().equals("JIGSAW")) return canObtain.contains(ObtainableOptions.STRUCTURE_BLOCKS);
 					if(mat.name().equals("LIGHT")) return canObtain.contains(ObtainableOptions.LIGHT_BLOCKS);
+				}
+				if(version >= 19){
+					if(mat.name().equals("REINFORCED_DEEPSLATE")) return canObtain.contains(ObtainableOptions.REINFORCED_DEEPSLATE);
 				}
 				if(mat.name().equals(version >= 17 ? "DIRT_PATH" : "GRASS_PATH")) return false; // Not obtainable with silk
 				return true;

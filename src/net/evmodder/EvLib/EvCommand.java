@@ -8,6 +8,7 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.plugin.java.JavaPlugin;
 
+/** Base class for implementing plugin commands */
 public abstract class EvCommand implements TabExecutor{
 //	protected EvPlugin plugin;
 	final String commandName;
