@@ -212,7 +212,7 @@ public final class NBTTagUtils{// version = X1.0
 		return item;
 	}
 	public static RefNBTTagCompound getTag(ItemStack item){
-		Object nmsItem = methodAsNMSCopy.of(null).call(item);
+		Object nmsItem = methodAsNMSCopy.of(null).call(item); // asNMSCopy() can generate a NPE in rare cases (plugin compatibility)
 		Object nmsTag = methodGetTag.of(nmsItem).call();
 		return nmsTag == null ? new RefNBTTagCompound() : new RefNBTTagCompound(nmsTag);
 	};

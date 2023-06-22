@@ -454,7 +454,7 @@ public class WebUtils {
 //		String token = /*authenticateMicrosoft*/authenticateMojang(email, passw);
 //		System.out.println("token = "+token);
 		String uuid = "0e314b6029c74e35bef33c652c8fb467";
-		String token = "eyJhbGciOiJIUzI1NiJ9.eyJ4dWlkIjoiMjUzNTQ2NjM1MzY2NjY2NiIsImFnZyI6IkFkdWx0Iiwic3ViIjoiMWUzYTgyNDYtNTNmMC00ODBmLWIwYjMtMTFiNGU5ZDVkNTY0IiwibmJmIjoxNjczMzQwMDg4LCJhdXRoIjoiWEJPWCIsInJvbGVzIjpbXSwiaXNzIjoiYXV0aGVudGljYXRpb24iLCJleHAiOjE2NzM0MjY0ODgsImlhdCI6MTY3MzM0MDA4OCwicGxhdGZvcm0iOiJVTktOT1dOIiwieXVpZCI6IjY1ODY5ZWMwOGMxZGM1ZDM2YzVjMWMzY2M5YzlmODkwIn0.8vuEp1JXnePsWnRN30ggbQhsIfFZDiuJVH9ImfdANzU";
+		String token = "eyJraWQiOiJhYzg0YSIsImFsZyI6IkhTMjU2In0.eyJ4dWlkIjoiMjUzNTQ2NjM1MzY2NjY2NiIsImFnZyI6IkFkdWx0Iiwic3ViIjoiMWUzYTgyNDYtNTNmMC00ODBmLWIwYjMtMTFiNGU5ZDVkNTY0IiwiYXV0aCI6IlhCT1giLCJucyI6ImRlZmF1bHQiLCJyb2xlcyI6W10sImlzcyI6ImF1dGhlbnRpY2F0aW9uIiwiZmxhZ3MiOlsidHdvZmFjdG9yYXV0aCIsIm1pbmVjcmFmdF9uZXQiLCJvcmRlcnNfMjAyMiJdLCJwbGF0Zm9ybSI6IlVOS05PV04iLCJ5dWlkIjoiNjU4NjllYzA4YzFkYzVkMzZjNWMxYzNjYzljOWY4OTAiLCJuYmYiOjE2ODcyNzUwNzksImV4cCI6MTY4NzM2MTQ3OSwiaWF0IjoxNjg3Mjc1MDc5fQ.7XksM6LuGDPTq1gij2aVQBFrJgI1kMVzB6Z0_SROk0Y";
 
 		System.out.println(String.join("\n", headsToFlip));
 		System.out.println("Beginning conversion...");
@@ -475,7 +475,7 @@ public class WebUtils {
 		expectedTxr.remove(EntityType.PLAYER.name());
 		for(EntityType type : Arrays.asList(EntityType.ARMOR_STAND, EntityType.LEASH_HITCH, EntityType.MINECART, EntityType.MINECART_CHEST,
 				EntityType.MINECART_COMMAND, EntityType.MINECART_FURNACE, EntityType.MINECART_HOPPER, EntityType.MINECART_MOB_SPAWNER,
-				EntityType.MINECART_TNT, EntityType.UNKNOWN)){
+				EntityType.MINECART_TNT, EntityType.BOAT, EntityType.PAINTING, EntityType.UNKNOWN, EntityType.valueOf("CHEST_BOAT"))){
 			expectedTxr.add(type.name()); missingDrpC.add(type.name());
 		}
 		for(String headData : FileIO.loadFile("head-textures.txt", "").split("\n")){
@@ -521,7 +521,8 @@ public class WebUtils {
 	static void checkMissingGrummTextures(){
 		TreeSet<String> regularTxtrs = new TreeSet<>();
 		TreeSet<String> grummTxtrs = new TreeSet<>();
-		for(String headData : FileIO.loadFile("head-textures.txt", "").split("\n")){
+		final String allHeads = FileIO.loadFile("head-textures.txt", "")+"\n"+FileIO.loadFile("grumm-head-textures.txt", "")+"\n"+FileIO.loadFile("sideways-shulker-head-textures.txt", "");
+		for(String headData : allHeads.split("\n")){
 			int i = headData.indexOf(':'), j = headData.indexOf('|');
 			if(i != -1){
 				if(headData.substring(i + 1).replace("xxx", "").trim().isEmpty()) continue;
@@ -674,7 +675,7 @@ public class WebUtils {
 		checkMissingTexturesDropratesAndSpawnModifiers();
 		checkMissingGrummTextures();
 //		checkAbnormalHeadTextures();
-//		runGrumm();
+		runGrumm();
 //		System.out.println("Test: "+Vehicle.class.isAssignableFrom(EntityType.PLAYER.getEntityClass()));
 	}
 }

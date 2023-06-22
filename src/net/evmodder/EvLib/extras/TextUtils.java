@@ -240,8 +240,7 @@ public class TextUtils{
 		return str;
 	}
 
-	public static String locationToString(Location loc){
-		return locationToString(loc, null, null);}
+	public static String locationToString(Location loc){return locationToString(loc, null, null);}
 	public static String locationToString(Location loc, ChatColor coordColor, ChatColor commaColor){
 		return locationToString(loc, coordColor, commaColor, 2);
 	}

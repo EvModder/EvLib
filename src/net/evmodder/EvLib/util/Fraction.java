@@ -1,10 +1,10 @@
 package net.evmodder.EvLib.util;
 
 public class Fraction{
-	int numer, denom;
+	private int numer, denom;
 	public Fraction(int a, int b){numer=a; denom=b;}
-	public static int GCD(int a, int b){return b == 0 ? a : GCD(b, a % b);}
-	public static int LCM(int a, int b){return (a * b) / GCD(a, b);}
+	private static int GCD(int a, int b){return b == 0 ? a : GCD(b, a % b);}
+	private static int LCM(int a, int b){return (a * b) / GCD(a, b);}
 	public void add(int a, int b){
 		if(b != denom){
 			int new_denom = LCM(denom, b);
@@ -19,6 +19,8 @@ public class Fraction{
 		numer %= denom;
 		return whole;
 	}
+
+	public int getNumerator(){return numer;}
 
 	@Override public String toString(){
 		return numer+"/"+denom;
