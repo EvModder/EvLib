@@ -1,6 +1,6 @@
 package net.evmodder.EvLib.util;
 
-public class Fraction{
+public class Fraction implements Comparable<Fraction>{
 	private int numer, denom;
 	public Fraction(int a, int b){numer=a; denom=b;}
 	private static int GCD(int a, int b){return b == 0 ? a : GCD(b, a % b);}
@@ -21,9 +21,19 @@ public class Fraction{
 	}
 
 	public int getNumerator(){return numer;}
+	public int getDenominator(){return denom;}
 
 	@Override public String toString(){
 		return numer+"/"+denom;
+	}
+
+	@Override public boolean equals(Object o){
+		return o != null && o instanceof Fraction && ((Fraction)o).numer == numer && ((Fraction)o).denom == denom;
+	}
+
+	@Override public int compareTo(Fraction o){
+		long gcd = GCD(denom, o.denom);
+		return Long.compare(numer*gcd, o.numer*gcd);
 	}
 
 	public static Fraction fromString(String str){
