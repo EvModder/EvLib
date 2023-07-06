@@ -135,7 +135,7 @@ public class TellrawUtils{
 	}
 
 	// for toPlainText() on KeybindComponent and TranslateComponent, we fall back to using the NMS resolver
-	private static Constructor<?> translateConstructor, translateConstructorWith, keybindConstructor;
+	private static Constructor<?> translateConstructor, translateConstructorWith, translateConstructorFallbackAndWith, keybindConstructor;
 	private static Method chatMessageGetString, makeIChatMutableComponent = null;
 	private static boolean nmsInitAttempted = false;
 	private static boolean toPlainTextUseNMS(){
@@ -163,9 +163,17 @@ public class TellrawUtils{
 			}
 		}
 		try{
-			translateConstructor = clazz.getConstructor(String.class);
-			translateConstructorWith = clazz.getConstructor(String.class, Object[].class);
-			keybindConstructor = keybindClazz.getConstructor(String.class);
+			// Get constructors
+			try{ // pre 1.19.4
+				keybindConstructor = keybindClazz.getConstructor(String.class);
+				translateConstructor = clazz.getConstructor(String.class);
+				translateConstructorWith = clazz.getConstructor(String.class, Object[].class);
+			}
+			catch(NoSuchMethodException e){/*bad1=true*/}
+			try{ // post 1.19.4
+				translateConstructorFallbackAndWith = clazz.getConstructor(String.class, String.class, Object[].class);
+			}
+			catch(NoSuchMethodException e){/*bad2=true*/}
 			if(post_1_19){
 				chatMessageGetString = Class.forName("net.minecraft.network.chat.IChatBaseComponent").getMethod("getString");
 				Class<?> clazzComponentContents = Class.forName("net.minecraft.network.chat.ComponentContents");
@@ -314,33 +322,46 @@ public class TellrawUtils{
 		}
 	}
 	public final static class TranslationComponent extends Component{
-		final String jsonKey;
+		final String jsonKey, fallback;//fallback added in 1.19.4
 		final Component[] with; // Used to replace "%s" placeholders in the translation text.
 		public String getJsonKey(){return jsonKey;}
 		public Component[] getWith(){return with;}
-		public TranslationComponent(String jsonKey){this.jsonKey = jsonKey; with = null;}
-		public TranslationComponent(String jsonKey, Component... with){this.jsonKey = jsonKey; this.with = with;}
+		public TranslationComponent(String jsonKey){this.jsonKey = jsonKey; this.fallback = null; with = null;}
+		public TranslationComponent(String jsonKey, Component... with){this.jsonKey = jsonKey; this.fallback = null; this.with = with;}
 		public TranslationComponent(String jsonKey, Component[] with,
-				String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
+				String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){//pre1.19.4
 			super(insert, click, hover, color, formats);
 			this.jsonKey = jsonKey;
+			this.fallback = null;
+			this.with = with;
+		}
+		public TranslationComponent(String jsonKey, String fallback, Component[] with,
+				String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){//1.19.4+
+			super(insert, click, hover, color, formats);
+			this.jsonKey = jsonKey;
+			this.fallback = jsonKey.equals(fallback) ? null : fallback;
 			this.with = with;
 		}
 		//tellraw @a {"translate":"multiplayer.player.joined","with":["EvDoc", "unused"]} -> en_us.json: "%s joined the game"
 
 		@Override public String toPlainText(){
 			if(toPlainTextUseNMS()) try{
-				Object translateComp = with == null
+				Object translateComp = (with == null && translateConstructor != null)
 						? translateConstructor.newInstance(jsonKey)
-						: translateConstructorWith.newInstance(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
+						: translateConstructorWith != null
+							? translateConstructorWith.newInstance(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray())
+							: translateConstructorFallbackAndWith.newInstance(jsonKey, fallback,
+									with == null ? null : Arrays.stream(with).map(Component::toPlainText).toArray());
 				if(makeIChatMutableComponent != null) translateComp = makeIChatMutableComponent.invoke(null, translateComp);
 				return (String)(chatMessageGetString.invoke(translateComp));
 			}
 			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException e){}
 
 			// This is ONLY correct when the key is invalid/unknown to the client
-			return with == null ? jsonKey.replace("%%", "<thingie_cuz_lazy>").replace("%s", "").replace("<thingie_cuz_lazy>", "%")
-					: String.format(jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
+			return with == null
+//					? jsonKey.replace("%%", "<thingie_cuz_lazy>").replace("%s", "").replace("<thingie_cuz_lazy>", "%")
+					? String.format(fallback != null ? fallback : jsonKey)
+					: String.format(fallback != null ? fallback : jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
 		}
 		@Override protected String toStringInternal(){
 			// For TranslationComponents that are actually just String formatters, convert to a list
@@ -349,20 +370,24 @@ public class TellrawUtils{
 			// Otherwise, proceed with toString() as a {"translate"} component
 			String escapedJsonKey = TextUtils.escape(jsonKey, "\"","\n");
 			StringBuilder builder = new StringBuilder().append("{\"translate\":\"").append(escapedJsonKey).append('"');
+			if(fallback != null) builder.append(",\"fallback\":\"").append(TextUtils.escape(fallback, "\"","\n")).append('"');
 			if(with != null && with.length > 0) builder.append(",\"with\":[").append(
 					Arrays.stream(with).map(Component::toString).collect(Collectors.joining(","))).append(']');
 			return builder.append(getProperties()).append('}').toString();
 		}
 		@Override TranslationComponent copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
-			return new TranslationComponent(jsonKey, with, insert, click, hover, color, formats);
+			return new TranslationComponent(jsonKey, fallback, with, insert, click, hover, color, formats);
 		}
 		Component convertStringFormattersAndRawText(){
-			if(jsonKey.indexOf('%') == -1){
-//				if(jsonKey.indexOf('.') == -1) return new RawTextComponent(jsonKey);//TODO: more formal check to see if this key exists or not
+			if(jsonKey.indexOf('%') == -1){ // Not a format str
+				// Commented out this optimization because the key *might* be a valid key client-side
+				//if(jsonKey.indexOf('.') == -1 && toPlainText().equals(jsonKey)) return new RawTextComponent(fallback != null ? fallback : jsonKey);
 				return this;
 			}
 
-			final String formatText = jsonKey.replace("%%", "<thingie_cuz_lazy>");
+			final String formatText = (fallback != null ? fallback : jsonKey).replace("%%", "<thingie_cuz_lazy>");
+			if(formatText.replace("%s", "").indexOf('%') != -1) return this; // TODO: consider supporting formats besides "%s"
+
 			ListComponent listComp = new ListComponent();
 			int textStart = 0, nextSub = formatText.indexOf("%s");
 			int i = 0;
@@ -736,7 +761,7 @@ public class TellrawUtils{
 					return true;
 				}
 			}
-			// For TranslationComponents that are actually just String formatters, not translation keys.
+			// For TranslationComponents that are actually just String substitutions, not translation keys.
 			if(component instanceof TranslationComponent && last != null && last.samePropertiesAs(component)){
 				final Component strFormatComp = ((TranslationComponent)component).convertStringFormattersAndRawText();
 				if(!(strFormatComp instanceof TranslationComponent)) return addComponent(strFormatComp);
@@ -952,7 +977,7 @@ public class TellrawUtils{
 				TreeMap<Format, Boolean> formats = new TreeMap<>(); // Using TreeMap instead of HashMap because sorting is nice
 				ComponentType type = null;
 				String text = null;
-				String jsonKey = null;
+				String jsonKey = null, fallback = null;
 				Component[] with = null;
 				Keybind keybind = null;
 				Object selector = null;
@@ -1063,6 +1088,14 @@ public class TellrawUtils{
 						jsonKey = textAndIdx.a;
 						i = textAndIdx.b;
 					}
+					else if(str.startsWith("fallback\"", i)){
+						newType = ComponentType.TRANSLATE;
+						i += 9;
+						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+						if(textAndIdx == null) return null;
+						fallback = textAndIdx.a;
+						i = textAndIdx.b;
+					}
 					else if(str.startsWith("score\"", i)){
 						newType = ComponentType.SCORE;
 						i += 6;
@@ -1155,7 +1188,7 @@ public class TellrawUtils{
 				}
 				switch(type){
 					case TEXT: comp = new RawTextComponent(text, insert, click, hover, color, formats); break;
-					case TRANSLATE: comp = new TranslationComponent(jsonKey, with, insert, click, hover, color, formats); break;
+					case TRANSLATE: comp = new TranslationComponent(jsonKey, fallback, with, insert, click, hover, color, formats); break;
 					case SCORE: comp = new ScoreComponent(selector, objective, value, insert, click, hover, color, formats); break;
 					case SELECTOR: comp = new SelectorComponent(selector, insert, click, hover, color, formats); break;
 					case KEYBIND: comp = new KeybindComponent(keybind, insert, click, hover, color, formats); break;
