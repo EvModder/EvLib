@@ -30,6 +30,8 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.evmodder.EvLib.FileIO;
@@ -165,14 +167,8 @@ public class WebUtils {
 		if(nameOrUUID.matches("^[a-f0-9]{32}$")) nameOrUUID = addDashesForUUID(nameOrUUID);
 		return playerExists.put(nameOrUUID.toLowerCase(), profile);
 	}
-	public static GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin){
-		if(nameOrUUID.matches("^[a-f0-9]{32}$")) nameOrUUID = addDashesForUUID(nameOrUUID);
-		nameOrUUID = nameOrUUID.toLowerCase();
-		GameProfile profile = playerExists.get(nameOrUUID);
-		if(profile != null){
-			if(fetchSkin && !profile.getProperties().containsKey("textures")) nameOrUUID = profile.getId().toString();
-			else return profile;
-		}
+	private static GameProfile getGameProfileWebRequest(String nameOrUUID/*formatted*/, boolean fetchSkin){
+		GameProfile profile = null;
 		try{//Lookup by UUID
 			final UUID uuid = UUID.fromString(nameOrUUID);
 			String data = getReadURL("https://sessionserver.mojang.com/session/minecraft/profile/"+nameOrUUID);
@@ -202,7 +198,7 @@ public class WebUtils {
 					String uuidStr = data.substring(idStart, idEnd);
 					if(uuidStr.matches("^[a-f0-9]{32}$")) uuidStr = addDashesForUUID(uuidStr);
 					final UUID uuid = UUID.fromString(uuidStr);// Important to validate UUID before recursive call
-					if(fetchSkin) return getGameProfile(uuidStr, fetchSkin);
+					if(fetchSkin) return getGameProfile(uuidStr, fetchSkin, null);
 					final int nameStart = data.indexOf("\"name\":\"")+8;
 					final int nameEnd = data.indexOf("\"", nameStart+1);
 					final String name = data.substring(nameStart, nameEnd);
@@ -213,6 +209,21 @@ public class WebUtils {
 		}
 		playerExists.put(nameOrUUID, profile);
 		return profile;
+	}
+	public static GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
+		if(nameOrUUID.matches("^[a-f0-9]{32}$")) nameOrUUID = addDashesForUUID(nameOrUUID);
+		nameOrUUID = nameOrUUID.toLowerCase();
+		final GameProfile profile = playerExists.get(nameOrUUID);
+		if(profile != null){
+			if(fetchSkin && !profile.getProperties().containsKey("textures")) nameOrUUID = profile.getId().toString();
+			else return profile;
+		}
+		if(nullForSync == null) return getGameProfileWebRequest(nameOrUUID, fetchSkin);
+		else{
+			final String n = nameOrUUID;
+			new BukkitRunnable(){@Override public void run(){getGameProfileWebRequest(n, fetchSkin);}}.runTaskAsynchronously(nullForSync);
+			return null;
+		}
 	}
 
 	static HashMap<String, String> textureExists = new HashMap<>();
@@ -636,7 +647,7 @@ public class WebUtils {
 		TreeSet<String> badNames = new TreeSet<>();
 		for(String line : nameAndStuff){
 			String name = line.split(",")[0];
-			GameProfile profile = getGameProfile(name, /*fetchSkin=*/false);
+			GameProfile profile = getGameProfile(name, /*fetchSkin=*/false, /*nullForSync=*/null);
 			if(profile != null && profile.getId() != null) System.out.println(profile.getId()+","+line);
 			else badNames.add(name);
 		}
