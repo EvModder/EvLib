@@ -327,6 +327,7 @@ public class TellrawUtils{
 		public String getJsonKey(){return jsonKey;}
 		public Component[] getWith(){return with;}
 		public TranslationComponent(String jsonKey){this.jsonKey = jsonKey; this.fallback = null; with = null;}
+		public TranslationComponent(String jsonKey, String fallback){this.jsonKey = jsonKey; this.fallback = fallback; with = null;}
 		public TranslationComponent(String jsonKey, Component... with){this.jsonKey = jsonKey; this.fallback = null; this.with = with;}
 		public TranslationComponent(String jsonKey, Component[] with,
 				String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){//pre1.19.4
@@ -359,7 +360,6 @@ public class TellrawUtils{
 
 			// This is ONLY correct when the key is invalid/unknown to the client
 			return with == null
-//					? jsonKey.replace("%%", "<thingie_cuz_lazy>").replace("%s", "").replace("<thingie_cuz_lazy>", "%")
 					? String.format(fallback != null ? fallback : jsonKey)
 					: String.format(fallback != null ? fallback : jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
 		}
@@ -1071,6 +1071,13 @@ public class TellrawUtils{
 						with = ((ListComponent)withAndIdx.a).components.toArray(new Component[0]);
 						i = withAndIdx.b;
 					}
+					else if(str.startsWith("fallback\"", i)){
+						i += 9;
+						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
+						if(textAndIdx == null) return null;
+						fallback = textAndIdx.a;
+						i = textAndIdx.b;
+					}
 					// Content tags are checked in the order: text, translate, score, selector, keybind, nbt
 					else if(str.startsWith("text\"", i)){
 						newType = ComponentType.TEXT;
@@ -1086,14 +1093,6 @@ public class TellrawUtils{
 						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
 						if(textAndIdx == null) return null;
 						jsonKey = textAndIdx.a;
-						i = textAndIdx.b;
-					}
-					else if(str.startsWith("fallback\"", i)){
-						newType = ComponentType.TRANSLATE;
-						i += 9;
-						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
-						if(textAndIdx == null) return null;
-						fallback = textAndIdx.a;
 						i = textAndIdx.b;
 					}
 					else if(str.startsWith("score\"", i)){
