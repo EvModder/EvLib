@@ -2,6 +2,7 @@ package net.evmodder.EvLib;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -34,7 +35,7 @@ public final class FileIO{// version = X1.0
 
 	public static void moveDirectoryContents(File srcDir, File destDir){
 		if(srcDir.isDirectory()){
-			for(File file : srcDir.listFiles()){
+			for(final File file : srcDir.listFiles()){
 				try{Files.move(file.toPath(), new File(destDir.getPath()+"/"+file.getName()).toPath(),
 						StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);}
 				catch(IOException e){e.printStackTrace();}
@@ -49,15 +50,15 @@ public final class FileIO{// version = X1.0
 	}
 
 	public static Vector<String> installedEvPlugins(){
-		Vector<String> evPlugins = new Vector<>();
-		for(Plugin pl : Bukkit.getServer().getPluginManager().getPlugins()){
+		final Vector<String> evPlugins = new Vector<>();
+		for(final Plugin pl : Bukkit.getServer().getPluginManager().getPlugins()){
 			if(pl instanceof EvPlugin) evPlugins.add(pl.getName());
 		}
 		return evPlugins;
 	}
 
 	static void verifyDir(Plugin evPl){
-		Vector<String> evPlugins = FileIO.installedEvPlugins();
+		final Vector<String> evPlugins = FileIO.installedEvPlugins();
 		final String CUSTOM_DIR = "./plugins/"+evPl.getName()+"/";
 		if(!new File(EV_DIR).exists() && (evPl.getName().equals("DropHeads") || evPlugins.size() < MERGE_EV_DIR_THRESHOLD)){
 			DIR = CUSTOM_DIR;
@@ -65,7 +66,7 @@ public final class FileIO{// version = X1.0
 		else if(new File(CUSTOM_DIR).exists()){//merge with EvFolder
 			//Bukkit.getLogger().info("EvPlugins installed: "+String.join(", ", evPlugins));
 			evPl.getLogger().warning("Relocating data in "+CUSTOM_DIR+", this might take a minute..");
-			File evFolder = new File(EV_DIR);
+			final File evFolder = new File(EV_DIR);
 			if(!evFolder.exists()) evFolder.mkdir();
 			moveDirectoryContents(new File(CUSTOM_DIR), evFolder);
 		}
@@ -78,11 +79,11 @@ public final class FileIO{// version = X1.0
 			if(defaultValue == null) return null;
 
 			//Create Directory
-			File dir = new File(DIR);
+			final File dir = new File(DIR);
 			if(!dir.exists())dir.mkdir();
 
 			//Create the file
-			File conf = new File(DIR+filename);
+			final File conf = new File(DIR+filename);
 			try{
 				conf.createNewFile();
 				reader = new BufferedReader(new InputStreamReader(defaultValue));
@@ -98,7 +99,7 @@ public final class FileIO{// version = X1.0
 			}
 			catch(IOException e1){e1.printStackTrace();}
 		}
-		StringBuilder file = new StringBuilder();
+		final StringBuilder file = new StringBuilder();
 		if(reader != null){
 			try{
 				String line = reader.readLine();
@@ -116,13 +117,13 @@ public final class FileIO{// version = X1.0
 	}
 
 	public static String loadFile(String filename, String defaultContent/*, boolean exactContent*/){
-		BufferedReader reader = null;
+		BufferedReader reader;
 		try{reader = new BufferedReader(new FileReader(DIR+filename));}
 		catch(FileNotFoundException e){
 			if(defaultContent == null || defaultContent.isEmpty()) return defaultContent;
 
 			//Create Directory
-			File dir = new File(DIR);
+			final File dir = new File(DIR);
 			if(!dir.exists())dir.mkdir();
 
 			//Create the file
@@ -134,9 +135,9 @@ public final class FileIO{// version = X1.0
 				writer.close();
 			}
 			catch(IOException e1){e1.printStackTrace();}
-			return defaultContent;
+			reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(defaultContent.getBytes())));
 		}
-		StringBuilder file = new StringBuilder();
+		final StringBuilder file = new StringBuilder();
 		if(reader != null){
 			try{
 				String line;
@@ -155,7 +156,7 @@ public final class FileIO{// version = X1.0
 	public static boolean saveFile(String filename, String content, boolean append){
 		if(content == null || content.isEmpty()) return new File(DIR+filename).delete();
 		try{
-			BufferedWriter writer = new BufferedWriter(new FileWriter(DIR+filename, append));
+			final BufferedWriter writer = new BufferedWriter(new FileWriter(DIR+filename, append));
 			writer.write(content); writer.close();
 			return true;
 		}
@@ -169,28 +170,32 @@ public final class FileIO{// version = X1.0
 		return new File(DIR+filename).delete();
 	}
 
+	public static boolean moveFile(String oldName, String newName){
+		return new File(DIR+oldName).renameTo(new File(DIR+newName));
+	}
+
 	public static YamlConfiguration loadConfig(JavaPlugin pl, String configName, InputStream defaultConfig, boolean notifyIfNew){
 		if(!configName.endsWith(".yml")){
 			pl.getLogger().severe("Invalid config file!");
 			pl.getLogger().severe("Configuation files must end in .yml");
 			return null;
 		}
-		File file = new File(DIR+configName);
+		final File file = new File(DIR+configName);
 		if(!file.exists() && defaultConfig != null){
 			try{
 				//Create Directory
-				File dir = new File(DIR);
+				final File dir = new File(DIR);
 				if(!dir.exists())dir.mkdir();
 
 				//Read contents of defaultConfig
-				BufferedReader reader = new BufferedReader(new InputStreamReader(defaultConfig));
+				final BufferedReader reader = new BufferedReader(new InputStreamReader(defaultConfig));
 				String line = reader.readLine();
-				StringBuilder builder = new StringBuilder(line);
+				final StringBuilder builder = new StringBuilder(line);
 				while((line = reader.readLine()) != null) builder.append('\n').append(line);
 				reader.close();
 
 				//Create new config from contents of defaultConfig
-				BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+				final BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 				writer.write(builder.toString()); writer.close();
 			}
 			catch(IOException ex){
@@ -208,10 +213,11 @@ public final class FileIO{// version = X1.0
 		try{
 			InputStream inputStream = pl.getClass().getResourceAsStream("/"+filename);
 			if(inputStream == null) inputStream = pl.getClass().getClassLoader().getResourceAsStream("/"+filename);
-			if(inputStream == null) return defaultContent;
-			BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+			final BufferedReader reader = new BufferedReader(inputStream == null
+					? new InputStreamReader(new ByteArrayInputStream(defaultContent.getBytes()))
+					: new InputStreamReader(inputStream));
 
-			StringBuilder file = new StringBuilder();
+			final StringBuilder file = new StringBuilder();
 			String line;
 			while((line = reader.readLine()) != null){
 				line = line.trim().replace("//", "#");
@@ -227,7 +233,7 @@ public final class FileIO{// version = X1.0
 	}
 
 	public static YamlConfiguration loadYaml(String filename, String defaultContent){
-		YamlConfiguration yaml = YamlConfiguration.loadConfiguration(new File(DIR+filename));
+		final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(new File(DIR+filename));
 		if(yaml == null){
 			if(defaultContent == null || defaultContent.isEmpty()) return null;
 
@@ -285,17 +291,17 @@ public final class FileIO{// version = X1.0
 		}
 		if(dirURL == null){
 			// In case of a jar file, we can't actually find a directory. Have to assume the same jar as clazz.
-			String me = clazz.getName().replace(".", "/") + ".class";
+			final String me = clazz.getName().replace(".", "/") + ".class";
 			dirURL = clazz.getClassLoader().getResource(me);
 		}
 		if(dirURL.getProtocol().equals("jar")){
 			// A JAR path
-			String jarPath = dirURL.getPath().substring(5, dirURL.getPath().indexOf("!")); // strip out only the JAR file
-			JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"));
-			Enumeration<JarEntry> entries = jar.entries(); // gives ALL entries in jar
-			Set<String> result = new HashSet<>(); // avoid duplicates in case it is a subdirectory
+			final String jarPath = dirURL.getPath().substring(5, dirURL.getPath().indexOf("!")); // strip out only the JAR file
+			final JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"));
+			final Enumeration<JarEntry> entries = jar.entries(); // gives ALL entries in jar
+			final Set<String> result = new HashSet<>(); // avoid duplicates in case it is a subdirectory
 			while(entries.hasMoreElements()){
-				String name = entries.nextElement().getName();
+				final String name = entries.nextElement().getName();
 				if(name.startsWith(path)){ // filter according to the path
 					String entry = name.substring(path.length());
 					int checkSubdir = entry.indexOf("/");
