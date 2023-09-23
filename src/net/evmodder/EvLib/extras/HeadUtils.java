@@ -103,11 +103,11 @@ public final class HeadUtils {
 //	}
 
 	public static ItemStack makeCustomHead(GameProfile profile, boolean setOwner){
-		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-		SkullMeta meta = (SkullMeta) head.getItemMeta();
+		final ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+		final SkullMeta meta = (SkullMeta) head.getItemMeta();
 		setGameProfile(meta, profile);
 		if(setOwner && profile.getId() != null){
-			OfflinePlayer p = Bukkit.getOfflinePlayer(profile.getId());
+			final OfflinePlayer p = Bukkit.getOfflinePlayer(profile.getId());
 			if(p != null){
 				meta.setOwningPlayer(p);
 				//if(p.getName() != null) meta.setOwner(p.getName());

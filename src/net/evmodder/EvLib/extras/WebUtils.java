@@ -382,6 +382,8 @@ public class WebUtils {
 					//===========================================================================================
 					try{Thread.sleep(8000);}catch(InterruptedException e1){e1.printStackTrace();}//8s
 					//https://api.mojang.com/user/profile/0e314b6029c74e35bef33c652c8fb467/skin
+					//https://api.mojang.com/users/profiles/minecraft/evmodder
+					//https://sessionserver.mojang.com/session/minecraft/profile/0e314b6029c74e35bef33c652c8fb467
 					conn = (HttpURLConnection)new URL("https://api.minecraftservices.com/minecraft/profile/skins").openConnection();
 //					conn = (HttpURLConnection)new URL("https://api.mojang.com/user/profile/" + uuid + "/skin").openConnection();
 					conn.setRequestProperty("Authorization", "Bearer "+token);
@@ -443,6 +445,7 @@ public class WebUtils {
 	static void runGrumm(){
 		String[] targetHeads = new String[]{
 //				"BOAT", "LEASH_HITCH",
+				"LLAMA|BROWN", "LLAMA|GRAY"
 		};
 		String[] headsData = FileIO.loadFile("head-textures.txt", "").split("\n");
 		String[] headsToFlip = new String[targetHeads.length];
@@ -486,9 +489,14 @@ public class WebUtils {
 		expectedTxr.remove(EntityType.PLAYER.name());
 		for(EntityType type : Arrays.asList(EntityType.ARMOR_STAND, EntityType.LEASH_HITCH, EntityType.MINECART, EntityType.MINECART_CHEST,
 				EntityType.MINECART_COMMAND, EntityType.MINECART_FURNACE, EntityType.MINECART_HOPPER, EntityType.MINECART_MOB_SPAWNER,
-				EntityType.MINECART_TNT, EntityType.BOAT, EntityType.PAINTING, EntityType.UNKNOWN, EntityType.valueOf("CHEST_BOAT"))){
+				EntityType.MINECART_TNT, EntityType.BOAT, EntityType.PAINTING, EntityType.UNKNOWN)){
 			expectedTxr.add(type.name()); missingDrpC.add(type.name());
 		}
+		try{
+			EntityType type = EntityType.valueOf("CHEST_BOAT");
+			expectedTxr.add(type.name()); missingDrpC.add(type.name());
+		}
+		catch(IllegalArgumentException e){}
 		for(String headData : FileIO.loadFile("head-textures.txt", "").split("\n")){
 			int i = headData.indexOf(':');
 			if(i != -1){
