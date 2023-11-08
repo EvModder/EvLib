@@ -172,15 +172,17 @@ public class WebUtils {
 		try{//Lookup by UUID
 			final UUID uuid = UUID.fromString(nameOrUUID);
 			String data = getReadURL("https://sessionserver.mojang.com/session/minecraft/profile/"+nameOrUUID);
-			if(data != null){
+			if(data != null){  // No account found for this UUID
 				data = data.replaceAll("\\s+", "");
 				final int nameStart = data.indexOf("\"name\":\"")+8;
 				final int nameEnd = data.indexOf("\"", nameStart+1);
+				if(nameStart == -1 || nameEnd <= nameStart) return null;  // No account found for this UUID
 				final String name = data.substring(nameStart, nameEnd);
 				profile = new GameProfile(uuid, name);
 				if(fetchSkin){
 					final int codeStart = data.indexOf("{\"name\":\"textures\",\"value\":\"")+28;
 					final int codeEnd = data.indexOf("\"}", codeStart+1);
+					if(codeStart == -1 || codeEnd <= codeStart) System.err.println("Failed to parse skin texture from Mojang API response");
 					final String base64 = data.substring(codeStart, codeEnd);
 					profile.getProperties().put("textures", new Property("textures", base64));
 				}
