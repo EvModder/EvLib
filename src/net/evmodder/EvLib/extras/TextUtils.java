@@ -3,11 +3,13 @@ package net.evmodder.EvLib.extras;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
+import org.bukkit.inventory.ItemStack;
 
 public class TextUtils{
 	public static final char[] COLOR_CHARS = new char[]
@@ -392,6 +394,69 @@ public class TextUtils{
 				}
 	}
 
+	private static int version = 0;
+	public static ChatColor getRarityColor(ItemStack item){
+		//String itemNameFormat = item.hasItemMeta() && item.getItemMeta().hasDisplayName() ? ""+ChatColor.ITALIC : "";
+		if(Bukkit.getBukkitVersion().compareTo("1.14") >= 0){
+			switch(item.getType().name()){
+				// EPIC:
+				case "MOJANG_BANNER_PATTERN":
+				case "JIGSAW":
+				case "LIGHT":
+					return ChatColor.LIGHT_PURPLE;
+				// UNCOMMON:
+				case "CREEPER_BANNER_PATTERN":
+				case "SKULL_BANNER_PATTERN":
+					return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : ChatColor.YELLOW;
+				default:
+					// Fallthrough intended
+			}
+		}
+		switch(item.getType()){
+			// EPIC:
+			case DRAGON_EGG:
+			case ENCHANTED_GOLDEN_APPLE:
+			case DEBUG_STICK:
+			case KNOWLEDGE_BOOK:
+			case COMMAND_BLOCK: case CHAIN_COMMAND_BLOCK: case REPEATING_COMMAND_BLOCK:
+			case COMMAND_BLOCK_MINECART:
+			case STRUCTURE_BLOCK:
+			case STRUCTURE_VOID:
+				return ChatColor.LIGHT_PURPLE;
+			case SPAWNER:
+				return Bukkit.getBukkitVersion().compareTo("1.19.3") < 0 ? ChatColor.LIGHT_PURPLE : ChatColor.WHITE;
+			// RARE:
+			case BEACON:
+			case CONDUIT:
+			case END_CRYSTAL:
+			case GOLDEN_APPLE:
+			case MUSIC_DISC_11: case MUSIC_DISC_13: case MUSIC_DISC_BLOCKS: case MUSIC_DISC_CAT: case MUSIC_DISC_CHIRP: case MUSIC_DISC_FAR:
+			case MUSIC_DISC_MALL: case MUSIC_DISC_MELLOHI: case MUSIC_DISC_STAL: case MUSIC_DISC_WAIT: case MUSIC_DISC_WARD:
+				return ChatColor.AQUA;
+			// UNCOMMON:
+			case EXPERIENCE_BOTTLE:
+			case DRAGON_BREATH:
+			case ELYTRA:
+			case ENCHANTED_BOOK:
+			case PLAYER_HEAD: case CREEPER_HEAD: case ZOMBIE_HEAD: case DRAGON_HEAD:
+			case SKELETON_SKULL: case WITHER_SKELETON_SKULL:
+			case HEART_OF_THE_SEA:
+			case NETHER_STAR:
+			case TOTEM_OF_UNDYING:
+				return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : ChatColor.YELLOW;
+			// COMMON:
+			default: {
+				if(version == 0) version = Integer.parseInt(Bukkit.getBukkitVersion().split("-")[0].split("\\.")[1]);
+				if(version >= 16 && item.getType().name().equals("MUSIC_DISC_PIGSTEP")) return ChatColor.AQUA;
+				if(version >= 17 && item.getType().name().equals("LIGHT")) return ChatColor.LIGHT_PURPLE; 
+				if(version >= 18 && item.getType().name().equals("MUSIC_DISC_OTHERSIDE")) return ChatColor.AQUA;
+				if(version >= 19 && item.getType().name().equals("MUSIC_DISC_5")) return ChatColor.AQUA;
+				if(version >= 20 && item.getType().name().equals("MUSIC_DISC_RELIC")) return ChatColor.AQUA;
+
+				return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : ChatColor.WHITE;
+			}
+		}
+	}
 
 	//TODO: Move this to TabText (once TabText is cleaned up)?
 	/* ----------==========---------- PIXEL WIDTH CALCULATION METHODS ----------==========---------- */
