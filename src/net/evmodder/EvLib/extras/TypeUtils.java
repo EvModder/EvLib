@@ -103,42 +103,6 @@ public class TypeUtils{
 		}
 	}
 
-	public static boolean isOre(Material mat){
-		switch(mat){
-			case NETHER_QUARTZ_ORE:
-			case COAL_ORE:
-			case IRON_ORE:
-			case GOLD_ORE:
-			case REDSTONE_ORE:
-			case LAPIS_ORE:
-			case EMERALD_ORE:
-			case DIAMOND_ORE:
-				return true;
-			default:
-				return (
-						// Is ANCIENT_DEBRIS an ore?
-						version >= 16 && mat.name().equals("NETHER_GOLD_ORE") ||
-						version >= 17 && (mat.name().equals("COPPER_ORE")
-								|| (mat.name().startsWith("DEEPSLATE_") && isOre(Material.valueOf(mat.name().substring(10))))
-						)
-				);
-		}
-	}
-
-	public static boolean isInfested(Material mat){
-		switch(mat){
-			case INFESTED_CHISELED_STONE_BRICKS:
-			case INFESTED_COBBLESTONE:
-			case INFESTED_CRACKED_STONE_BRICKS:
-			case INFESTED_MOSSY_STONE_BRICKS:
-			case INFESTED_STONE:
-			case INFESTED_STONE_BRICKS:
-				return true;
-			default:
-				return version >= 17 && mat.name().equals("INFESTED_DEEPSLATE");
-		}
-	}
-
 	public static ChatColor getRarityColor(ItemStack item){
 		//String itemNameFormat = item.hasItemMeta() && item.getItemMeta().hasDisplayName() ? ""+ChatColor.ITALIC : "";
 		if(version >= 14){
@@ -315,7 +279,7 @@ public class TypeUtils{
 				return false;
 		}
 	}
-	public static boolean isStainedGlass(Material mat){
+	/*public static boolean isStainedGlass(Material mat){
 		switch(mat){
 			case BLACK_STAINED_GLASS:
 			case BLUE_STAINED_GLASS:
@@ -337,8 +301,8 @@ public class TypeUtils{
 			default:
 				return false;
 		}
-	}
-	public static boolean isStainedGlassPane(Material mat){
+	}*/
+	/*public static boolean isStainedGlassPane(Material mat){
 		switch(mat){
 			case BLACK_STAINED_GLASS_PANE:
 			case BLUE_STAINED_GLASS_PANE:
@@ -360,7 +324,7 @@ public class TypeUtils{
 			default:
 				return false;
 		}
-	}
+	}*/
 	public static boolean isTerracotta(Material mat){
 		switch(mat){
 			case TERRACOTTA:
@@ -431,7 +395,7 @@ public class TypeUtils{
 				return false;
 		}
 	}
-	public static boolean isBanner(Material mat){
+	/*public static boolean isBanner(Material mat){
 		switch(mat){
 			case BLACK_BANNER:
 			case BLUE_BANNER:
@@ -453,7 +417,7 @@ public class TypeUtils{
 			default:
 				return false;
 		}
-	}
+	}*/
 	public static boolean isWallBanner(Material mat){
 		switch(mat){
 			case BLACK_WALL_BANNER:
@@ -477,11 +441,92 @@ public class TypeUtils{
 				return false;
 		}
 	}
-	public static boolean isSign(Material mat){
-		return mat.name().endsWith("_SIGN") && !mat.name().endsWith("_WALL_SIGN") && !mat.name().endsWith("_HANGING_SIGN");
-	}
+	/*public static boolean isPlanks(Material mat){
+		switch(mat){
+			case ACACIA_PLANKS:
+			case BIRCH_PLANKS:
+			case DARK_OAK_PLANKS:
+			case JUNGLE_PLANKS:
+			case OAK_PLANKS:
+			case SPRUCE_PLANKS:
+				return true;
+			default:
+				return (version >= 16 && (mat.name().equals("WARPED_PLANKS") || mat.name().equals("CRIMSON_PLANKS"))) ||
+						(version >= 19 && mat.name().equals("MANGROVE_PLANKS")) ||
+						(version >= 20 && (mat.name().equals("CHERRY_PLANKS") || mat.name().equals("BAMBOO_PLANKS")));
+		}
+	}*/
+	/*public static boolean isDoor(Material mat){
+		return org.bukkit.material.Door.class.isAssignableFrom(mat.getData());
+		switch(mat){
+			case ACACIA_DOOR:
+			case BIRCH_DOOR:
+			case DARK_OAK_DOOR:
+			case JUNGLE_DOOR:
+			case OAK_DOOR:
+			case SPRUCE_DOOR:
+				return true;
+			default:
+				return (version >= 16 && (mat.name().equals("WARPED_DOOR") || mat.name().equals("CRIMSON_DOOR"))) ||
+						(version >= 19 && mat.name().equals("MANGROVE_DOOR")) ||
+						(version >= 20 && (mat.name().equals("CHERRY_DOOR") || mat.name().equals("BAMBOO_DOOR")));
+		}
+	}*/
+	/*public static boolean isSapling(Material mat){
+		return org.bukkit.material.Sapling.class.isAssignableFrom(mat.getData());
+		switch(mat){
+			case ACACIA_SAPLING:
+			case BIRCH_SAPLING:
+			case DARK_OAK_SAPLING: 
+			case JUNGLE_SAPLING:
+			case OAK_SAPLING:
+			case SPRUCE_SAPLING:
+			// Nether fungus? Bamboo shoot?
+				return true;
+			default:
+				return (version >= 19 && mat.name().equals("MANGROVE_PROPAGULE")) ||
+						(version >= 20 && mat.name().equals("CHERRY_SAPLING"));
+		}
+	}*/
+	/*public static boolean isButton(Material mat){
+		return org.bukkit.material.Button.class.isAssignableFrom(mat.getData());
+		switch(mat){
+			case ACACIA_BUTTON:
+			case BIRCH_BUTTON:
+			case DARK_OAK_BUTTON:
+			case JUNGLE_BUTTON:
+			case OAK_BUTTON:
+			case SPRUCE_BUTTON:
+			case STONE_BUTTON:
+				return true;
+			default:
+				return (version >= 16 && (mat.name().equals("WARPED_BUTTON") || mat.name().equals("CRIMSON_BUTTON"))) ||
+						(version >= 19 && mat.name().equals("MANGROVE_BUTTON")) ||
+						(version >= 20 && (mat.name().equals("CHERRY_BUTTON") || mat.name().equals("BAMBOO_BUTTON")));
+		}
+	}*/
+	/*public static boolean isPressurePlate(Material mat){
+		return org.bukkit.material.PressurePlate.class.isAssignableFrom(mat.getData());
+		switch(mat){
+			case ACACIA_PRESSURE_PLATE:
+			case BIRCH_PRESSURE_PLATE:
+			case DARK_OAK_PRESSURE_PLATE:
+			case JUNGLE_PRESSURE_PLATE:
+			case OAK_PRESSURE_PLATE:
+			case SPRUCE_PRESSURE_PLATE:
+			case STONE_PRESSURE_PLATE:
+			case HEAVY_WEIGHTED_PRESSURE_PLATE:
+			case LIGHT_WEIGHTED_PRESSURE_PLATE:
+				return true;
+			default:
+				return (version >= 16 && (mat.name().equals("WARPED_PRESSURE_PLATE") || mat.name().equals("CRIMSON_PRESSURE_PLATE"))) ||
+						(version >= 19 && mat.name().equals("MANGROVE_PRESSURE_PLATE")) ||
+						(version >= 20 && (mat.name().equals("CHERRY_PRESSURE_PLATE") || mat.name().equals("BAMBOO_PRESSURE_PLATE")));
+		}
+	}*/
 	public static boolean isWallSign(Material mat){return mat.name().endsWith("_WALL_SIGN");}
 	public static boolean isHangingSign(Material mat){return mat.name().endsWith("_HANGING_SIGN");}
+	public static boolean isSign(Material mat){return mat.name().endsWith("_SIGN") && !isWallSign(mat) && !isHangingSign(mat);}
 
 	@SuppressWarnings("deprecation") // No good alternative to MaterialData
 	public static boolean isFlowerPot(Material mat){
@@ -505,104 +550,52 @@ public class TypeUtils{
 
 	/*public static boolean isRail(Material mat){
 		return org.bukkit.material.Rails.class.isAssignableFrom(mat.getData());
-//		switch(mat){
-//			case RAIL:
-//			case ACTIVATOR_RAIL:
-//			case DETECTOR_RAIL:
-//			case POWERED_RAIL:
-//				return true;
-//			default:
-//				return false;
-//		}
-	}*/
-
-	/*public static boolean isSapling(Material mat){
-		return org.bukkit.material.Sapling.class.isAssignableFrom(mat.getData());
-//		switch(mat){
-//			case ACACIA_SAPLING:
-//			case BIRCH_SAPLING:
-//			case DARK_OAK_SAPLING: 
-//			case JUNGLE_SAPLING:
-//			case OAK_SAPLING:
-//			case SPRUCE_SAPLING:
-//			// Nether fungus? Bamboo shoot?
-//				return true;
-//			default:
-//				return (version >= 19 && mat.name().equals("MANGROVE_PROPAGULE")) ||
-//						(version >= 20 && mat.name().equals("CHERRY_SAPLING"));
-//		}
-	}*/
-
-	/*public static boolean isButton(Material mat){
-		return org.bukkit.material.Button.class.isAssignableFrom(mat.getData());
-//		switch(mat){
-//			case ACACIA_BUTTON:
-//			case BIRCH_BUTTON:
-//			case DARK_OAK_BUTTON:
-//			case JUNGLE_BUTTON:
-//			case OAK_BUTTON:
-//			case SPRUCE_BUTTON:
-//			case STONE_BUTTON:
-//				return true;
-//			default:
-//				return (version >= 16 && (mat.name().equals("WARPED_BUTTON") || mat.name().equals("CRIMSON_BUTTON"))) ||
-//						(version >= 19 && mat.name().equals("MANGROVE_BUTTON")) ||
-//						(version >= 20 && (mat.name().equals("CHERRY_BUTTON") || mat.name().equals("BAMBOO_BUTTON")));
-//		}
-	}*/
-
-	/*public static boolean isPressurePlate(Material mat){
-		return org.bukkit.material.PressurePlate.class.isAssignableFrom(mat.getData());
-//		switch(mat){
-//			case ACACIA_PRESSURE_PLATE:
-//			case BIRCH_PRESSURE_PLATE:
-//			case DARK_OAK_PRESSURE_PLATE:
-//			case JUNGLE_PRESSURE_PLATE:
-//			case OAK_PRESSURE_PLATE:
-//			case SPRUCE_PRESSURE_PLATE:
-//			case STONE_PRESSURE_PLATE:
-//			case HEAVY_WEIGHTED_PRESSURE_PLATE:
-//			case LIGHT_WEIGHTED_PRESSURE_PLATE:
-//				return true;
-//			default:
-//				return (version >= 16 && (mat.name().equals("WARPED_PRESSURE_PLATE") || mat.name().equals("CRIMSON_PRESSURE_PLATE"))) ||
-//						(version >= 19 && mat.name().equals("MANGROVE_PRESSURE_PLATE")) ||
-//						(version >= 20 && (mat.name().equals("CHERRY_PRESSURE_PLATE") || mat.name().equals("BAMBOO_PRESSURE_PLATE")));
-//		}
-	}*/
-
-	/*public static boolean isDoor(Material mat){
-		return org.bukkit.material.Door.class.isAssignableFrom(mat.getData());
-//		switch(mat){
-//			case ACACIA_DOOR:
-//			case BIRCH_DOOR:
-//			case DARK_OAK_DOOR:
-//			case JUNGLE_DOOR:
-//			case OAK_DOOR:
-//			case SPRUCE_DOOR:
-//				return true;
-//			default:
-//				return (version >= 16 && (mat.name().equals("WARPED_DOOR") || mat.name().equals("CRIMSON_DOOR"))) ||
-//						(version >= 19 && mat.name().equals("MANGROVE_DOOR")) ||
-//						(version >= 20 && (mat.name().equals("CHERRY_DOOR") || mat.name().equals("BAMBOO_DOOR")));
-//		}
-	}*/
-
-	/*public static boolean isPlanks(Material mat){
 		switch(mat){
-			case ACACIA_PLANKS:
-			case BIRCH_PLANKS:
-			case DARK_OAK_PLANKS:
-			case JUNGLE_PLANKS:
-			case OAK_PLANKS:
-			case SPRUCE_PLANKS:
+			case RAIL:
+			case ACTIVATOR_RAIL:
+			case DETECTOR_RAIL:
+			case POWERED_RAIL:
 				return true;
 			default:
-				return (version >= 16 && (mat.name().equals("WARPED_PLANKS") || mat.name().equals("CRIMSON_PLANKS"))) ||
-						(version >= 19 && mat.name().equals("MANGROVE_PLANKS")) ||
-						(version >= 20 && (mat.name().equals("CHERRY_PLANKS") || mat.name().equals("BAMBOO_PLANKS")));
+				return false;
 		}
 	}*/
+
+	public static boolean isOre(Material mat){
+		switch(mat){
+			case NETHER_QUARTZ_ORE:
+			case COAL_ORE:
+			case IRON_ORE:
+			case GOLD_ORE:
+			case REDSTONE_ORE:
+			case LAPIS_ORE:
+			case EMERALD_ORE:
+			case DIAMOND_ORE:
+				return true;
+			default:
+				return (
+					// Is ANCIENT_DEBRIS an ore?
+					version >= 16 && mat.name().equals("NETHER_GOLD_ORE") ||
+					version >= 17 && (mat.name().equals("COPPER_ORE")
+							|| (mat.name().startsWith("DEEPSLATE_") && isOre(Material.valueOf(mat.name().substring(10))))
+					)
+				);
+		}
+	}
+
+	public static boolean isInfested(Material mat){
+		switch(mat){
+			case INFESTED_CHISELED_STONE_BRICKS:
+			case INFESTED_COBBLESTONE:
+			case INFESTED_CRACKED_STONE_BRICKS:
+			case INFESTED_MOSSY_STONE_BRICKS:
+			case INFESTED_STONE:
+			case INFESTED_STONE_BRICKS:
+				return true;
+			default:
+				return version >= 17 && mat.name().equals("INFESTED_DEEPSLATE");
+		}
+	}
 
 	public static boolean isChestplate(Material mat){
 		switch(mat){
@@ -696,10 +689,8 @@ public class TypeUtils{
 				return 0;
 		}
 	}
-	public static boolean pickIsAtLeast(Material pickType, Material needPick){//+
-		return pickaxeNumber(pickType) >= pickaxeNumber(needPick);
-	}
-	private static byte swordNumber(Material swordType){
+	public static boolean pickIsAtLeast(Material pickType, Material needPick){return pickaxeNumber(pickType) >= pickaxeNumber(needPick);}
+	/*private static byte swordNumber(Material swordType){
 		switch(swordType){
 			case DIAMOND_SWORD:
 				return 4;
@@ -716,16 +707,14 @@ public class TypeUtils{
 					throw new IllegalArgumentException("Unknown sword type: "+swordType+", please update EvLib");
 				return 0;
 		}
-	}
-	public static boolean swordIsAtLeast(Material swordType, Material needSword){//+
-		return swordNumber(swordType) >= swordNumber(needSword);
-	}
+	}*/
+	//public static boolean swordIsAtLeast(Material swordType, Material needSword){return swordNumber(swordType) >= swordNumber(needSword);}
 
-	enum ObtainableOptions{
+	public enum ObtainableOptions{
 		SILK_SPAWNERS, SILK_INFESTED, MOB_EGGS, CMD_BLOCKS,
 		BEDROCK, END_PORTAL_FRAMES, BARRIERS, STRUCTURE_BLOCKS, LIGHT_BLOCKS, PETRIFIED_SLABS,
 		ITEM_LORE, ITEM_NAME_COLOR, CONFLICTING_ENCHANTS, ABOVE_MAX_ENCHANTS, OVERSTACKED,
-		PLAYER_HEADS, TATTERED_BOOKS, REINFORCED_DEEPSLATE
+		PLAYER_HEADS, TATTERED_BOOKS, REINFORCED_DEEPSLATE, KNOWLEDGE_BOOK
 	};
 	public static boolean isObtainable(Material mat, ObtainableOptions... opts){
 		HashSet<ObtainableOptions> canObtain = new HashSet<>();
@@ -775,8 +764,9 @@ public class TypeUtils{
 			//========== More generally unobtainable items
 			case FARMLAND: // Not obtainable with silk
 			case CHORUS_PLANT: // Not obtainable with silk
-			case KNOWLEDGE_BOOK:
 				return false;
+			case KNOWLEDGE_BOOK:
+				return canObtain.contains(ObtainableOptions.KNOWLEDGE_BOOK);
 			case BARRIER:
 				return canObtain.contains(ObtainableOptions.BARRIERS);
 			case BEDROCK:
