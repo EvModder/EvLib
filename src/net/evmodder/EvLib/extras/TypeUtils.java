@@ -102,52 +102,52 @@ public class TypeUtils{
 	}
 
 	public static boolean isBed(Material mat){
-		return org.bukkit.material.Bed.class.isAssignableFrom(mat.getData());
-//		switch(mat){
-//			case BLACK_BED:
-//			case BLUE_BED:
-//			case BROWN_BED:
-//			case CYAN_BED:
-//			case GRAY_BED:
-//			case GREEN_BED:
-//			case LIGHT_BLUE_BED:
-//			case LIME_BED:
-//			case MAGENTA_BED:
-//			case ORANGE_BED:
-//			case PINK_BED:
-//			case PURPLE_BED:
-//			case RED_BED:
-//			case LIGHT_GRAY_BED:
-//			case WHITE_BED:
-//			case YELLOW_BED:
-//				return true;
-//			default:
-//				return false;
-//		}
+//		return org.bukkit.material.Bed.class.isAssignableFrom(mat.getData());
+		switch(mat){
+			case BLACK_BED:
+			case BLUE_BED:
+			case BROWN_BED:
+			case CYAN_BED:
+			case GRAY_BED:
+			case GREEN_BED:
+			case LIGHT_BLUE_BED:
+			case LIME_BED:
+			case MAGENTA_BED:
+			case ORANGE_BED:
+			case PINK_BED:
+			case PURPLE_BED:
+			case RED_BED:
+			case LIGHT_GRAY_BED:
+			case WHITE_BED:
+			case YELLOW_BED:
+				return true;
+			default:
+				return false;
+		}
 	}
 	public static boolean isWool(Material mat){
-		return org.bukkit.material.Wool.class.isAssignableFrom(mat.getData());
-//		switch(mat){
-//			case BLACK_WOOL:
-//			case BLUE_WOOL:
-//			case BROWN_WOOL:
-//			case CYAN_WOOL:
-//			case GRAY_WOOL:
-//			case GREEN_WOOL:
-//			case LIGHT_BLUE_WOOL:
-//			case LIME_WOOL:
-//			case MAGENTA_WOOL:
-//			case ORANGE_WOOL:
-//			case PINK_WOOL:
-//			case PURPLE_WOOL:
-//			case RED_WOOL:
-//			case LIGHT_GRAY_WOOL:
-//			case WHITE_WOOL:
-//			case YELLOW_WOOL:
-//				return true;
-//			default:
-//				return false;
-//		}
+//		return org.bukkit.material.Wool.class.isAssignableFrom(mat.getData());
+		switch(mat){
+			case BLACK_WOOL:
+			case BLUE_WOOL:
+			case BROWN_WOOL:
+			case CYAN_WOOL:
+			case GRAY_WOOL:
+			case GREEN_WOOL:
+			case LIGHT_BLUE_WOOL:
+			case LIME_WOOL:
+			case MAGENTA_WOOL:
+			case ORANGE_WOOL:
+			case PINK_WOOL:
+			case PURPLE_WOOL:
+			case RED_WOOL:
+			case LIGHT_GRAY_WOOL:
+			case WHITE_WOOL:
+			case YELLOW_WOOL:
+				return true;
+			default:
+				return false;
+		}
 	}
 	public static boolean isShulkerBox(Material mat){
 		switch(mat){
