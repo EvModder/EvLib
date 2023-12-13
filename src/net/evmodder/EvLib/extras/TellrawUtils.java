@@ -33,7 +33,6 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Objective;
-import net.evmodder.EvLib.extras.EntityUtils.CCP;
 
 public class TellrawUtils{
 	public enum ClickEvent{// Descriptions below are from https://minecraft.gamepedia.com/Raw_JSON_text_format
@@ -416,17 +415,18 @@ public class TellrawUtils{
 	//------------------------------------------------------------------------
 	final static String tropicalFishLocaleCCP = /*custom.tropical_fish.ccp*/"%s-%s %s";
 	final static String tropicalFishLocaleCP = /*custom.tropical_fish.cp*/"%s %s";
-	public static TranslationComponent getLocalizedDisplayName(CCP ccp){
-		Integer id = EntityUtils.commonTropicalFishIds.get(ccp);
+	public static TranslationComponent getLocalizedDisplayNameForTropicalFish(int pccInt){
+		Integer id = EntityUtils.commonTropicalFishIds.get(pccInt);
 		if(id != null) return new TranslationComponent("entity.minecraft.tropical_fish.predefined."+id);
-		return ccp.bodyColor != ccp.patternColor
+		net.evmodder.EvLib.extras.EntityUtils.PCC pcc = EntityUtils.PCCFromInt(pccInt);
+		return pcc.bodyColor != pcc.patternColor
 			? new TranslationComponent(tropicalFishLocaleCCP, new Component[]{
-				new TranslationComponent("color.minecraft."+ccp.bodyColor.name().toLowerCase()),
-				new TranslationComponent("color.minecraft."+ccp.patternColor.name().toLowerCase()),
-				new TranslationComponent("entity.minecraft.tropical_fish.type."+ccp.pattern.name().toLowerCase())})
+				new TranslationComponent("color.minecraft."+pcc.bodyColor.name().toLowerCase()),
+				new TranslationComponent("color.minecraft."+pcc.patternColor.name().toLowerCase()),
+				new TranslationComponent("entity.minecraft.tropical_fish.type."+pcc.pattern.name().toLowerCase())})
 			: new TranslationComponent(tropicalFishLocaleCP, new Component[]{
-					new TranslationComponent("color.minecraft."+ccp.bodyColor.name().toLowerCase()),
-					new TranslationComponent("entity.minecraft.tropical_fish.type."+ccp.pattern.name().toLowerCase())});
+					new TranslationComponent("color.minecraft."+pcc.bodyColor.name().toLowerCase()),
+					new TranslationComponent("entity.minecraft.tropical_fish.type."+pcc.pattern.name().toLowerCase())});
 	}
 	public static TranslationComponent getBestGuessLocalizedDisplayName(EntityType eType){
 		switch(eType){
@@ -456,7 +456,7 @@ public class TellrawUtils{
 					? "entity.minecraft.killer_bunny"
 					: "entity.minecraft.rabbit");
 			case TROPICAL_FISH:
-				return getLocalizedDisplayName(EntityUtils.getCCP((TropicalFish)entity));
+				return getLocalizedDisplayNameForTropicalFish(EntityUtils.getPCCInt((TropicalFish)entity));
 			default:
 				return getBestGuessLocalizedDisplayName(entity.getType());
 		}

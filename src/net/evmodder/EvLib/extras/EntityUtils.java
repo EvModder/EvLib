@@ -31,75 +31,65 @@ public final class EntityUtils{
 	public static EntityType getSpawnedMob(Material spawnEggType){return eggToEntity.get(spawnEggType);}
 	public static Material getSpawnEgg(EntityType eType){return entityToEgg.get(eType);}
 
-	public static class CCP{
-		public DyeColor bodyColor, patternColor;
+	public static class PCC{
 		public Pattern pattern;
-		public CCP(DyeColor color, DyeColor pColor, Pattern p){bodyColor = color; patternColor = pColor; pattern = p;}
+		public DyeColor bodyColor, patternColor;
+		public PCC(Pattern p, DyeColor color, DyeColor pColor){pattern = p; bodyColor = color; patternColor = pColor;}
 		@Override public boolean equals(Object o){
 			if(o == this) return true;
 			if(o == null || o.getClass() != getClass()) return false;
-			CCP ccp = (CCP)o;
-			return ccp.bodyColor == bodyColor && ccp.patternColor == patternColor && ccp.pattern == pattern;
+			PCC pcc = (PCC)o;
+			return pcc.pattern == pattern && pcc.bodyColor == bodyColor && pcc.patternColor == patternColor;
 		}
 		@Override public int hashCode(){
-			return bodyColor.hashCode() + 16*(patternColor.hashCode() + 16*pattern.hashCode());
+			return intFromPCC(pattern, bodyColor, patternColor);
 		}
 	}
-	final static HashMap<CCP, Integer> commonTropicalFishIds;// Map from Name -> translation key id for the 22 common tropical fish
-	final static HashMap<CCP, String> commonTropicalFishNames;//Names for the 22 common tropical fish
-	final static HashMap<String, CCP> commonTropicalFishNamesReverse;
-	final static HashMap<CCP, String> cachedTropicalFishNames;//Cached names for the 2700 other varieties (15*15*12)
-	@Deprecated static final HashMap<DyeColor, String> fishColorNames;//Names used by color
+
+	// Map from intPCC -> "BODY_C|PATTERN_C|PATTERN"
+	private static final HashMap<Integer, String> cachedTropicalFishNames;
+	// Index: translate-id -> English names for the 22 common tropical fish
+	private static final String[] commonTropicalFishNames = new String[]{
+			"Anemone", "Black Tang", "Blue Tang", "Butterflyfish", "Cichlid", "Clownfish", "Cotton Candy Betta", "Dottyback",
+			/*US=*/"Emperor Red Snapper" /*UK="Red Emperor"*/, "Goatfish", "Moorish Idol", "Ornate Butterflyfish", "Parrotfish",
+			"Queen Angelfish", "Red Cichlid", "Red Lipped Blenny", "Red Snapper", "Threadfin", "Tomato Clownfish", "Triggerfish",
+			"Yellowtail Parrotfish", "Yellow Tang"
+	};
+	// Map from ENGLISH_NAME -> translate-id
+	private static final HashMap<String, Integer> commonTropicalFishNamesReverse;
+	// Map from intPCC -> translate-id for the 22 common tropical fish
+	static final HashMap<Integer, Integer> commonTropicalFishIds;
 	static{
 		commonTropicalFishIds = new HashMap<>();
-		commonTropicalFishIds.put(new CCP(DyeColor.ORANGE, DyeColor.GRAY, Pattern.STRIPEY), 0);
-		commonTropicalFishIds.put(new CCP(DyeColor.GRAY, DyeColor.GRAY, Pattern.FLOPPER), 1);
-		commonTropicalFishIds.put(new CCP(DyeColor.GRAY, DyeColor.BLUE, Pattern.FLOPPER), 2);
-		commonTropicalFishIds.put(new CCP(DyeColor.WHITE, DyeColor.GRAY, Pattern.BRINELY), 3);
-		commonTropicalFishIds.put(new CCP(DyeColor.BLUE, DyeColor.GRAY, Pattern.SUNSTREAK), 4);
-		commonTropicalFishIds.put(new CCP(DyeColor.ORANGE, DyeColor.WHITE, Pattern.KOB), 5);
-		commonTropicalFishIds.put(new CCP(DyeColor.PINK, DyeColor.LIGHT_BLUE, Pattern.SPOTTY), 6);
-		commonTropicalFishIds.put(new CCP(DyeColor.PURPLE, DyeColor.YELLOW, Pattern.BLOCKFISH), 7);
-		commonTropicalFishIds.put(new CCP(DyeColor.WHITE, DyeColor.RED, Pattern.CLAYFISH), 8);
-		commonTropicalFishIds.put(new CCP(DyeColor.WHITE, DyeColor.YELLOW, Pattern.SPOTTY), 9);
-		commonTropicalFishIds.put(new CCP(DyeColor.WHITE, DyeColor.GRAY, Pattern.GLITTER), 10);
-		commonTropicalFishIds.put(new CCP(DyeColor.WHITE, DyeColor.ORANGE, Pattern.CLAYFISH), 11);
-		commonTropicalFishIds.put(new CCP(DyeColor.CYAN, DyeColor.PINK, Pattern.DASHER), 12);
-		commonTropicalFishIds.put(new CCP(DyeColor.LIME, DyeColor.LIGHT_BLUE, Pattern.BRINELY), 13);
-		commonTropicalFishIds.put(new CCP(DyeColor.RED, DyeColor.WHITE, Pattern.BETTY), 14);
-		commonTropicalFishIds.put(new CCP(DyeColor.GRAY, DyeColor.RED, Pattern.SNOOPER), 15);
-		commonTropicalFishIds.put(new CCP(DyeColor.RED, DyeColor.WHITE, Pattern.BLOCKFISH), 16);
-		commonTropicalFishIds.put(new CCP(DyeColor.WHITE, DyeColor.YELLOW, Pattern.FLOPPER), 17);
-		commonTropicalFishIds.put(new CCP(DyeColor.RED, DyeColor.WHITE, Pattern.KOB), 18);
-		commonTropicalFishIds.put(new CCP(DyeColor.GRAY, DyeColor.WHITE, Pattern.SUNSTREAK), 19);
-		commonTropicalFishIds.put(new CCP(DyeColor.CYAN, DyeColor.YELLOW, Pattern.DASHER), 20);
-		commonTropicalFishIds.put(new CCP(DyeColor.YELLOW, DyeColor.YELLOW, Pattern.FLOPPER), 21);
-		commonTropicalFishNames = new HashMap<>();
-		commonTropicalFishNames.put(new CCP(DyeColor.ORANGE, DyeColor.GRAY, Pattern.STRIPEY), "Anemone");
-		commonTropicalFishNames.put(new CCP(DyeColor.GRAY, DyeColor.GRAY, Pattern.FLOPPER), "Black Tang");
-		commonTropicalFishNames.put(new CCP(DyeColor.GRAY, DyeColor.BLUE, Pattern.FLOPPER), "Blue Tang");
-		commonTropicalFishNames.put(new CCP(DyeColor.WHITE, DyeColor.GRAY, Pattern.BRINELY), "Butterflyfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.BLUE, DyeColor.GRAY, Pattern.SUNSTREAK), "Cichlid");
-		commonTropicalFishNames.put(new CCP(DyeColor.ORANGE, DyeColor.WHITE, Pattern.KOB), "Clownfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.PINK, DyeColor.LIGHT_BLUE, Pattern.SPOTTY), "Cotton Candy Betta");
-		commonTropicalFishNames.put(new CCP(DyeColor.PURPLE, DyeColor.YELLOW, Pattern.BLOCKFISH), "Dottyback");
-		commonTropicalFishNames.put(new CCP(DyeColor.WHITE, DyeColor.RED, Pattern.CLAYFISH), /*US=*/"Emperor Red Snapper" /*UK="Red Emperor"*/);
-		commonTropicalFishNames.put(new CCP(DyeColor.WHITE, DyeColor.YELLOW, Pattern.SPOTTY), "Goatfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.WHITE, DyeColor.GRAY, Pattern.GLITTER), "Moorish Idol");
-		commonTropicalFishNames.put(new CCP(DyeColor.WHITE, DyeColor.ORANGE, Pattern.CLAYFISH), "Ornate Butterflyfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.CYAN, DyeColor.PINK, Pattern.DASHER), "Parrotfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.LIME, DyeColor.LIGHT_BLUE, Pattern.BRINELY), "Queen Angelfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.RED, DyeColor.WHITE, Pattern.BETTY), "Red Cichlid");
-		commonTropicalFishNames.put(new CCP(DyeColor.GRAY, DyeColor.RED, Pattern.SNOOPER), "Red Lipped Blenny");
-		commonTropicalFishNames.put(new CCP(DyeColor.RED, DyeColor.WHITE, Pattern.BLOCKFISH), "Red Snapper");
-		commonTropicalFishNames.put(new CCP(DyeColor.WHITE, DyeColor.YELLOW, Pattern.FLOPPER), "Threadfin");
-		commonTropicalFishNames.put(new CCP(DyeColor.RED, DyeColor.WHITE, Pattern.KOB), "Tomato Clownfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.GRAY, DyeColor.WHITE, Pattern.SUNSTREAK), "Triggerfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.CYAN, DyeColor.YELLOW, Pattern.DASHER), "Yellowtail Parrotfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.YELLOW, DyeColor.YELLOW, Pattern.FLOPPER), "Yellow Tang");
+		commonTropicalFishIds.put(intFromPCC(Pattern.STRIPEY, DyeColor.ORANGE, DyeColor.GRAY), 0);
+		commonTropicalFishIds.put(intFromPCC(Pattern.FLOPPER, DyeColor.GRAY, DyeColor.GRAY), 1);
+		commonTropicalFishIds.put(intFromPCC(Pattern.FLOPPER, DyeColor.GRAY, DyeColor.BLUE), 2);
+		commonTropicalFishIds.put(intFromPCC(Pattern.BRINELY, DyeColor.WHITE, DyeColor.GRAY), 3);
+		commonTropicalFishIds.put(intFromPCC(Pattern.SUNSTREAK, DyeColor.BLUE, DyeColor.GRAY), 4);
+		commonTropicalFishIds.put(intFromPCC(Pattern.KOB, DyeColor.ORANGE, DyeColor.WHITE), 5);
+		commonTropicalFishIds.put(intFromPCC(Pattern.SPOTTY, DyeColor.PINK, DyeColor.LIGHT_BLUE), 6);
+		commonTropicalFishIds.put(intFromPCC(Pattern.BLOCKFISH, DyeColor.PURPLE, DyeColor.YELLOW), 7);
+		commonTropicalFishIds.put(intFromPCC(Pattern.CLAYFISH, DyeColor.WHITE, DyeColor.RED), 8);
+		commonTropicalFishIds.put(intFromPCC(Pattern.SPOTTY, DyeColor.WHITE, DyeColor.YELLOW), 9);
+		commonTropicalFishIds.put(intFromPCC(Pattern.GLITTER, DyeColor.WHITE, DyeColor.GRAY), 10);
+		commonTropicalFishIds.put(intFromPCC(Pattern.CLAYFISH, DyeColor.WHITE, DyeColor.ORANGE), 11);
+		commonTropicalFishIds.put(intFromPCC(Pattern.DASHER, DyeColor.CYAN, DyeColor.PINK), 12);
+		commonTropicalFishIds.put(intFromPCC(Pattern.BRINELY, DyeColor.LIME, DyeColor.LIGHT_BLUE), 13);
+		commonTropicalFishIds.put(intFromPCC(Pattern.BETTY, DyeColor.RED, DyeColor.WHITE), 14);
+		commonTropicalFishIds.put(intFromPCC(Pattern.SNOOPER, DyeColor.GRAY, DyeColor.RED), 15);
+		commonTropicalFishIds.put(intFromPCC(Pattern.BLOCKFISH, DyeColor.RED, DyeColor.WHITE), 16);
+		commonTropicalFishIds.put(intFromPCC(Pattern.FLOPPER, DyeColor.WHITE, DyeColor.YELLOW), 17);
+		commonTropicalFishIds.put(intFromPCC(Pattern.KOB, DyeColor.RED, DyeColor.WHITE), 18);
+		commonTropicalFishIds.put(intFromPCC(Pattern.SUNSTREAK, DyeColor.GRAY, DyeColor.WHITE), 19);
+		commonTropicalFishIds.put(intFromPCC(Pattern.DASHER, DyeColor.CYAN, DyeColor.YELLOW), 20);
+		commonTropicalFishIds.put(intFromPCC(Pattern.FLOPPER, DyeColor.YELLOW, DyeColor.YELLOW), 21);
+
 		commonTropicalFishNamesReverse = new HashMap<>();
-		commonTropicalFishNames.entrySet().stream().forEach(
-				e -> commonTropicalFishNamesReverse.put(e.getValue().toUpperCase().replace(' ', '_'), e.getKey()));
+		for(int i=0; i<commonTropicalFishNames.length; ++i) commonTropicalFishNamesReverse.put(
+				commonTropicalFishNames[i].toUpperCase().replace(' ', '_'), i);
+	}
+	private static final HashMap<DyeColor, String> fishColorNames;//Names used by color
+	static{
 		fishColorNames = new HashMap<>();
 		fishColorNames.put(DyeColor.BLACK, "Black");
 		fishColorNames.put(DyeColor.BLUE, "Blue");
@@ -119,42 +109,50 @@ public final class EntityUtils{
 		fishColorNames.put(DyeColor.YELLOW, "Yellow");
 		cachedTropicalFishNames = new HashMap<>();
 	}
-	@Deprecated public static String getTropicalFishEnglishName(CCP ccp){
-		String name = commonTropicalFishNames.get(ccp);
-		if(name == null) name = cachedTropicalFishNames.get(ccp);
-		if(name == null){
-			StringBuilder builder = new StringBuilder(fishColorNames.get(ccp.bodyColor));
-			if(ccp.bodyColor != ccp.patternColor) builder.append('-').append(fishColorNames.get(ccp.patternColor));
-			builder.append(' ').append(TextUtils.capitalizeAndSpacify(ccp.pattern.name(), '_'));
-			name = builder.toString();
-			cachedTropicalFishNames.put(ccp, name); // Cache result. Size can reach up to 2700 varieties (15*15*12)
-		}
+	@Deprecated public static String getTropicalFishEnglishName(int pccInt){
+		Integer id = commonTropicalFishIds.get(pccInt);
+		if(id != null) return commonTropicalFishNames[id];
+		String name = cachedTropicalFishNames.get(pccInt);
+		if(name != null) return name;
+
+		PCC pcc = PCCFromInt(pccInt);
+		StringBuilder builder = new StringBuilder(fishColorNames.get(pcc.bodyColor));
+		if(pcc.bodyColor != pcc.patternColor) builder.append('-').append(fishColorNames.get(pcc.patternColor));
+		builder.append(' ').append(TextUtils.capitalizeAndSpacify(pcc.pattern.name(), '_'));
+		name = builder.toString();
+		cachedTropicalFishNames.put(pccInt, name); // Cache size can reach up to 2700 varieties (15*15*12)
 		return name;
 	}
-	public static CCP getCCP(TropicalFish fish){
-//		System.out.println("CCP: "+fish.getBodyColor()+","+ fish.getPatternColor()+","+ fish.getPattern());
-		return new CCP(fish.getBodyColor(), fish.getPatternColor(), fish.getPattern());
+	public static int getPCCInt(TropicalFish fish){
+		return intFromPCC(fish.getPattern(), fish.getBodyColor(), fish.getPatternColor());
 	}
-	public static CCP getCCP(String commonTropicalFishName){
+	public static int getPCCInt(String commonTropicalFishName){
 		return commonTropicalFishNamesReverse.get(commonTropicalFishName.toUpperCase().replace(' ', '_'));
 	}
-	public static Integer getCommonTropicalFishId(CCP ccp){return commonTropicalFishIds.get(ccp);}
+	public static Integer getCommonTropicalFishId(int pccInt){return commonTropicalFishIds.get(pccInt);}
 
-	public static String getPandaTrait(String mainGene, String hiddenGene){
-		if(mainGene.equals(hiddenGene)) return mainGene;
-		switch(mainGene){
-			case "BROWN":
-			case "WEAK":
-				return "NORMAL";
-			default:
-				return mainGene;
-		}
+	public static int intFromPCC(Pattern p, DyeColor c1, DyeColor c2){
+		final int p1 = p.ordinal()/6, p2 = p.ordinal()%6;
+		final int p3 = c1.ordinal(), p4 = c2.ordinal();
+		return (p4 << 24) + (p3 << 16) + (p2 << 8) + (p1 << 0);
+	}
+	public static PCC PCCFromInt(int pccInt){
+		int p4 = (byte)(pccInt >>> 24);
+		int p3 = (byte)(pccInt >>> 16);
+		int p2 = (byte)(pccInt >>> 8);
+		int p1 = (byte)pccInt;
+		return new PCC(Pattern.values()[p1*6+p2], DyeColor.values()[p3], DyeColor.values()[p4]);
 	}
 
+	//TODO: Keep up-to-date with Minecraft updates, and test for regressions
 	public static EntityType getEntityByName(String name){
-		//TODO: improve this function / test for errors
-		//TODO: uncomment and access HeadUtils using reflection:
-		//if(name.toUpperCase().startsWith("MHF_")) name = HeadUtils.normalizedNameFromMHFName(name);
+		if(name.toUpperCase().startsWith("MHF_")){
+			try{
+				name = (String)Class.forName("net.evmodder.EvLib.extras.HeadUtils")
+						.getMethod("normalizedNameFromMHFName", String.class).invoke(/*static method, so=*/null, name);
+			}
+			catch(ReflectiveOperationException e){}
+		}
 		name = name.toUpperCase().replace(' ', '_');
 		switch(name.replace("_", "")){
 			case "MOOSHROOM": return EntityType.MUSHROOM_COW;
@@ -176,8 +174,8 @@ public final class EntityUtils{
 		}
 	}
 
+	//TODO: Keep up-to-date with Minecraft updates, and test for regressions
 	public static String getNormalizedEntityName(String name){
-		//TODO: improve this function / test for errors
 		switch(name.toUpperCase()){
 			case "MUSHROOM_COW": return "mooshroom";
 			case "SNOWMAN": return "snow_golem";
@@ -202,6 +200,17 @@ public final class EntityUtils{
 				return true;
 			default:
 				return false;
+		}
+	}
+
+	public static String getPandaTrait(String mainGene, String hiddenGene){
+		if(mainGene.equals(hiddenGene)) return mainGene;
+		switch(mainGene){
+			case "BROWN":
+			case "WEAK":
+				return "NORMAL";
+			default:
+				return mainGene;
 		}
 	}
 }

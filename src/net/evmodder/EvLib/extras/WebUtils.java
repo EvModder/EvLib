@@ -172,7 +172,7 @@ public class WebUtils {
 		try{//Lookup by UUID
 			final UUID uuid = UUID.fromString(nameOrUUID);
 			String data = getReadURL("https://sessionserver.mojang.com/session/minecraft/profile/"+nameOrUUID);
-			if(data != null){  // No account found for this UUID
+			if(data != null){ // Account found for this UUID
 				data = data.replaceAll("\\s+", "");
 				final int nameStart = data.indexOf("\"name\":\"")+8;
 				final int nameEnd = data.indexOf("\"", nameStart+1);
@@ -215,9 +215,9 @@ public class WebUtils {
 	public static GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
 		if(nameOrUUID.matches("^[a-f0-9]{32}$")) nameOrUUID = addDashesForUUID(nameOrUUID);
 		nameOrUUID = nameOrUUID.toLowerCase();
-		final GameProfile profile = playerExists.get(nameOrUUID);
-		if(profile != null){
-			if(fetchSkin && !profile.getProperties().containsKey("textures")) nameOrUUID = profile.getId().toString();
+		if(playerExists.containsKey(nameOrUUID)){
+			final GameProfile profile = playerExists.get(nameOrUUID);
+			if(fetchSkin && profile!= null && !profile.getProperties().containsKey("textures")) nameOrUUID = profile.getId().toString();
 			else return profile;
 		}
 		if(nullForSync == null) return getGameProfileWebRequest(nameOrUUID, fetchSkin);
