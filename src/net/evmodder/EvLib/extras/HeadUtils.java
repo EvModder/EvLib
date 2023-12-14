@@ -3,10 +3,6 @@ package net.evmodder.EvLib.extras;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Nameable;
@@ -18,7 +14,8 @@ import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 
 public final class HeadUtils {
-	public static final String[] MHF_Heads = new String[]{//Standard, Mojang-Provided MHF Heads
+	// ========================= Commented out because UNUSED =======================
+	/*public static final String[] MHF_Heads = new String[]{//Standard, Mojang-Provided MHF Heads
 		"MHF_Alex", "MHF_Blaze", "MHF_CaveSpider", "MHF_Chicken", "MHF_Cow", "MHF_Creeper", "MHF_Enderman", "MHF_Ghast",
 		"MHF_Golem", "MHF_Herobrine", "MHF_LavaSlime", "MHF_MushroomCow", "MHF_Ocelot", "MHF_Pig", "MHF_PigZombie",
 		"MHF_Sheep", "MHF_Skeleton", "MHF_Slime", "MHF_Spider", "MHF_Squid", "MHF_Steve", "MHF_Villager",
@@ -29,10 +26,9 @@ public final class HeadUtils {
 		
 		"MHF_ArrowUp", "MHF_ArrowDown", "MHF_ArrowLeft", "MHF_ArrowRight", "MHF_Exclamation", "MHF_Question",
 	};
-	public static final Map<String, String> MHF_Lookup =
-			Stream.of(MHF_Heads).collect(Collectors.toMap(h -> h.toUpperCase(), h -> h));
+	public static final Map<String, String> MHF_Lookup = Stream.of(MHF_Heads).collect(Collectors.toMap(h -> h.toUpperCase(), h -> h));*/
 
-	public static final HashMap<EntityType, String> customHeads;//People who have set their skin to an Entity's head
+	/*public static final HashMap<EntityType, String> customHeads;//People who have set their skin to an Entity's head
 	static{
 		customHeads = new HashMap<>();
 		customHeads.put(EntityType.BAT, "ManBatPlaysMC");
@@ -52,6 +48,46 @@ public final class HeadUtils {
 		customHeads.put(EntityType.WITCH, "MHF_Witch");//made by player
 		customHeads.put(EntityType.WOLF, "MHF_Wolf");//made by player
 		customHeads.put(EntityType.ZOMBIE_VILLAGER, "scraftbrothers11");
+	}*/
+
+	/*public static String getMHFHeadName(String eType){
+		switch(eType){
+		case "MAGMA_CUBE":
+			return "MHF_LavaSlime";
+		case "IRON_GOLEM":
+			return "MHF_Golem";
+		case "MOOSHROOM":
+			return "MHF_MushroomCow";
+		case "WITHER_SKELETON":
+			return "MHF_Wither";
+		default:
+			StringBuilder builder = new StringBuilder("MHF_");
+			boolean lower = false;
+			for(char ch : eType.toCharArray()){
+				if(ch == '_') lower = false;
+				else if(lower) builder.append(Character.toLowerCase(ch));
+				else{builder.append(Character.toUpperCase(ch)); lower = true;}
+			}
+			return builder.toString();
+		}
+	}*/
+	public static String normalizedNameFromMHFName(String mhfName){ // Still referenced (reflectively) by EntityUtils
+		mhfName = mhfName.substring(4);
+		String mhfCompact = mhfName.replace("_", "").replace(" ", "").toLowerCase();
+		if(mhfCompact.equals("lavaslime")) return "Magma Cube";
+		else if(mhfCompact.equals("golem")) return "Iron Golem";
+		else if(mhfCompact.equals("pigzombie")) return "Zombie Pigman";
+		else if(mhfCompact.equals("mushroomcow")) return "Mooshroom";
+		else if(mhfName.isEmpty()) return "";
+		else{
+			char[] chars = mhfName.toCharArray();
+			StringBuilder name = new StringBuilder("").append(chars[0]);
+			for(int i=1; i<chars.length; ++i){
+				if(Character.isUpperCase(chars[i]) && chars[i-1] != ' ') name.append(' ');
+				name.append(chars[i]);
+			}
+			return name.toString();
+		}
 	}
 
 	private static Field fieldProfileItem, fieldSerializedProfileItem, fieldProfileBlock;
@@ -106,20 +142,6 @@ public final class HeadUtils {
 		return null;
 	}
 
-//	public static ItemStack makeSkull(String textureCode, String headName){
-//		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
-//		if(textureCode == null) return item;
-//		SkullMeta meta = (SkullMeta) item.getItemMeta();
-//
-//		GameProfile profile = new GameProfile(/*uuid=*/UUID.nameUUIDFromBytes(textureCode.getBytes()), /*name=*/null/*textureCode*/);
-//		profile.getProperties().put("textures", new Property("textures", textureCode));
-//		setGameProfile(meta, profile);
-//
-//		meta.setDisplayName(headName);
-//		item.setItemMeta(meta);
-//		return item;
-//	}
-
 	public static ItemStack makeCustomHead(GameProfile profile, boolean setOwner){
 		final ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		final SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -134,15 +156,29 @@ public final class HeadUtils {
 		head.setItemMeta(meta);
 		return head;
 	}
-	// unused
-//	public static ItemStack makePlayerHead(OfflinePlayer player){
-//		GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
-//		ItemStack head = makeCustomHead(profile);
-//		SkullMeta meta = (SkullMeta) head.getItemMeta();
-//		meta.setOwningPlayer(player);
-//		head.setItemMeta(meta);
-//		return head;
-//	}
+
+	// ========================= Commented out because UNUSED =======================
+	/*public static ItemStack makeSkull(String textureCode, String headName){
+		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+		if(textureCode == null) return item;
+		SkullMeta meta = (SkullMeta) item.getItemMeta();
+
+		GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(textureCode.getBytes()), headName);
+		profile.getProperties().put("textures", new Property("textures", textureCode));
+		setGameProfile(meta, profile);
+
+		meta.setDisplayName(headName);
+		item.setItemMeta(meta);
+		return item;
+	}*/
+	/*public static ItemStack makePlayerHead(OfflinePlayer player){
+		GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
+		ItemStack head = makeCustomHead(profile);
+		SkullMeta meta = (SkullMeta) head.getItemMeta();
+		meta.setOwningPlayer(player);
+		head.setItemMeta(meta);
+		return head;
+	}*/
 
 	// TODO: Move to TypeUtils perhaps?
 	public static boolean isHead(Material type){
@@ -227,45 +263,5 @@ public final class HeadUtils {
 
 	public static boolean hasGrummName(Nameable e){
 		return e.getCustomName() != null && (e.getCustomName().equals("Dinnerbone") || e.getCustomName().equals("Grumm"));
-	}
-
-	public static String getMHFHeadName(String eType){
-		switch(eType){
-		case "MAGMA_CUBE":
-			return "MHF_LavaSlime";
-		case "IRON_GOLEM":
-			return "MHF_Golem";
-		case "MOOSHROOM":
-			return "MHF_MushroomCow";
-		case "WITHER_SKELETON":
-			return "MHF_Wither";
-		default:
-			StringBuilder builder = new StringBuilder("MHF_");
-			boolean lower = false;
-			for(char ch : eType.toCharArray()){
-				if(ch == '_') lower = false;
-				else if(lower) builder.append(Character.toLowerCase(ch));
-				else{builder.append(Character.toUpperCase(ch)); lower = true;}
-			}
-			return builder.toString();
-		}
-	}
-	public static String normalizedNameFromMHFName(String mhfName){
-		mhfName = mhfName.substring(4);
-		String mhfCompact = mhfName.replace("_", "").replace(" ", "").toLowerCase();
-		if(mhfCompact.equals("lavaslime")) return "Magma Cube";
-		else if(mhfCompact.equals("golem")) return "Iron Golem";
-		else if(mhfCompact.equals("pigzombie")) return "Zombie Pigman";
-		else if(mhfCompact.equals("mushroomcow")) return "Mooshroom";
-		else if(mhfName.isEmpty()) return "";
-		else{
-			char[] chars = mhfName.toCharArray();
-			StringBuilder name = new StringBuilder("").append(chars[0]);
-			for(int i=1; i<chars.length; ++i){
-				if(Character.isUpperCase(chars[i]) && chars[i-1] != ' ') name.append(' ');
-				name.append(chars[i]);
-			}
-			return name.toString();
-		}
 	}
 }
