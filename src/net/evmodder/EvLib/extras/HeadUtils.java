@@ -1,6 +1,8 @@
 package net.evmodder.EvLib.extras;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -52,14 +54,30 @@ public final class HeadUtils {
 		customHeads.put(EntityType.ZOMBIE_VILLAGER, "scraftbrothers11");
 	}
 
-	private static Field fieldProfileItem, fieldProfileBlock;
+	private static Field fieldProfileItem, fieldSerializedProfileItem, fieldProfileBlock;
+	private static Constructor<?> nbtTagCompountConstructor;
+	private static Method methodSerializeProfile;
 	public static void setGameProfile(SkullMeta meta, GameProfile profile){
 		try{
-			if(fieldProfileItem == null) fieldProfileItem = meta.getClass().getDeclaredField("profile");
-			fieldProfileItem.setAccessible(true);
+			if(fieldProfileItem == null){
+				fieldProfileItem = meta.getClass().getDeclaredField("profile");
+				fieldProfileItem.setAccessible(true);
+				// If possible, set the serializedProfile field as well. Requires ReflectionUtils because damnit I'm lazy
+				try{
+					fieldSerializedProfileItem = meta.getClass().getDeclaredField("serializedProfile");
+					fieldSerializedProfileItem.setAccessible(true);
+					Class<?> clazzNBTTagCompound = fieldSerializedProfileItem.getType();
+					methodSerializeProfile = ReflectionUtils.getRefClass("net.minecraft.nbt.GameProfileSerializer")
+						.findMethod(/*isStatic=*/true, clazzNBTTagCompound, clazzNBTTagCompound, GameProfile.class).getRealMethod();
+					nbtTagCompountConstructor = clazzNBTTagCompound.getConstructor();
+				}
+				catch(RuntimeException e){}
+			}
 			fieldProfileItem.set(meta, profile);
+			if(nbtTagCompountConstructor != null) fieldSerializedProfileItem.set(meta,
+					methodSerializeProfile.invoke(null, nbtTagCompountConstructor.newInstance(), profile));
 		}
-		catch(NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e){e.printStackTrace();}
+		catch(ReflectiveOperationException e){e.printStackTrace();}
 	}
 	public static void setGameProfile(Skull skull, GameProfile profile){
 		try{
