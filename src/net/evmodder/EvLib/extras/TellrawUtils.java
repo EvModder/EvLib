@@ -461,6 +461,7 @@ public class TellrawUtils{
 				return getBestGuessLocalizedDisplayName(entity.getType());
 		}
 	}
+	@SuppressWarnings("deprecation")
 	static String getVanillaPotionEffectTypeName(PotionEffectType type){
 		switch(type.getName()){
 			case "AWKWARD": return "awkward";
@@ -539,6 +540,7 @@ public class TellrawUtils{
 				return new TranslationComponent("block.minecraft."+block.getType().name().toLowerCase()); 
 		}
 	}
+	@SuppressWarnings("deprecation")
 	public static Component getLocalizedDisplayName(ItemStack item){
 		if(item.hasItemMeta() && item.getItemMeta().hasDisplayName()) return new RawTextComponent(item.getItemMeta().getDisplayName());
 		if(item.getType().isBlock()){

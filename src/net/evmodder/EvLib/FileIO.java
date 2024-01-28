@@ -187,14 +187,14 @@ public final class FileIO{// version = X1.0
 				//Create Directory
 				final File dir = new File(DIR);
 				if(!dir.exists())dir.mkdir();
-	
+
 				//Read contents of defaultConfig
 				final BufferedReader reader = new BufferedReader(new InputStreamReader(defaultConfig));
 				String line = reader.readLine();
 				final StringBuilder builder = new StringBuilder(line);
 				while((line = reader.readLine()) != null) builder.append('\n').append(line);
 				reader.close();
-	
+
 				//Create new config from contents of defaultConfig
 				final BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 				writer.write(builder.toString()); writer.close();
@@ -204,7 +204,7 @@ public final class FileIO{// version = X1.0
 				pl.getLogger().severe("Unable to locate a default config!");
 				pl.getLogger().severe("Could not find /config.yml in plugin's .jar");
 			}
-			if(notifyIfNew) pl.getLogger().info("Could not locate configuration file!");
+			if(notifyIfNew) pl.getLogger().info("Could not locate "+configName+" file!");
 			if(notifyIfNew) pl.getLogger().info("Generating a new one with default settings.");
 		}
 		final YamlConfiguration newConfig = YamlConfiguration.loadConfiguration(file);
