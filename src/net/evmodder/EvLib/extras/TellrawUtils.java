@@ -95,24 +95,24 @@ public class TellrawUtils{
 	};
 
 	public enum Format{
-		BOLD('b'), ITALIC('o'), UNDERLINED('n'), STRIKETHROUGH('m'), OBFUSCATED('k');
+		OBFUSCATED('k'), BOLD('l'), STRIKETHROUGH('m'), UNDERLINED('n'), ITALIC('o');
 		final char toChar;
 		Format(char toChar){this.toChar = toChar;}
 //		char toChar(){return toChar;}
 		static Format fromChar(char ch){
 			switch(ch){
-				case 'b': return Format.BOLD;
-				case 'o': return Format.ITALIC;
-				case 'n': return Format.UNDERLINED;
-				case 'm': return Format.STRIKETHROUGH;
 				case 'k': return Format.OBFUSCATED;
+				case 'l': return Format.BOLD;
+				case 'm': return Format.STRIKETHROUGH;
+				case 'n': return Format.UNDERLINED;
+				case 'o': return Format.ITALIC;
 				default: throw new IllegalArgumentException("Unknown format char: "+ch);
 			}
 		}
 	}
 
 	public static RawTextComponent getCurrentColorAndFormatProperties(String str){
-		String colorAndFormatsStr = TextUtils.getCurrentColorAndFormats(str).replace("§", "");
+		String colorAndFormatsStr = ChatColor.getLastColors(str).replace("§", "");
 		if(colorAndFormatsStr.isEmpty()) return new RawTextComponent(""); // no color/format properties
 		final char colorChar = colorAndFormatsStr.charAt(0);
 		String color = null;
@@ -309,7 +309,10 @@ public class TellrawUtils{
 		//tellraw @a {"text":"test"}
 		//tellraw @a {"text":"test","insertion":"hi there"}
 
-		@Override public String toPlainText(){return text;}
+		@Override public String toPlainText(){
+			ChatColor.getLastColors(text);
+			return text;
+		}//TODO: apply color & foramts
 		@Override protected String toStringInternal(){
 			String escapedText = TextUtils.escape(text, "\"","\n");
 			return !hasProperties
@@ -362,34 +365,19 @@ public class TellrawUtils{
 					? String.format(fallback != null ? fallback : jsonKey)
 					: String.format(fallback != null ? fallback : jsonKey, Arrays.stream(with).map(Component::toPlainText).toArray());
 		}
-		@Override protected String toStringInternal(){
-			// For TranslationComponents that are actually just String formatters, convert to a list
-			Component convertedComp = convertStringFormattersAndRawText();
-			if(convertedComp instanceof ListComponent) return convertedComp.toString();
-			// Otherwise, proceed with toString() as a {"translate"} component
-			String escapedJsonKey = TextUtils.escape(jsonKey, "\"","\n");
-			StringBuilder builder = new StringBuilder().append("{\"translate\":\"").append(escapedJsonKey).append('"');
-			if(fallback != null) builder.append(",\"fallback\":\"").append(TextUtils.escape(fallback, "\"","\n")).append('"');
-			if(with != null && with.length > 0) builder.append(",\"with\":[").append(
-					Arrays.stream(with).map(Component::toString).collect(Collectors.joining(","))).append(']');
-			return builder.append(getProperties()).append('}').toString();
-		}
-		@Override TranslationComponent copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
-			return new TranslationComponent(jsonKey, fallback, with, insert, click, hover, color, formats);
-		}
-		Component convertStringFormattersAndRawText(){
+		ListComponent attemptConvertToListComp(){
 			if(jsonKey.indexOf('%') == -1){ // Not a format str
-				// Commented out this optimization because the key *might* be a valid key client-side
+				// TODO: Commented out this optimization because the key *might* be a valid key client-side
 				//if(jsonKey.indexOf('.') == -1 && toPlainText().equals(jsonKey)) return new RawTextComponent(fallback != null ? fallback : jsonKey);
-				return this;
+				return null;
 			}
 
 			final String formatText = (fallback != null ? fallback : jsonKey).replace("%%", "<thingie_cuz_lazy>");
-			if(formatText.replace("%s", "").indexOf('%') != -1) return this; // TODO: consider supporting formats besides "%s"
 
+			int nextSub = formatText.indexOf("%s");
+			if(nextSub == -1) return null; // TODO: consider supporting formats besides "%s"
 			ListComponent listComp = new ListComponent();
-			int textStart = 0, nextSub = formatText.indexOf("%s");
-			int i = 0;
+			int i = 0, textStart = 0;
 			boolean isFirstComp = true;
 			while(nextSub != -1){
 				final String s = formatText.substring(textStart, nextSub).replace("<thingie_cuz_lazy>", "%");
@@ -405,9 +393,23 @@ public class TellrawUtils{
 				nextSub = formatText.indexOf("%s", textStart);
 			}
 			final String s = formatText.substring(textStart).replace("<thingie_cuz_lazy>", "%");
-			if(isFirstComp) listComp.addComponent(new RawTextComponent(s, getInsertion(), getClickAction(), getHoverAction(), getColor(), getFormats()));
-			else if(!s.isEmpty()) listComp.addComponent(s);
+			listComp.addComponent(s); // isFirstComp is guaranteed false by this point
 			return listComp;
+		}
+		@Override protected String toStringInternal(){
+			// For TranslationComponents that are actually just String formatters, convert to a list
+			ListComponent listComp = attemptConvertToListComp();
+			if(listComp != null) return listComp.toString();
+			// Otherwise, proceed with toString() as a {"translate"} component
+			String escapedJsonKey = TextUtils.escape(jsonKey, "\"","\n");
+			StringBuilder builder = new StringBuilder().append("{\"translate\":\"").append(escapedJsonKey).append('"');
+			if(fallback != null) builder.append(",\"fallback\":\"").append(TextUtils.escape(fallback, "\"","\n")).append('"');
+			if(with != null && with.length > 0) builder.append(",\"with\":[").append(
+					Arrays.stream(with).map(Component::toString).collect(Collectors.joining(","))).append(']');
+			return builder.append(getProperties()).append('}').toString();
+		}
+		@Override TranslationComponent copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
+			return new TranslationComponent(jsonKey, fallback, with, insert, click, hover, color, formats);
 		}
 	}
 
@@ -741,8 +743,60 @@ public class TellrawUtils{
 		}
 		public boolean isEmpty(){return components.isEmpty();}
 
-		private RawTextComponent copyWithNewText(RawTextComponent comp, String text){
+		private RawTextComponent textCompWithSameProperties(Component comp, String text){
 			return new RawTextComponent(text, comp.getInsertion(), comp.getClickAction(), comp.getHoverAction(), comp.getColor(), comp.getFormats());
+		}
+		// Cannot merge inline hex colors
+		private ChatColor getSimpleColor(String s){
+			if(s == null) return ChatColor.RESET;
+			try{return ChatColor.valueOf(s.toUpperCase());}
+			catch(IllegalArgumentException ex){return null;}
+		}
+		private RawTextComponent concatenateTextComps(RawTextComponent a, RawTextComponent b){
+			final String colorAndFormatsA = ChatColor.getLastColors(a.toPlainText());
+			final String colorAndFormatsB = TextUtils.getLeadingColorAndFormats(b.toPlainText());
+			final String colorB = TextUtils.stripFormatsOnly(colorAndFormatsB);
+
+			final String targetColor = b.getColor() != null ? b.getColor() : getColor();
+			final ChatColor simpleTargetColor = getSimpleColor(targetColor);
+
+			String joinColor = "";
+			if(colorB.isEmpty()){
+				String colorA = TextUtils.stripFormatsOnly(colorAndFormatsA);
+				if(colorA.isEmpty() ? targetColor != getColor() : !colorA.equals(targetColor)){
+					if(targetColor == null) joinColor += ChatColor.RESET;
+					else if(simpleTargetColor != null) joinColor += simpleTargetColor;
+					else return null;
+				}
+			}
+			String joinFormats = "";
+			if(joinColor.isEmpty()){
+				for(Format f : Format.values()){
+					final boolean globalFormat = getFormats() != null && getFormats().getOrDefault(f, false);
+					final boolean targetFormat = b.getFormats() != null && b.getFormats().containsKey(f) ? b.getFormats().get(f) : globalFormat;
+	
+					if(colorAndFormatsB.indexOf(f.toChar) == -1){//NOT in B
+						if(colorAndFormatsA.indexOf(f.toChar) == -1//NOT from A or from globalFormat
+								&& (!globalFormat || !TextUtils.stripColorsOnly(a.toPlainText()).equals(a.toPlainText()))){
+							if(targetFormat) joinFormats += ChatColor.COLOR_CHAR+f.toChar;
+						}
+						else if(!targetFormat){
+							if(targetColor == null) joinColor += ChatColor.RESET;
+							else if(simpleTargetColor != null) joinColor += simpleTargetColor;
+							else return null;
+							joinFormats = ""; break;
+						}
+					}
+				}
+			}
+			if(!joinColor.isEmpty()){
+				for(Format f : Format.values()){
+					final boolean globalFormat = getFormats() != null && getFormats().getOrDefault(f, false);
+					final boolean targetFormat = b.getFormats() != null && b.getFormats().containsKey(f) ? b.getFormats().get(f) : globalFormat;
+					if(targetFormat && colorAndFormatsB.indexOf(f.toChar) == -1) joinFormats += ChatColor.COLOR_CHAR+f.toChar;
+				}
+			}
+			return textCompWithSameProperties(a, a.toPlainText() + joinColor + joinFormats + b.toPlainText());
 		}
 		public boolean addComponent(Component component){
 			// Currently the only component is just properties, so see if we can delete it and move the properties to the new component
@@ -754,24 +808,25 @@ public class TellrawUtils{
 			// If last==null, components[] is empty and we are willing to accept an empty component to set the list properties 
 			if(component.toPlainText().isEmpty() && last != null) return false;
 			if(component instanceof RawTextComponent && last != null){
-				if(ChatColor.stripColor(component.toPlainText()).isEmpty()) return false;
-				if(last instanceof RawTextComponent && (last.samePropertiesAs(component)
-						|| (components.size() == 1 && last.isPropertiesSupersetOf(component))
-				)){
-					components.remove(components.size()-1);
-					components.add(last = copyWithNewText((RawTextComponent)last, last.toPlainText() + component.toPlainText()));
-					return true;
+				if(ChatColor.stripColor(component.toPlainText()).isEmpty()) return false; // Otherwise we are unwilling to accept an empty component
+				if(last instanceof RawTextComponent){
+					if((components.size() == 1 && last.isPropertiesSupersetOf(component)) // Inheriting list's properties
+						|| component.copyWithNewProperties( // The only properties we can safely change are color and formats.
+							component.getInsertion(), component.getClickAction(), component.getHoverAction(), last.getColor(), last.getFormats())
+						.samePropertiesAs(last)
+					){
+						RawTextComponent merged = concatenateTextComps((RawTextComponent)last, (RawTextComponent)component);
+						if(merged != null) components.set(components.size()-1, last = merged);
+					}
 				}
 			}
 			// For TranslationComponents that are actually just String substitutions, not translation keys.
-			if(component instanceof TranslationComponent && last != null && last.samePropertiesAs(component)){
-				final Component strFormatComp = ((TranslationComponent)component).convertStringFormattersAndRawText();
-				if(!(strFormatComp instanceof TranslationComponent)) return addComponent(strFormatComp);
+			if(component instanceof TranslationComponent/* && last != null && last.samePropertiesAs(component)*/){
+				ListComponent strFormatComp = ((TranslationComponent)component).attemptConvertToListComp();
+				if(strFormatComp != null) return addComponent(strFormatComp);
 			}
 			if(component instanceof ListComponent){
-				// We can safely flatten nested TellrawBlobs IFF they don't override any of the parent's "group properties"..
-				// AND we are not inside a "with":[]
-				if(((ListComponent)component).components.size() <= 1/* || noOverridingProperties(component)*/){
+				if(((ListComponent)component).components.size() <= 1 || isPropertiesSupersetOf(component)){
 					for(Component comp : ((ListComponent)component).components) addComponent(comp);
 					return true;
 				}
@@ -801,7 +856,7 @@ public class TellrawUtils{
 				boolean replacementIsRawText = replacement instanceof RawTextComponent;
 
 				if(replacementIsRawText && txComp.isPropertiesSupersetOf(replacement)){
-					components.set(i, copyWithNewText(txComp, text.replace(textToReplace, ((RawTextComponent)replacement).toPlainText())));
+					components.set(i, textCompWithSameProperties(txComp, text.replace(textToReplace, ((RawTextComponent)replacement).toPlainText())));
 					continue;
 				}
 				int matchIdx = text.indexOf(textToReplace);
@@ -810,12 +865,12 @@ public class TellrawUtils{
 				boolean emptyBefore = (replacementIsRawText ? ChatColor.stripColor(textBefore) : textBefore).isEmpty();
 				boolean emptyAfter = (replacementIsRawText ? ChatColor.stripColor(textAfter) : textAfter).isEmpty();
 				// Necessary to prevent overriding this ListComponent's group properties
-				if(i == 0 && emptyBefore && !this.samePropertiesAs(replacement)){components.add(0, copyWithNewText(txComp, "")); i = 1;}
+				if(i == 0 && emptyBefore && !this.samePropertiesAs(replacement)){components.add(0, textCompWithSameProperties(txComp, "")); i = 1;}
 
 				Component thisReplacement = replacement;
 				if(replacementIsRawText){
-					if(emptyBefore) thisReplacement = copyWithNewText((RawTextComponent)thisReplacement, textBefore + thisReplacement.toPlainText());
-					if(emptyAfter) thisReplacement = copyWithNewText((RawTextComponent)thisReplacement, thisReplacement.toPlainText() + textAfter);
+					if(emptyBefore) thisReplacement = textCompWithSameProperties(thisReplacement, textBefore + thisReplacement.toPlainText());
+					if(emptyAfter) thisReplacement = textCompWithSameProperties(thisReplacement, thisReplacement.toPlainText() + textAfter);
 				}
 				if(!emptyBefore){
 					RawTextComponent propertiesAtReplacement = getCurrentColorAndFormatProperties(textBefore);
@@ -831,7 +886,7 @@ public class TellrawUtils{
 					components.set(i, thisReplacement);
 				}
 				else if(emptyBefore){
-					components.set(i, copyWithNewText(txComp, textAfter));
+					components.set(i, textCompWithSameProperties(txComp, textAfter));
 					components.add(i, thisReplacement);
 				}
 				else if(emptyAfter){
@@ -840,8 +895,8 @@ public class TellrawUtils{
 					else components.add(i, thisReplacement);
 				}
 				else{
-					components.set(i, copyWithNewText(txComp, textBefore));
-					RawTextComponent textAfterComp = copyWithNewText(txComp, textAfter);
+					components.set(i, textCompWithSameProperties(txComp, textBefore));
+					RawTextComponent textAfterComp = textCompWithSameProperties(txComp, textAfter);
 					if(++i == components.size()){components.add(thisReplacement); components.add(last = textAfterComp);}
 					else{components.add(i, textAfterComp); components.add(i, thisReplacement);}
 				}
@@ -880,13 +935,15 @@ public class TellrawUtils{
 						).append(']').toString();
 			}
 		}
-		@Override ListComponent copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
+		@Override ListComponent copyWithNewProperties(
+				String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			ListComponent newListComp = new ListComponent(new RawTextComponent("", insert, click, hover, color, formats));
 			components.forEach(comp -> newListComp.addComponent(comp));
 			return newListComp;
 		}
 	}
 
+	// Convert String with hex color(s) -> ListComponent (because §x-style inline hex colors don't work in /tellraw)
 	public final static ListComponent convertHexColorsToComponentsWithReset(String str){
 		// §x§0§0§0§0§0§0 
 		Matcher matcher = Pattern.compile("§x((?:§[0-9a-fA-F]){6})(?:[^§]|(?:§[k-o]))+").matcher(str);
@@ -944,7 +1001,8 @@ public class TellrawUtils{
 		}
 		ListComponent listComp = new ListComponent();
 		if(insert_comp0 != null) listComp.addComponent(insert_comp0);
-//		if(str.charAt('i') == ']') return comp; //TODO: Apparently empty lists are not supported in tellraw (last checked: 1.20)
+		//TODO: Empty lists are not valid JSON (last checked: 1.20.4)
+//		if(str.charAt(i+1) == ']') return new Pair<>(listComp, i + 1);
 		do{
 			++i;
 			Pair<Component, Integer> nextComp = parseNextComponentFromString(str, i);
@@ -958,6 +1016,29 @@ public class TellrawUtils{
 			return null;
 		}
 		return new Pair<>(listComp, i + 1);
+	}
+	private final static Pair<Component[], Integer> parseComponentArrayForWith(String str, int i){
+		//while(i < str.length() && Character.isWhitespace(str.charAt(i))) ++i;
+		if(str.charAt(i) != '['){
+			Bukkit.getLogger().warning("TellrawUtils ERROR: expected [ at index "+i+" of string: "+str);
+			return null;
+		}
+		//TODO: Empty lists are valid for with:[]  (last checked: 1.20.4)
+		if(str.charAt(i+1) == ']') return new Pair<>(new Component[0], i + 1); 
+		List<Component> comps = new ArrayList<>();
+		do{
+			++i;
+			Pair<Component, Integer> nextComp = parseNextComponentFromString(str, i);
+			if(nextComp == null || nextComp.a == null) return null;
+			comps.add(nextComp.a);
+			i = nextComp.b;
+			while(Character.isWhitespace(str.charAt(i))) ++i;
+		} while(str.charAt(i) == ',');
+		if(str.charAt(i) != ']'){
+			Bukkit.getLogger().warning("TellrawUtils ERROR: expected ] at index "+i+" of string: "+str);
+			return null;
+		}
+		return new Pair<>(comps.toArray(new Component[0]), i + 1);
 	}
 	enum ComponentType{TEXT, TRANSLATE, SCORE, SELECTOR, KEYBIND};
 	private final static Pair<Component, Integer> parseNextComponentFromString(String str, int i){
@@ -1068,9 +1149,9 @@ public class TellrawUtils{
 							return null;
 						}
 						++i;
-						Pair<Component, Integer> withAndIdx = parseNextComponentFromString(str, i);
+						Pair<Component[], Integer> withAndIdx = parseComponentArrayForWith(str, i);
 						if(withAndIdx == null) return null;
-						with = ((ListComponent)withAndIdx.a).components.toArray(new Component[0]);
+						with = withAndIdx.a;
 						i = withAndIdx.b;
 					}
 					else if(str.startsWith("fallback\"", i)){

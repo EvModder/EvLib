@@ -123,10 +123,11 @@ public class TextUtils{
 		return translateAlternateColorCodes(altColorChar, textToTranslate).replace(ChatColor.RESET.toString(), resetColor);
 	}
 
-	public static String minimizeColorCodes(String legacyStr){// TODO: where is this used?
+	//TODO: fix bug: "&l " is different from " &l", so we need special handling for it
+	public static String minimizeColorCodes(String legacyStr){// TODO: unused
 		// Find (<color>)(\s|<color>)+
 		Pattern colorsAndSpacesPattern = Pattern.compile(
-				"(?:(?:§x(?:§[0-9a-fA-F]){6})|(?:§[0-9a-fA-FrRkKmMnNoO]))(?:(?:§x(?:§[0-9a-fA-F]){6})|(?:§[0-9a-fA-FrRkKmMnNoO])|\\s)*");
+				"(?:(?:§x(?:§[0-9a-fA-F]){6})|(?:§[0-9a-fA-FrRk-oK-O]))(?:(?:§x(?:§[0-9a-fA-F]){6})|(?:§[0-9a-fA-FrRk-oK-O])|\\s)*");
 		Pattern lastColorPattern = Pattern.compile("((?:§x(?:§[0-9a-fA-F]){6})|(?:§[0-9a-fA-FrR]))\\s*$", Pattern.MULTILINE);
 		Matcher colorMatcher = colorsAndSpacesPattern.matcher(legacyStr);
 		StringBuilder builder = new StringBuilder();
@@ -143,12 +144,12 @@ public class TextUtils{
 		return builder.toString();
 	}
 
-	// TODO: implement "remove useless colors/formats" which removes colors/formats at the end of a string that have no visual effect
+	// TODO: implement "remove useless trailing colors/formats", which removes colors/formats at the end of a string that have no visual effect
 
 	public static String stripColorsOnly(String str, char altColorChar){
-		//(?:§x(?:§[0-9a-fA-FrR]){6})|(?:§#(?:[0-9a-fA-FrR]{3}){1,2})|(?:§[0-9a-fA-FrR])
-		//return str.replaceAll("(?:"+altColorChar+"x(?:"+altColorChar+"[0-9a-fA-FrR]){6})|(?:"+altColorChar+"[0-9a-fA-FrR])", "");
-		return str.replaceAll(altColorChar+"(?:x(?:"+altColorChar+"[0-9a-fA-FrR]){6})|[0-9a-fA-FrR]", "");
+		//(?:§x(?:§[0-9a-fA-FrR]){6})|(?:§#(?:[0-9a-fA-F]{3}){1,2})|(?:§[0-9a-fA-FrR])
+		//return str.replaceAll("(?:"+altColorChar+"x(?:"+altColorChar+"[0-9a-fA-F]){6})|(?:"+altColorChar+"[0-9a-fA-FrR])", "");
+		return str.replaceAll(altColorChar+"(?:x(?:"+altColorChar+"[0-9a-fA-F]){6})|[0-9a-fA-FrR]", "");
 	}
 	public static String stripColorsOnly(String str){return stripColorsOnly(str, ChatColor.COLOR_CHAR);}
 	public static String stripFormatsOnly(String str, char altColorChar){
@@ -156,6 +157,35 @@ public class TextUtils{
 		return str.replaceAll(altColorChar+"[k-oK-O]", "");
 	}
 	public static String stripFormatsOnly(String str){return stripFormatsOnly(str, ChatColor.COLOR_CHAR);}
+
+	// TODO: rewrite without regex because performance is nice
+	public static String getLeadingColorAndFormats(String str){
+		// Similar to minimizeColorCodes()
+		String colorPat = "(?:§x(?:§[0-9a-fA-F]){6})|(?:§[0-9a-fA-FrR])";
+		Pattern colorsAndSpacesPattern = Pattern.compile(
+				"^((?:\\s|§.)*?)" // Match the fluff before the last color
+				+ "("+colorPat+")(?!(?:\\s|§.)*(?:"+colorPat+"))" // Match last color (before first text)
+				+ "((?:(?:\\s|§[^k-oK-O])*(?:§[k-oK-O]))*)" // Glob with all formats after color (before first text)
+				+ ".*", Pattern.DOTALL); // Rest of str
+		Matcher matcher1 = colorsAndSpacesPattern.matcher(str);
+		String color = "", formats = "";
+		if(matcher1.find()){
+			color = matcher1.group(2);
+			formats = matcher1.group(3).replaceAll("\\s|§", "");
+		}
+		else{
+			Pattern formatsAndSpacesPattern = Pattern.compile("^((?:§.|\\s)*).*", Pattern.DOTALL); // Rest of str
+			Matcher matcher2 = formatsAndSpacesPattern.matcher(str);
+			if(matcher2.find()) formats = matcher2.group(1).replaceAll("\\s|§", "");
+		}
+		if(formats.isEmpty()) return color;
+		return color
+				+ (formats.indexOf('k') != -1 ? ChatColor.MAGIC.toString() : "")
+				+ (formats.indexOf('l') != -1 && str.matches("(?s)(?:\\n|§.)*§l.*") ? ChatColor.BOLD.toString() : "")
+				+ (formats.indexOf('m') != -1 ? ChatColor.STRIKETHROUGH.toString() : "")
+				+ (formats.indexOf('n') != -1 ? ChatColor.UNDERLINE.toString() : "")
+				+ (formats.indexOf('o') != -1 ? ChatColor.ITALIC.toString() : "");
+	}
 
 	//Returns empty-string if no color is present at end of string
 	public static String getCurrentColor(String str){
@@ -186,8 +216,9 @@ public class TextUtils{
 		}
 		return builder.toString();
 	}
-	//Returns empty-string if no color or format is present at end of string
-	public static String getCurrentColorAndFormats(String str){
+	// Returns empty-string if no color or format is present at end of string
+	// Works identically to ChatColor.getLastColors()
+/*	public static String getCurrentColorAndFormats(String str){
 		StringBuilder builder = new StringBuilder();
 		final char[] msg = str.toCharArray();
 		int i=msg.length-1;
@@ -198,15 +229,15 @@ public class TextUtils{
 					&& msg[i-7] == ChatColor.COLOR_CHAR && isHex(msg[i-6])
 					&& msg[i-5] == ChatColor.COLOR_CHAR && isHex(msg[i-4])
 					&& msg[i-3] == ChatColor.COLOR_CHAR && isHex(msg[i-2])
-					&& isHex(msg[i])){builder.append(str.substring(i-13, i+1)); ++i; break;}
-			if(isSimpleColor(msg[i])){builder.append(str.substring(i-1, i+1)); ++i; break;}
+					&& isHex(msg[i])){builder.insert(0, str.substring(i-13, i+1)); ++i; break;}
+			if(isSimpleColor(msg[i])){builder.insert(0, str.substring(i-1, i+1)); ++i; break;}
 		}
 		for(++i; i<msg.length; ++i) if(msg[i-1] == ChatColor.COLOR_CHAR && isFormat(msg[i])){
 			final String formatStr = str.substring(i-1, i+1);
 			if(builder.indexOf(formatStr) == -1) builder.append(formatStr);
 		}
 		return builder.toString();
-	}
+	}*/
 
 	public static boolean isEscaped(char[] str, int x){
 		boolean escaped = false;
