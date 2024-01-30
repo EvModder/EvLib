@@ -1,6 +1,5 @@
 package net.evmodder.EvLib.extras;
 
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.bukkit.Bukkit;
@@ -41,7 +40,7 @@ public class TextUtils{
 		}
 	}
 
-	public static String generateRandomASCII(int desiredLength){//TODO: currently unused
+	/*public static String generateRandomASCII(int desiredLength){//TODO: currently unused
 		StringBuilder builder = new StringBuilder();
 		Random rand = new Random();
 		for(int i=0; i<desiredLength; ++i){
@@ -54,7 +53,7 @@ public class TextUtils{
 			builder.append((char)randC);
 		}
 		return builder.toString();
-	}
+	}*/
 
 	private static boolean isHex(char ch){return ('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F');}
 
@@ -124,7 +123,7 @@ public class TextUtils{
 	}
 
 	//TODO: fix bug: "&l " is different from " &l", so we need special handling for it
-	public static String minimizeColorCodes(String legacyStr){// TODO: unused
+	/*public static String minimizeColorCodes(String legacyStr){// TODO: unused
 		// Find (<color>)(\s|<color>)+
 		Pattern colorsAndSpacesPattern = Pattern.compile(
 				"(?:(?:§x(?:§[0-9a-fA-F]){6})|(?:§[0-9a-fA-FrRk-oK-O]))(?:(?:§x(?:§[0-9a-fA-F]){6})|(?:§[0-9a-fA-FrRk-oK-O])|\\s)*");
@@ -142,7 +141,7 @@ public class TextUtils{
 		}
 		builder.append(legacyStr.substring(lastEnd));
 		return builder.toString();
-	}
+	}*/
 
 	// TODO: implement "remove useless trailing colors/formats", which removes colors/formats at the end of a string that have no visual effect
 

@@ -111,28 +111,6 @@ public class TellrawUtils{
 		}
 	}
 
-	public static RawTextComponent getCurrentColorAndFormatProperties(String str){
-		String colorAndFormatsStr = ChatColor.getLastColors(str).replace("§", "");
-		if(colorAndFormatsStr.isEmpty()) return new RawTextComponent(""); // no color/format properties
-		final char colorChar = colorAndFormatsStr.charAt(0);
-		String color = null;
-		if(colorChar == 'x'){
-			color = "#"+colorAndFormatsStr.substring(1, 7);
-			colorAndFormatsStr = colorAndFormatsStr.substring(7);
-		}
-		if(TextUtils.isSimpleColor(colorChar)){
-			color = ChatColor.getByChar(colorChar).name().toLowerCase();
-			colorAndFormatsStr = colorAndFormatsStr.substring(1);
-		}
-		final String formatsStr = colorAndFormatsStr;
-		final Map<Format, Boolean> formats = color == null
-			? Arrays.stream(Format.values()).collect(Collectors.toMap(f -> f, f -> formatsStr.indexOf(f.toChar) != -1))
-			: colorAndFormatsStr.chars().mapToObj(c -> Format.fromChar((char)c)).collect(Collectors.toMap(f -> f, f -> true));
-//		Bukkit.getLogger().info("properties for str('"+str+"'): color: "+color+", formats: "
-//			+Arrays.stream(formats).map(f -> f.format.toChar+":"+f.value).collect(Collectors.joining(",", "{", "}")));
-		return new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null, color, formats);
-	}
-
 	// for toPlainText() on KeybindComponent and TranslateComponent, we fall back to using the NMS resolver
 	private static Constructor<?> translateConstructor, translateConstructorWith, translateConstructorFallbackAndWith, keybindConstructor;
 	private static Method chatMessageGetString, makeIChatMutableComponent = null;
@@ -294,6 +272,7 @@ public class TellrawUtils{
 	};
 	public final static class RawTextComponent extends Component{
 		final String text;
+		String getRawText(){return text;}
 		public RawTextComponent(String text){this.text = text;}
 		public RawTextComponent(String text, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
@@ -310,9 +289,16 @@ public class TellrawUtils{
 		//tellraw @a {"text":"test","insertion":"hi there"}
 
 		@Override public String toPlainText(){
-			ChatColor.getLastColors(text);
-			return text;
-		}//TODO: apply color & foramts
+			String color = getColor();
+			if(color == null) color = "";
+			else{
+				try{color = ""+ChatColor.valueOf(color.toUpperCase());}
+				catch(IllegalArgumentException ex){color = TextUtils.translateAlternateColorCodes('&', '&'+color);}
+			}
+			String formats = getFormats() == null ? "" : getFormats().entrySet().stream().filter(e -> e.getValue())
+					.map(e -> ""+ChatColor.COLOR_CHAR+e.getKey().toChar).collect(Collectors.joining());
+			return color+formats+text;
+		}
 		@Override protected String toStringInternal(){
 			String escapedText = TextUtils.escape(text, "\"","\n");
 			return !hasProperties
@@ -729,6 +715,28 @@ public class TellrawUtils{
 		}
 	}
 
+	/**
+	 * Creates a <code>RawTextComponent</code> with the same color and format properties as seen at the trailing end of the input String
+	 * @param str The String from which to draw color/format properties by means of ChatColor.getLastColors(str)
+	 * @return an empty text RawTextComponent with color and format properties defined
+	 */
+	public static RawTextComponent getTrailingColorAndFormatProperties(String str){
+		String colorAndFormatsStr = ChatColor.getLastColors(str).replace("§", "");
+		if(colorAndFormatsStr.isEmpty()) return new RawTextComponent(""); // no color/format properties
+		final char colorChar = colorAndFormatsStr.charAt(0);
+		String color = null;
+		if(colorChar == 'x'){
+			color = "#"+colorAndFormatsStr.substring(1, 7);
+			colorAndFormatsStr = colorAndFormatsStr.substring(7);
+		}
+		else if(TextUtils.isSimpleColor(colorChar)){
+			color = ChatColor.getByChar(colorChar).name().toLowerCase();
+			colorAndFormatsStr = colorAndFormatsStr.substring(1);
+		}
+		final Map<Format, Boolean> formats = colorAndFormatsStr.chars().mapToObj(c -> Format.fromChar((char)c)).collect(Collectors.toMap(f -> f, f -> true));
+		return new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null, color, formats);
+	}
+
 	public final static class ListComponent extends Component{
 		@Override String getInsertion(){return components.isEmpty() ? null : components.get(0).getInsertion();}
 		@Override TextClickAction getClickAction(){return components.isEmpty() ? null : components.get(0).getClickAction();}
@@ -753,8 +761,8 @@ public class TellrawUtils{
 			catch(IllegalArgumentException ex){return null;}
 		}
 		private RawTextComponent concatenateTextComps(RawTextComponent a, RawTextComponent b){
-			final String colorAndFormatsA = ChatColor.getLastColors(a.toPlainText());
-			final String colorAndFormatsB = TextUtils.getLeadingColorAndFormats(b.toPlainText());
+			final String colorAndFormatsA = ChatColor.getLastColors(a.getRawText());
+			final String colorAndFormatsB = TextUtils.getLeadingColorAndFormats(b.getRawText());
 			final String colorB = TextUtils.stripFormatsOnly(colorAndFormatsB);
 
 			final String targetColor = b.getColor() != null ? b.getColor() : getColor();
@@ -777,7 +785,7 @@ public class TellrawUtils{
 	
 					if(colorAndFormatsB.indexOf(f.toChar) == -1){//NOT in B
 						if(colorAndFormatsA.indexOf(f.toChar) == -1//NOT from A or from globalFormat
-								&& (!globalFormat || !TextUtils.stripColorsOnly(a.toPlainText()).equals(a.toPlainText()))){
+								&& (!globalFormat || !TextUtils.stripColorsOnly(a.getRawText()).equals(a.getRawText()))){
 							if(targetFormat) joinFormats += ChatColor.COLOR_CHAR+f.toChar;
 						}
 						else if(!targetFormat){
@@ -796,19 +804,26 @@ public class TellrawUtils{
 					if(targetFormat && colorAndFormatsB.indexOf(f.toChar) == -1) joinFormats += ChatColor.COLOR_CHAR+f.toChar;
 				}
 			}
-			return textCompWithSameProperties(a, a.toPlainText() + joinColor + joinFormats + b.toPlainText());
+			return textCompWithSameProperties(a, a.getRawText() + joinColor + joinFormats + b.getRawText());
 		}
+
+		/**
+		 * Possibly adds a @component to this @ListComponent.
+		 * The function may choose to ignore empty components, and merge adjacent text and translation components when possible.
+		 * @param component The component to be added
+		 * @return true if the component's contents were merged into this ListComponent
+		 */
 		public boolean addComponent(Component component){
-			// Currently the only component is just properties, so see if we can delete it and move the properties to the new component
-			if(components.size() == 1 && last.toPlainText().isEmpty() && last.isPropertiesSupersetOf(component)){
+			// Currently the 1st component is just properties, so we can delete it and move the properties to the new component
+			if(components.size() == 1 && ChatColor.stripColor(last.toPlainText()).isEmpty() && last.isPropertiesSupersetOf(component)){
 				components.set(0, last=component.copyWithNewProperties(
 						last.getInsertion(), last.getClickAction(), last.getHoverAction(), last.getColor(), last.getFormats()));
 				return true;
 			}
-			// If last==null, components[] is empty and we are willing to accept an empty component to set the list properties 
-			if(component.toPlainText().isEmpty() && last != null) return false;
+			// Similar to above, we are unwilling to accept an empty component unless it is the first element (setting the list properties)
+			if(ChatColor.stripColor(component.toPlainText()).isEmpty() && last != null) return false;
+
 			if(component instanceof RawTextComponent && last != null){
-				if(ChatColor.stripColor(component.toPlainText()).isEmpty()) return false; // Otherwise we are unwilling to accept an empty component
 				if(last instanceof RawTextComponent){
 					if((components.size() == 1 && last.isPropertiesSupersetOf(component)) // Inheriting list's properties
 						|| component.copyWithNewProperties( // The only properties we can safely change are color and formats.
@@ -820,12 +835,12 @@ public class TellrawUtils{
 					}
 				}
 			}
-			// For TranslationComponents that are actually just String substitutions, not translation keys.
-			if(component instanceof TranslationComponent/* && last != null && last.samePropertiesAs(component)*/){
+			else if(component instanceof TranslationComponent){
+				// For TranslationComponents that are actually just String substitutions, not translation keys.
 				ListComponent strFormatComp = ((TranslationComponent)component).attemptConvertToListComp();
 				if(strFormatComp != null) return addComponent(strFormatComp);
 			}
-			if(component instanceof ListComponent){
+			else if(component instanceof ListComponent){
 				if(((ListComponent)component).components.size() <= 1 || isPropertiesSupersetOf(component)){
 					for(Component comp : ((ListComponent)component).components) addComponent(comp);
 					return true;
@@ -841,39 +856,39 @@ public class TellrawUtils{
 		 * @param replacement The component substituted in place of each instance of matching text
 		 * @return true if one or more replacements occurred
 		 */
-		public boolean replaceRawDisplayTextWithComponent(final String textToReplace, final Component replacement){
+		public boolean replaceRawTextWithComponent(final String textToReplace, final Component replacement){
 			if(textToReplace.isEmpty()) return false;
 			boolean updated = false;
 			for(int i=0; i<components.size(); ++i){
 				Component comp = components.get(i);
 				if(comp instanceof ListComponent){
-					if(((ListComponent)comp).replaceRawDisplayTextWithComponent(textToReplace, replacement)) updated = true;
+					if(((ListComponent)comp).replaceRawTextWithComponent(textToReplace, replacement)) updated = true;
 				}
 				if(comp instanceof RawTextComponent == false) continue;
 				RawTextComponent txComp = (RawTextComponent) comp;
-				final String text = txComp.toPlainText();
+				final String text = txComp.getRawText();
 				if(text.contains(textToReplace) == false) continue;
-				boolean replacementIsRawText = replacement instanceof RawTextComponent;
+				final String replacementRawText = replacement instanceof RawTextComponent ? ((RawTextComponent)replacement).getRawText() : null;
 
-				if(replacementIsRawText && txComp.isPropertiesSupersetOf(replacement)){
-					components.set(i, textCompWithSameProperties(txComp, text.replace(textToReplace, ((RawTextComponent)replacement).toPlainText())));
+				if(replacementRawText != null && txComp.isPropertiesSupersetOf(replacement)){
+					components.set(i, textCompWithSameProperties(txComp, text.replace(textToReplace, replacementRawText)));
 					continue;
 				}
 				int matchIdx = text.indexOf(textToReplace);
 				String textBefore = text.substring(0, matchIdx);
 				String textAfter = text.substring(matchIdx+textToReplace.length());
-				boolean emptyBefore = (replacementIsRawText ? ChatColor.stripColor(textBefore) : textBefore).isEmpty();
-				boolean emptyAfter = (replacementIsRawText ? ChatColor.stripColor(textAfter) : textAfter).isEmpty();
+				boolean emptyBefore = (replacementRawText != null ? ChatColor.stripColor(textBefore) : textBefore).isEmpty();
+				boolean emptyAfter = (replacementRawText != null ? ChatColor.stripColor(textAfter) : textAfter).isEmpty();
 				// Necessary to prevent overriding this ListComponent's group properties
 				if(i == 0 && emptyBefore && !this.samePropertiesAs(replacement)){components.add(0, textCompWithSameProperties(txComp, "")); i = 1;}
 
 				Component thisReplacement = replacement;
-				if(replacementIsRawText){
-					if(emptyBefore) thisReplacement = textCompWithSameProperties(thisReplacement, textBefore + thisReplacement.toPlainText());
-					if(emptyAfter) thisReplacement = textCompWithSameProperties(thisReplacement, thisReplacement.toPlainText() + textAfter);
+				if(replacementRawText != null){
+					if(emptyBefore) thisReplacement = textCompWithSameProperties(thisReplacement, textBefore + replacementRawText);
+					if(emptyAfter) thisReplacement = textCompWithSameProperties(thisReplacement, replacementRawText + textAfter);
 				}
 				if(!emptyBefore){
-					RawTextComponent propertiesAtReplacement = getCurrentColorAndFormatProperties(textBefore);
+					RawTextComponent propertiesAtReplacement = getTrailingColorAndFormatProperties(textBefore);
 					if(!this.isPropertiesSupersetOf(propertiesAtReplacement)){
 						ListComponent subListComp = new ListComponent();
 						subListComp.addComponent(propertiesAtReplacement);
@@ -907,7 +922,8 @@ public class TellrawUtils{
 
 		/** If the first component is properties-only and all those properties are overridden, then we can discard it. */
 		private boolean canDiscardFirstComponent(){
-			if(components.size() > 1 && components.get(0).toPlainText().isEmpty() && components.get(1).overridesAllPropertiesOf(components.get(0))){
+			if(components.size() > 1 && ChatColor.stripColor(components.get(0).toPlainText()).isEmpty()
+					&& components.get(1).overridesAllPropertiesOf(components.get(0))){
 				for(int i=2; i<components.size(); ++i){
 					if(!components.get(i).overridesAllPropertiesOf(components.get(1))) return false;
 				}
@@ -917,15 +933,9 @@ public class TellrawUtils{
 		}
 
 		@Override public String toPlainText(){
-			StringBuilder builder = new StringBuilder();
-			for(Component comp : components) builder.append(comp.toPlainText());
-			return builder.toString();
+			return components.stream().map(Component::toPlainText).collect(Collectors.joining());
 		}
 		@Override protected String toStringInternal(){
-			while(last instanceof RawTextComponent && ChatColor.stripColor(last.toPlainText()).isEmpty()){
-				components.remove(components.size()-1);
-				last = components.isEmpty() ? null : components.get(components.size()-1);
-			}
 			if(canDiscardFirstComponent()) components.remove(0);
 			switch(components.size()){
 				case 0: return "\"\"";
