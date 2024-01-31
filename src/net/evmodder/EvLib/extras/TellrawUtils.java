@@ -180,10 +180,20 @@ public class TellrawUtils{
 		private String toString;
 		final boolean hasProperties;
 
+		/** Returns the insertion text of this component (when the component is shift-clicked by a player, this string is inserted in their chat input).
+		 * @return the insertion text */
 		String getInsertion(){return insertion;}
+		/** Returns the ClickAction of this component.
+		 * @return the click action */
 		TextClickAction getClickAction(){return clickAction;}
+		/** Returns the HoverAction of this component.
+		 * @return the hover action */
 		TextHoverAction getHoverAction(){return hoverAction;}
+		/** Returns the color of this component.
+		 * @return a String denoting the color */
 		String getColor(){return color;}
+		/** Returns the formats of this component.
+		 * @return a Map<Format, Boolean> with true values for formats applied on this component */
 		Map<Format, Boolean> getFormats(){return formats;}
 
 		private Component(String insertion, TextClickAction clickAction, TextHoverAction hoverAction, String color, Map<Format, Boolean> formats){
@@ -266,7 +276,11 @@ public class TellrawUtils{
 		}
 
 		protected abstract String toStringInternal();
+		/** Returns a JSON string built from this component suitable for use in commands/tellraw.
+		 * @return a formatted JSON String representing this component */
 		@Override final public String toString(){return toString == null ? (toString = toStringInternal()) : toString;}
+		/** Returns what this component would appear as (in plain text) if parsed by Minecraft's JSON/tellraw resolver.
+		 * @return a String representing the resolved text of this component */
 		public abstract String toPlainText();
 		abstract Component copyWithNewProperties(String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats);
 	};

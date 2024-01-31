@@ -16,6 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 //to: >TellrawUtils</a></div>
 //from: >HeadUtils<\/a><\/div>(\n<div[^>]+>&nbsp;<\/div>\n<div[^>]+><a[^>]+>HeadUtils\.HeadType<\/a><\/div>)+
 //to: >HeadUtils</a></div>
+//^ alternatively to above, just edit docs/net/evmodder/EvLib/extras/package-summary.html to remove all sub-classes from the list
 // `([ (>])TellrawUtils\.([a-zA-Z]+)` -> `$1$2`
 
 /** JavaPlugin with more config file handling features */
