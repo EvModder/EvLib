@@ -529,7 +529,7 @@ public class WebUtils {
 		System.out.println("Extra drop rates for: "+extraDrpC);
 
 		TreeSet<String> alrInConf = new TreeSet<>();
-		for(String spawnMod : FileIO.loadFile("spawn-cause-modifiers.txt", "").split("\n")){
+		for(String spawnMod : FileIO.loadFile("spawn-cause-multipliers.txt", "").split("\n")){
 			final int i = spawnMod.indexOf(':');
 			if(i != -1) alrInConf.add(spawnMod.substring(0, i));
 		}
@@ -619,6 +619,9 @@ public class WebUtils {
 		}
 		return "[I;"+arr[0]+","+arr[1]+","+arr[2]+","+arr[3]+"]";
 	}
+	public static UUID convertUUIDFromIntArray(int[] arr){
+		return new UUID((long)arr[0] << 32 | arr[1] & 0xFFFFFFFFL, (long)arr[2] << 32 | arr[3] & 0xFFFFFFFFL);
+	}
 
 	static void printUUIDsForTextureKeys(){
 		String[] textureKeys = new String[]{
@@ -694,9 +697,9 @@ public class WebUtils {
 //		printUUIDsForTextureKeys();
 //		printUUIDsForPlayerNames();
 		checkMissingTexturesDropratesAndSpawnModifiers();
-		checkMissingGrummTextures();
+//		checkMissingGrummTextures();
 //		checkAbnormalHeadTextures();
-		runGrumm();
+//		runGrumm();
 //		System.out.println("Test: "+Vehicle.class.isAssignableFrom(EntityType.PLAYER.getEntityClass()));
 	}
 }
