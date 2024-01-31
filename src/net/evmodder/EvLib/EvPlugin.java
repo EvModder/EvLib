@@ -12,6 +12,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 // Search > File... > containing text X > replace Y
 // WITH REGEX ENABLED:
+//from: >TellrawUtils<\/a><\/div>(\n<div[^>]+>&nbsp;<\/div>\n<div[^>]+><a[^>]+>TellrawUtils\.\w+<\/a><\/div>)+
+//to: >TellrawUtils</a></div>
 // `>TellrawUtils.([a-zA-Z]+)<` -> `>$1<`
 // WITHOUT REGEX ENABLED:
 // ` TellrawUtils.` -> ``
