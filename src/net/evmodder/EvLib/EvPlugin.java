@@ -4,6 +4,17 @@ import java.io.InputStream;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+//Export -> JAVADOC -> javadoc sources:
+// * Bukkit-latest: https://hub.spigotmc.org/javadocs/bukkit/
+// Include files:
+// * EvCommand, EvPlugin, EvUtils, FileIO, util/*, extras/ActionBar,Entity,Head,MethodMocker,NBTTag,Packet,Reflection,Selector,TabText,Tellraw,Text,Type,Web
+
+// Search > File... > containing text X > replace Y
+// * "extras.TellrawUtils." -> "extras.tellraw."
+// * "extras/TellrawUtils/" -> "extras/tellraw/"
+// * "TellrawUtils." -> ""
+
+/** JavaPlugin with more config file handling features */
 public abstract class EvPlugin extends JavaPlugin{
 	protected FileConfiguration config;
 	@Override public FileConfiguration getConfig(){return config;}
@@ -31,6 +42,6 @@ public abstract class EvPlugin extends JavaPlugin{
 		onEvDisable();
 	}
 
-	public void onEvEnable(){}
-	public void onEvDisable(){}
+	/** Called when this plugin is enabled */ public void onEvEnable(){}
+	/** Called when this plugin is disabled */ public void onEvDisable(){}
 }
