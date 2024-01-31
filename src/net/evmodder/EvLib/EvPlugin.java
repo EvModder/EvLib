@@ -16,6 +16,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 //to: >TellrawUtils</a></div>
 // * "extras.TellrawUtils." -> "extras.tellraw."
 // * "extras/TellrawUtils/" -> "extras/tellraw/"
+//* "extras/TellrawUtils." -> "extras/tellraw/"
+//* href="TellrawUtils. -> href="tellraw/
 // * "TellrawUtils." -> ""
 
 /** JavaPlugin with more config file handling features */
