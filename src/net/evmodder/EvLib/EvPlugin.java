@@ -11,14 +11,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 // * EvCommand, EvPlugin, EvUtils, FileIO, util/*, extras/ActionBar,Entity,Head,MethodMocker,NBTTag,Packet,Reflection,Selector,Tellraw,Text,Type,Web
 
 // Search > File... > containing text X > replace Y
-// * WITH REGEX ENABLED:
-//from: >TellrawUtils<\/a><\/div>(\n<div[^>]+>&nbsp;<\/div>\n<div[^>]+><a[^>]+>TellrawUtils\.\w+<\/a><\/div>)+
-//to: >TellrawUtils</a></div>
-// * "extras.TellrawUtils." -> "extras.tellraw."
-// * "extras/TellrawUtils/" -> "extras/tellraw/"
-//* "extras/TellrawUtils." -> "extras/tellraw/"
-//* href="TellrawUtils. -> href="tellraw/
-// * "TellrawUtils." -> ""
+// WITH REGEX ENABLED:
+// `>TellrawUtils.([a-zA-Z]+)<` -> `>$1<`
+// WITHOUT REGEX ENABLED:
+// ` TellrawUtils.` -> ``
 
 /** JavaPlugin with more config file handling features */
 public abstract class EvPlugin extends JavaPlugin{
