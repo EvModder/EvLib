@@ -16,9 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 //to: >TellrawUtils</a></div>
 //from: >HeadUtils<\/a><\/div>(\n<div[^>]+>&nbsp;<\/div>\n<div[^>]+><a[^>]+>HeadUtils\.HeadType<\/a><\/div>)+
 //to: >HeadUtils</a></div>
-// `>TellrawUtils.([a-zA-Z]+)<` -> `>$1<`
-// WITHOUT REGEX ENABLED:
-// ` TellrawUtils.` -> ``
+// `([ (>])TellrawUtils\.([a-zA-Z]+)` -> `$1$2`
 
 /** JavaPlugin with more config file handling features */
 public abstract class EvPlugin extends JavaPlugin{
