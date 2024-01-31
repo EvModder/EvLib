@@ -29,7 +29,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FileIO{// version = X1.0
 	static private final String EV_DIR = "./plugins/EvFolder/";
-	/** Defaults to <code>"./plugins/&lt;EvPluginName&gt;/"</code> */
+	/** Defaults to <code>"./plugins/&lt;EvPluginName&gt;/"</code>
+	 */
 	static public String DIR = EV_DIR;//TODO: remove public? (only user: EvLib/extras/WebUtils.java)
 	static final int MERGE_EV_DIR_THRESHOLD = 4;
 

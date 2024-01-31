@@ -406,6 +406,7 @@ public class ReflectionUtils{// version = X1.0
 		}
 	}
 
+	/** Field wrapper */
 	public static class RefField{
 		private Field field;
 

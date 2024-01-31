@@ -6,10 +6,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 //Export -> JAVADOC -> javadoc sources:
 // * Bukkit-latest: https://hub.spigotmc.org/javadocs/bukkit/
+// * netty-transport: https://netty.io/4.1/api/
 // Include files:
-// * EvCommand, EvPlugin, EvUtils, FileIO, util/*, extras/ActionBar,Entity,Head,MethodMocker,NBTTag,Packet,Reflection,Selector,TabText,Tellraw,Text,Type,Web
+// * EvCommand, EvPlugin, EvUtils, FileIO, util/*, extras/ActionBar,Entity,Head,MethodMocker,NBTTag,Packet,Reflection,Selector,Tellraw,Text,Type,Web
 
 // Search > File... > containing text X > replace Y
+// * WITH REGEX ENABLED:
+//from: >TellrawUtils<\/a><\/div>(\n<div[^>]+>&nbsp;<\/div>\n<div[^>]+><a[^>]+>TellrawUtils\.\w+<\/a><\/div>)+
+//to: >TellrawUtils</a></div>
 // * "extras.TellrawUtils." -> "extras.tellraw."
 // * "extras/TellrawUtils/" -> "extras/tellraw/"
 // * "TellrawUtils." -> ""
