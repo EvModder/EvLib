@@ -126,7 +126,7 @@ public final class EntityUtils{
 	public static int getPCCInt(TropicalFish fish){
 		return intFromPCC(fish.getPattern(), fish.getBodyColor(), fish.getPatternColor());
 	}
-	public static int getPCCInt(String commonTropicalFishName){
+	public static int getTropicalFishId(String commonTropicalFishName){
 		return commonTropicalFishNamesReverse.get(commonTropicalFishName.toUpperCase().replace(' ', '_'));
 	}
 	public static Integer getCommonTropicalFishId(int pccInt){return commonTropicalFishIds.get(pccInt);}
