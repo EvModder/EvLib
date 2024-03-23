@@ -845,7 +845,10 @@ public class TellrawUtils{
 						.samePropertiesAs(last)
 					){
 						RawTextComponent merged = concatenateTextComps((RawTextComponent)last, (RawTextComponent)component);
-						if(merged != null) components.set(components.size()-1, last = merged);
+						if(merged != null){
+							components.set(components.size()-1, last = merged);
+							return true;
+						}
 					}
 				}
 			}
