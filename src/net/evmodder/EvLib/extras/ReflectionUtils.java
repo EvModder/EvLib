@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class ReflectionUtils{// version = X1.0
 	/**  prefix of bukkit classes */
-	private static String preClassB = "org.bukkit.craftbukkit";
+	private static final String preClassB = Bukkit.getServer().getClass().getPackage().getName();
 	/** prefix of minecraft classes */
 	private static String preClassM = "net.minecraft.server";// + ".v1_13_R2"
 	/** boolean value, TRUE if server uses forge or MCPC+ */
@@ -32,14 +32,10 @@ public class ReflectionUtils{// version = X1.0
 	static{
 		if(Bukkit.getServer() != null){
 			if(Bukkit.getVersion().contains("MCPC") || Bukkit.getVersion().contains("Forge")) forge = true;
-			Server server = Bukkit.getServer();
-			Class<?> bukkitServerClass = server.getClass();
+			final Server server = Bukkit.getServer();
+			final Class<?> bukkitServerClass = server.getClass();
 			String[] pas = bukkitServerClass.getName().split("\\.");
-			if(pas.length == 5){
-				String verB = pas[3];
-				preClassB += "."+verB;
-				serverVersionString = verB;
-			}
+			if(pas.length == 5) serverVersionString = pas[3];
 			Object handle;
 			try{
 				handle = bukkitServerClass.getDeclaredMethod("getHandle").invoke(server);
