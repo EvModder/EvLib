@@ -1312,7 +1312,10 @@ public class TellrawUtils{
 		}
 	}
 	public final static Component parseComponentFromString(String str){
-		Pair<Component, Integer> compAndIdx = parseNextComponentFromString(str, 0);
+		if(str.isEmpty() || (str.charAt(0) != '[' && str.charAt(0) != '{' && str.charAt(0) != '"')){
+			return new RawTextComponent(str); // Not a raw text component
+		}
+		final Pair<Component, Integer> compAndIdx = parseNextComponentFromString(str, 0);
 		return compAndIdx == null ? null : compAndIdx.a;
 	}
 }
