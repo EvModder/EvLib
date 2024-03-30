@@ -93,22 +93,26 @@ public final class HeadUtils {
 	private static Field fieldProfileItem, fieldSerializedProfileItem, fieldProfileBlock;
 	private static Constructor<?> nbtTagCompountConstructor;
 	private static Method methodSerializeProfile;
+	private static void defineProfileField(SkullMeta meta){
+		try{
+			fieldProfileItem = meta.getClass().getDeclaredField("profile");
+			fieldProfileItem.setAccessible(true);
+			// If possible, define the serializedProfile field as well. Requires ReflectionUtils because damnit I'm lazy
+			try{
+				fieldSerializedProfileItem = meta.getClass().getDeclaredField("serializedProfile");
+				fieldSerializedProfileItem.setAccessible(true);
+				final Class<?> clazzNBTTagCompound = fieldSerializedProfileItem.getType();
+				methodSerializeProfile = ReflectionUtils.getRefClass("net.minecraft.nbt.GameProfileSerializer")
+					.findMethod(/*isStatic=*/true, clazzNBTTagCompound, clazzNBTTagCompound, GameProfile.class).getRealMethod();
+				nbtTagCompountConstructor = clazzNBTTagCompound.getConstructor();
+			}
+			catch(RuntimeException e){}
+		}
+		catch(ReflectiveOperationException e){e.printStackTrace();}
+	}
 	public static void setGameProfile(SkullMeta meta, GameProfile profile){
 		try{
-			if(fieldProfileItem == null){
-				fieldProfileItem = meta.getClass().getDeclaredField("profile");
-				fieldProfileItem.setAccessible(true);
-				// If possible, set the serializedProfile field as well. Requires ReflectionUtils because damnit I'm lazy
-				try{
-					fieldSerializedProfileItem = meta.getClass().getDeclaredField("serializedProfile");
-					fieldSerializedProfileItem.setAccessible(true);
-					Class<?> clazzNBTTagCompound = fieldSerializedProfileItem.getType();
-					methodSerializeProfile = ReflectionUtils.getRefClass("net.minecraft.nbt.GameProfileSerializer")
-						.findMethod(/*isStatic=*/true, clazzNBTTagCompound, clazzNBTTagCompound, GameProfile.class).getRealMethod();
-					nbtTagCompountConstructor = clazzNBTTagCompound.getConstructor();
-				}
-				catch(RuntimeException e){}
-			}
+			if(fieldProfileItem == null) defineProfileField(meta);
 			fieldProfileItem.set(meta, profile);
 			if(nbtTagCompountConstructor != null) fieldSerializedProfileItem.set(meta,
 					methodSerializeProfile.invoke(null, nbtTagCompountConstructor.newInstance(), profile));
@@ -125,11 +129,10 @@ public final class HeadUtils {
 	}
 	public static GameProfile getGameProfile(SkullMeta meta){
 		try{
-			if(fieldProfileItem == null) fieldProfileItem = meta.getClass().getDeclaredField("profile");
-			fieldProfileItem.setAccessible(true);
+			if(fieldProfileItem == null) defineProfileField(meta);
 			return (GameProfile) fieldProfileItem.get(meta);
 		}
-		catch(NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e){e.printStackTrace();}
+		catch(ReflectiveOperationException e){e.printStackTrace();}
 		return null;
 	}
 	public static GameProfile getGameProfile(Skull skull){
