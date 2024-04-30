@@ -421,6 +421,7 @@ public class Updater {
 					result = Updater.UpdateResult.NO_UPDATE;
 					return false;
 				}
+				plugin.getLogger().info("Version update: "+localVersion+" -> "+remoteVersion);
 			}
 			else{
 				// The file's name did not contain the string 'vVersion'
