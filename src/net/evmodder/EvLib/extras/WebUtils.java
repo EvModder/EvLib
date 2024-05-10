@@ -15,7 +15,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -41,7 +41,7 @@ public class WebUtils {
 
 	public static String getReadURL(String post){
 		try{
-			URLConnection connection = new URL(post).openConnection();
+			URLConnection connection = URI.create(post).toURL().openConnection();
 			//conn.setRequestMethod("GET");
 			connection.setUseCaches(false);
 			connection.setDoOutput(true);
@@ -82,7 +82,7 @@ public class WebUtils {
 
 	public static String postReadURL(String payload, String url){
 		try{
-			HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
+			HttpURLConnection conn = (HttpURLConnection)URI.create(url).toURL().openConnection();
 			conn.setRequestMethod("POST");
 			conn.setRequestProperty("Content-Type", "application/json");
 			conn.setDoInput(true);
@@ -246,7 +246,7 @@ public class WebUtils {
 				else url = texture;
 			}
 			if(verify) try{
-				HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
+				HttpURLConnection conn = (HttpURLConnection)URI.create(url).toURL().openConnection();
 				conn.setUseCaches(false);
 				conn.setDoOutput(false);
 				conn.setDoInput(true);
@@ -323,8 +323,8 @@ public class WebUtils {
 
 	static String getTextureVal(String uuidNoDashes){
 		try{
-			HttpURLConnection conn = (HttpURLConnection)new URL(
-					"https://sessionserver.mojang.com/session/minecraft/profile/"+uuidNoDashes).openConnection();
+			HttpURLConnection conn = (HttpURLConnection)URI.create(
+					"https://sessionserver.mojang.com/session/minecraft/profile/"+uuidNoDashes).toURL().openConnection();
 			conn.setDoOutput(true);
 			BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 			StringBuilder builder = new StringBuilder();
@@ -369,7 +369,7 @@ public class WebUtils {
 				try{Thread.sleep(2000);}catch(InterruptedException e1){e1.printStackTrace();}//2s
 				HttpURLConnection conn;
 				try{
-					conn = (HttpURLConnection)new URL(url).openConnection();
+					conn = (HttpURLConnection)URI.create(url).toURL().openConnection();
 					conn.setUseCaches(false);
 					conn.setDoOutput(true);
 					conn.setDoInput(true);
@@ -386,7 +386,7 @@ public class WebUtils {
 					//https://api.mojang.com/user/profile/0e314b6029c74e35bef33c652c8fb467/skin
 					//https://api.mojang.com/users/profiles/minecraft/evmodder
 					//https://sessionserver.mojang.com/session/minecraft/profile/0e314b6029c74e35bef33c652c8fb467
-					conn = (HttpURLConnection)new URL("https://api.minecraftservices.com/minecraft/profile/skins").openConnection();
+					conn = (HttpURLConnection)URI.create("https://api.minecraftservices.com/minecraft/profile/skins").toURL().openConnection();
 //					conn = (HttpURLConnection)new URL("https://api.mojang.com/user/profile/" + uuid + "/skin").openConnection();
 					conn.setRequestProperty("Authorization", "Bearer "+token);
 					conn.setRequestProperty("Content-Length", "15000");
@@ -582,7 +582,7 @@ public class WebUtils {
 			//String textureId = url.substring(url.lastIndexOf('/')+1);
 //			try{Thread.sleep(2000);}catch(InterruptedException e1){e1.printStackTrace();}//2s
 			try{
-				HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
+				HttpURLConnection conn = (HttpURLConnection)URI.create(url).toURL().openConnection();
 				conn.setUseCaches(false);
 				conn.setDoOutput(true);
 				conn.setDoInput(true);

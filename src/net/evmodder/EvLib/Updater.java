@@ -2,6 +2,7 @@ package net.evmodder.EvLib;
 
 import java.io.*;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Enumeration;
@@ -275,7 +276,7 @@ public class Updater {
 		BufferedInputStream in = null;
 		FileOutputStream fout = null;
 		try{
-			URL fileUrl = new URL(versionLink);
+			final URL fileUrl = URI.create(versionLink).toURL();
 			final int fileLength = fileUrl.openConnection().getContentLength();
 			in = new BufferedInputStream(fileUrl.openStream());
 			fout = new FileOutputStream(new File(updateFolder, file.getName()));
