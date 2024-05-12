@@ -12,13 +12,13 @@ public enum CustomParticleEffect {
 	TRAIL_1(){
 		@Override public void display(Player p, long time){
 			//if(time%15 == 0) p.getWorld().FOOTSTEP.display(0, 0, 0, 0, 1, p.getLocation(), 20);
-			if(time%15 == 0) p.getWorld().spawnParticle(Particle.BLOCK_DUST, p.getLocation(), 1);
+			if(time%15 == 0) p.getWorld().spawnParticle(Particle.BLOCK, p.getLocation(), 1);
 		}
 	},
 	TRAIL_1_LIFTED(){
 		@Override public void display(Player p, long time){
 			//if(time%10 == 0) ParticleEffect.FOOTSTEP.display(0, 0, 0, 0, 1, p.getLocation().add(0,.1,0), 20);
-			if(time%15 == 0) p.getWorld().spawnParticle(Particle.BLOCK_DUST, p.getLocation().add(0,.1,0), 1);
+			if(time%15 == 0) p.getWorld().spawnParticle(Particle.BLOCK, p.getLocation().add(0,.1,0), 1);
 		}
 	},
 	TRAIL_2(){
@@ -51,19 +51,19 @@ public enum CustomParticleEffect {
 				if(theta_mod > MathUtils.PI2) theta_mod -= MathUtils.PI2;
 				if(!p.isSprinting()){
 //					ParticleEffect.SUSPENDED_DEPTH.display(0, 0, 0, 0, 200, p.getLocation().add(0,1,0), 10);
-					p.getWorld().spawnParticle(Particle.SUSPENDED_DEPTH, p.getLocation().add(0, 1, 0), 200);
+					p.getWorld().spawnParticle(Particle.ASH, p.getLocation().add(0, 1, 0), 200);
 				}
 			}
 			Vector dir = new Vector(r*MathUtils.sin(theta), r/8, r*MathUtils.cos(theta));
 //			ParticleEffect.SUSPENDED_DEPTH.display(0, 0, 0, 0, 1, p.getLocation().add(0,1,0).add(dir), 10);
 //			ParticleEffect.SUSPENDED_DEPTH.display(0, 0, 0, 0, 1, p.getLocation().add(0,1,0).add(dir.multiply(-1)), 10);
-			p.getWorld().spawnParticle(Particle.SUSPENDED_DEPTH, p.getLocation().add(0,1,0).add(dir), 1);
-			p.getWorld().spawnParticle(Particle.SUSPENDED_DEPTH, p.getLocation().add(0,1,0).add(dir.multiply(-1)), 1);
+			p.getWorld().spawnParticle(Particle.ASH, p.getLocation().add(0,1,0).add(dir), 1);
+			p.getWorld().spawnParticle(Particle.ASH, p.getLocation().add(0,1,0).add(dir.multiply(-1)), 1);
 			tempX = dir.getX(); dir.setX(dir.getZ()); dir.setZ(-tempX);
 //			ParticleEffect.SUSPENDED_DEPTH.display(0, 0, 0, 0, 1, p.getLocation().add(0,1,0).add(dir), 10);
 //			ParticleEffect.SUSPENDED_DEPTH.display(0, 0, 0, 0, 1, p.getLocation().add(0,1,0).add(dir.multiply(-1)), 10);
-			p.getWorld().spawnParticle(Particle.SUSPENDED_DEPTH, p.getLocation().add(0,1,0).add(dir), 1);
-			p.getWorld().spawnParticle(Particle.SUSPENDED_DEPTH, p.getLocation().add(0,1,0).add(dir.multiply(-1)), 1);
+			p.getWorld().spawnParticle(Particle.ASH, p.getLocation().add(0,1,0).add(dir), 1);
+			p.getWorld().spawnParticle(Particle.ASH, p.getLocation().add(0,1,0).add(dir.multiply(-1)), 1);
 		}
 	},
 	FUNNEL(){
@@ -87,7 +87,7 @@ public enum CustomParticleEffect {
 //			byte color = (byte) rand.nextInt(16);
 //			ParticleEffect.BLOCK_CRACK.display(new ParticleData(Material.STAINED_CLAY,color),0,0,0,0,1,p.getLocation(),p);
 //			p.getWorld().spawnParticle(Particle.BLOCK_DUST, p.getLocation(), 1, new MaterialData(Material.STAINED_CLAY, color));
-			p.getWorld().spawnParticle(Particle.BLOCK_DUST, p.getLocation(), 1,
+			p.getWorld().spawnParticle(Particle.DUST, p.getLocation(), 1,
 					(rand.nextInt(255)+1)/255.0, (rand.nextInt(255)+1)/255.0, (rand.nextInt(255)+1)/255.0, 0);
 		}
 	},
@@ -98,7 +98,7 @@ public enum CustomParticleEffect {
 			for(float theta=0; theta<MathUtils.PI2; theta+=MathUtils.degreesToRadians){
 				double modX = MathUtils.sin(theta)*t_squared, modZ = MathUtils.cos(theta)*t_squared;
 //				ParticleEffect.ENCHANTMENT_TABLE.display(0, 0, 0, 0, 1, p.getLocation().add(modX, 3-t_squared*2, modZ), p);
-				p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, p.getLocation().add(modX, 3-t_squared*2, modZ), 1);
+				p.getWorld().spawnParticle(Particle.ENCHANT, p.getLocation().add(modX, 3-t_squared*2, modZ), 1);
 			}
 		}
 	},
@@ -120,7 +120,7 @@ public enum CustomParticleEffect {
 	LAME(){
 		@Override public void display(Player p, long time){
 //			if(time%5 == 0) ParticleEffect.SPELL_MOB_AMBIENT.display(1, 1, 1, 1, 1, p.getLocation(), p);
-			p.getWorld().spawnParticle(Particle.SPELL_MOB_AMBIENT, p.getLocation(), 3, 1, 1, 1, 1);
+			p.getWorld().spawnParticle(Particle.ENTITY_EFFECT, p.getLocation(), 3, 1, 1, 1, 1);
 		}
 	},
 	BROKEN_SYSTEM(){
@@ -187,8 +187,8 @@ public enum CustomParticleEffect {
 //			ParticleEffect.DRIP_WATER.display(.5F, .01F, .5F, 0, 2, p.getEyeLocation().add(0, 1.8, 0), 10);
 //			ParticleEffect.WATER_DROP.display(.5F, .01F, .5F, 0, 2, p.getEyeLocation().add(0, 1.8, 0), 10);
 			p.getWorld().spawnParticle(Particle.CLOUD, p.getEyeLocation().add(0, 2, 0), 45, .5, .1, .5, 0);
-			p.getWorld().spawnParticle(Particle.DRIP_WATER, p.getEyeLocation().add(0, 1.8, 0), 2, .5, .01, .5);
-			p.getWorld().spawnParticle(Particle.WATER_DROP, p.getEyeLocation().add(0, 1.8, 0), 2, .5, .01, .5);
+			p.getWorld().spawnParticle(Particle.DRIPPING_WATER, p.getEyeLocation().add(0, 1.8, 0), 2, .5, .01, .5);
+			p.getWorld().spawnParticle(Particle.DRIPPING_WATER, p.getEyeLocation().add(0, 1.8, 0), 2, .5, .01, .5);
 			
 			if(rand.nextInt(144000) == 0) p.getWorld().strikeLightning(p.getLocation());
 			if(rand.nextInt(48000) == 0) p.setPlayerWeather(WeatherType.DOWNFALL);
@@ -248,14 +248,14 @@ public enum CustomParticleEffect {
 //			catch(IllegalArgumentException ex){}
 //			catch(ParticleDataException ex){}
 			Particle particle = Particle.values()[rand.nextInt(Particle.values().length)];
-			if(particle != Particle.MOB_APPEARANCE)
+			if(particle != Particle.ENTITY_EFFECT)
 				p.getWorld().spawnParticle(particle, p.getEyeLocation(), 1, 3, 1, 3, 0);
 		}
 	},
 	FOOFCLOUD(){
 		@Override public void display(Player p, long time){
 //			ParticleEffect.EXPLOSION_NORMAL.display(1F, .2F, 1F, .1F, 50, p.getLocation().add(0,1,0), 30);
-			p.getWorld().spawnParticle(Particle.EXPLOSION_NORMAL, p.getLocation(), 50, 1, .2, 1, .1, 0);
+			p.getWorld().spawnParticle(Particle.EXPLOSION, p.getLocation(), 50, 1, .2, 1, .1, 0);
 		}
 	},
 	ADMIN679(){
@@ -267,7 +267,7 @@ public enum CustomParticleEffect {
 	BEACON(){
 		@Override public void display(Player p, long time){
 //			ParticleEffect.REDSTONE.display(.1F, 15F, .1F, 1, 1000, p.getLocation().add(0,40,0), 100);
-			if(time%2 == 0) p.getWorld().spawnParticle(Particle.REDSTONE, p.getLocation().add(0,40,0), 1000, .1, 15, .1, 1);
+			if(time%2 == 0) p.getWorld().spawnParticle(Particle.DUST, p.getLocation().add(0,40,0), 1000, .1, 15, .1, 1);
 		}
 	},
 	IMAGINE_(){
@@ -289,13 +289,13 @@ public enum CustomParticleEffect {
 //			ParticleEffect.SNOWBALL.display(10F, 7F, 10F, 0, 500, loc, p);
 //			ParticleEffect.FIREWORKS_SPARK.display(10F, 7F, 10F, 0, 10, loc, p);
 //			ParticleEffect.EXPLOSION_NORMAL.display(10F, 7F, 10F, .5F, 1000, loc, p);
-			p.getWorld().spawnParticle(Particle.SNOW_SHOVEL, loc, 800, 10, 7, 10, .1);
-			p.getWorld().spawnParticle(Particle.SNOWBALL, loc, 500, 10, 7, 10);
-			p.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, loc, 10, 10, 7, 10);
-			p.getWorld().spawnParticle(Particle.EXPLOSION_NORMAL, loc, 1000, 10, 7, 10, .5);
+			p.getWorld().spawnParticle(Particle.SNOWFLAKE, loc, 800, 10, 7, 10, .1);
+			p.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, loc, 500, 10, 7, 10);
+			p.getWorld().spawnParticle(Particle.FIREWORK, loc, 10, 10, 7, 10);
+			p.getWorld().spawnParticle(Particle.EXPLOSION, loc, 1000, 10, 7, 10, .5);
 			loc.setY(loc.getY()-6.5);
 //			ParticleEffect.EXPLOSION_NORMAL.display(2F, .5F, 2F, .3F, 30, loc, p);
-			p.getWorld().spawnParticle(Particle.EXPLOSION_NORMAL, loc, 30, 2, .5, 2, .3);
+			p.getWorld().spawnParticle(Particle.EXPLOSION, loc, 30, 2, .5, 2, .3);
 		}
 	};
 	Random rand = new Random();

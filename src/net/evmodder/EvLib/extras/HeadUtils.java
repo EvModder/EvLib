@@ -106,7 +106,7 @@ public final class HeadUtils {
 					.findMethod(/*isStatic=*/true, clazzNBTTagCompound, clazzNBTTagCompound, GameProfile.class).getRealMethod();
 				nbtTagCompountConstructor = clazzNBTTagCompound.getConstructor();
 			}
-			catch(RuntimeException e){}
+			catch(RuntimeException | NoSuchFieldException e){}//1.20.5+ NoSuchFieldException
 		}
 		catch(ReflectiveOperationException e){e.printStackTrace();}
 	}
@@ -115,7 +115,7 @@ public final class HeadUtils {
 			if(fieldProfileItem == null) defineProfileField(meta);
 			fieldProfileItem.set(meta, profile);
 			if(nbtTagCompountConstructor != null) fieldSerializedProfileItem.set(meta,
-					methodSerializeProfile.invoke(null, nbtTagCompountConstructor.newInstance(), profile));
+					methodSerializeProfile.invoke(null, nbtTagCompountConstructor.newInstance(), profile));//Fixes spigot warning in 1.19
 		}
 		catch(ReflectiveOperationException e){e.printStackTrace();}
 	}

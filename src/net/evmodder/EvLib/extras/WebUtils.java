@@ -489,9 +489,10 @@ public class WebUtils {
 			if(type.isAlive()){expectedTxr.add(type.name()); missingDrpC.add(type.name());}
 		}
 		expectedTxr.remove(EntityType.PLAYER.name());
-		for(EntityType type : Arrays.asList(EntityType.ARMOR_STAND, EntityType.LEASH_HITCH, EntityType.MINECART, EntityType.MINECART_CHEST,
-				EntityType.MINECART_COMMAND, EntityType.MINECART_FURNACE, EntityType.MINECART_HOPPER, EntityType.MINECART_MOB_SPAWNER,
-				EntityType.MINECART_TNT, EntityType.BOAT, EntityType.PAINTING, EntityType.UNKNOWN)){
+		for(EntityType type : Arrays.asList(EntityType.ARMOR_STAND, EntityType.valueOf("LEASH_KNOT"), EntityType.MINECART,
+				EntityType.valueOf("CHEST_MINECART"), EntityType.valueOf("COMMAND_BLOCK_MINECART"), EntityType.valueOf("FURNACE_MINECART"),
+				EntityType.valueOf("HOPPER_MINECART"), EntityType.valueOf("SPAWNER_MINECART"), EntityType.valueOf("TNT_MINECART"),
+				EntityType.BOAT, EntityType.PAINTING, EntityType.UNKNOWN)){
 			expectedTxr.add(type.name()); missingDrpC.add(type.name());
 		}
 		try{

@@ -22,7 +22,7 @@ public final class EntityUtils{
 			Material eggType = Material.getMaterial(eType.name()+"_SPAWN_EGG");
 			if(eggType != null) eggToEntity.put(eggType, eType);
 		}
-		eggToEntity.put(Material.MOOSHROOM_SPAWN_EGG, EntityType.MUSHROOM_COW);
+		try{eggToEntity.put(Material.MOOSHROOM_SPAWN_EGG, EntityType.valueOf("MUSHROOM_COW"));} catch(IllegalArgumentException e){}// pre 1.20.5
 		try{eggToEntity.put(Material.valueOf("ZOMBIE_PIGMAN_SPAWN_EGG"), EntityType.valueOf("PIG_ZOMBIE"));} catch(IllegalArgumentException e){}
 		for(Entry<Material, EntityType> e : eggToEntity.entrySet()) entityToEgg.put(e.getValue(), e.getKey());
 	}
@@ -154,27 +154,38 @@ public final class EntityUtils{
 			catch(ReflectiveOperationException e){}
 		}
 		name = name.toUpperCase().replace(' ', '_');
-		switch(name.replace("_", "")){
-			case "MOOSHROOM": return EntityType.MUSHROOM_COW;
-			case "SNOWGOLEM": return EntityType.SNOWMAN;
-			case "ZOMBIEPIGMAN": return EntityType.valueOf("PIG_ZOMBIE");
-			case "LEASHKNOT": return EntityType.LEASH_HITCH;
-			case "TNTMINECART": return EntityType.MINECART_TNT;
-			case "CHESTMINECART": return EntityType.MINECART_CHEST;
-			case "HOPPERMINECART": return EntityType.MINECART_HOPPER;
-			case "FURNACEMINECART": return EntityType.MINECART_FURNACE;
-			case "COMMANDBLOCKMINECART": return EntityType.MINECART_COMMAND;
-			case "SPAWNERMINECART": return EntityType.MINECART_MOB_SPAWNER;
-			default: 
-				try{return EntityType.valueOf(name);}
-				catch(IllegalArgumentException ex){}
-				name = name.replace("_", "");
-				for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(name)) return t;
-				return EntityType.UNKNOWN;
+		try{return EntityType.valueOf(name);}
+		catch(IllegalArgumentException ex){
+			name = name.replace("_", "");
+			switch(name){
+				case "ZOMBIEPIGMAN": return EntityType.valueOf("PIG_ZOMBIE");
+
+				// Obsolete in 1.20.5+
+				case "MOOSHROOM": return EntityType.valueOf("MUSHROOM_COW");
+				case "MUSHROOMCOW": return EntityType.valueOf("MOOSHROOM");
+				case "SNOWGOLEM": return EntityType.valueOf("SNOWMAN");
+				case "SNOWMAN": return EntityType.valueOf("SNOW_GOLEM");
+				case "LEASHKNOT": return EntityType.valueOf("LEASH_HITCH");
+				case "LEASHHITCH": return EntityType.valueOf("LEASH_KNOT");
+				case "TNTMINECART": return EntityType.valueOf("MINECART_TNT");
+				case "MINECARTTNT": return EntityType.valueOf("TNT_MINECART");
+				case "CHESTMINECART": return EntityType.valueOf("MINECART_CHEST");
+				case "MINECARTCHEST": return EntityType.valueOf("CHEST_MINECART");
+				case "HOPPERMINECART": return EntityType.valueOf("MINECART_HOPPER");
+				case "MINECARTHOPPER": return EntityType.valueOf("HOPPER_MINECART");
+				case "FURNACEMINECART": return EntityType.valueOf("MINECART_FURNACE");
+				case "MINECARTFURNACE": return EntityType.valueOf("FURNACE_MINECART");
+				case "COMMANDBLOCKMINECART": return EntityType.valueOf("MINECART_COMMAND");
+				case "MINECART_COMMAND": return EntityType.valueOf("COMMAND_BLOCK_MINECART");
+				case "SPAWNERMINECART": return EntityType.valueOf("MINECART_MOB_SPAWNER");
+				case "MINECARTMOBSPAWNER": return EntityType.valueOf("SPAWNER_MINECART");
+			}
+			for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(name)) return t;
+			return EntityType.UNKNOWN;
 		}
 	}
 
-	//TODO: Keep up-to-date with Minecraft updates, and test for regressions
+	//TODO: Keep up-to-date with Minecraft updates, and test for regressions (obsolete in 1.20.5+)
 	public static String getNormalizedEntityName(String name){
 		switch(name.toUpperCase()){
 			case "MUSHROOM_COW": return "mooshroom";

@@ -3,6 +3,7 @@ package net.evmodder.EvLib.extras;
 import java.util.AbstractList;
 import java.util.HashMap;
 import java.util.Set;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
@@ -16,7 +17,9 @@ import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
  */
 public final class NBTTagUtils{// version = X1.0
 	//-------------------------------------------------- ReflectionUtils used by RefNBTTag: --------------------------------------------------//
-	static final RefClass classNBTTagCompound = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
+	static final RefClass classNBTTagCompound = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound"
+			);
+//			,"{nm}.nbt.CompoundTag");//1.20.5+
 	static final RefClass classNBTBase = ReflectionUtils.getRefClass("{nms}.NBTBase", "{nm}.nbt.NBTBase"); 
 	//ItemStack
 	static final RefClass classItemStack = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
@@ -25,8 +28,35 @@ public final class NBTTagUtils{// version = X1.0
 	static final RefMethod methodAsCraftMirror = classCraftItemStack.getMethod("asCraftMirror", classItemStack);
 //	static final RefMethod methodGetTag = classItemStack.getMethod("getTag");
 //	static final RefMethod methodSetTag = classItemStack.getMethod("setTag", classNBTTagCompound);
-	static final RefMethod methodGetTag = classItemStack.findMethod(/*isStatic=*/false, classNBTTagCompound);
-	static final RefMethod methodSetTag = classItemStack.findMethod(/*isStatic=*/false, Void.TYPE, classNBTTagCompound);
+//	static final RefMethod methodGetTag = classItemStack.findMethod(/*isStatic=*/false, classNBTTagCompound);
+//	static final RefMethod methodSetTag = classItemStack.findMethod(/*isStatic=*/false, Void.TYPE, classNBTTagCompound);
+	static final RefMethod methodGetTag, methodCopyTag, methodSetTag;
+	static final Object customDataTypeObj;
+	static{
+		RefMethod methodGetTagTemp, methodSetTagTemp, methodCopyTagTemp = null;
+		Object customDataTypeObjTemp = null;
+		try{
+			RefClass classCustomData = ReflectionUtils.getRefClass("{nm}.world.item.component.CustomData");
+			RefClass classDataComponentType = ReflectionUtils.getRefClass("{nm}.core.component.DataComponentType");
+			RefClass classDataComponentHolder = ReflectionUtils.getRefClass("{nm}.core.component.DataComponentHolder");
+			methodGetTagTemp = classDataComponentHolder.getMethod("get", classDataComponentType);
+			methodCopyTagTemp = classCustomData.getMethod("copyTag");
+			customDataTypeObjTemp = ReflectionUtils.getRefClass("{nm}.core.component.DataComponents").getField("CUSTOM_DATA").of(null).get();
+
+			methodSetTagTemp = classCustomData.getMethod("set", classDataComponentType, classItemStack, ReflectionUtils.getRefClass("{nm}.nbt.CompoundTag"));
+		}
+		catch(RuntimeException e){
+			e.printStackTrace();
+			Bukkit.getLogger().warning("\n\n\n");
+			methodGetTagTemp = classItemStack.findMethod(/*isStatic=*/false, classNBTTagCompound);
+			methodSetTagTemp = classItemStack.findMethod(/*isStatic=*/false, Void.TYPE, classNBTTagCompound);
+		}
+		methodGetTag = methodGetTagTemp;
+		methodCopyTag = methodCopyTagTemp;
+		methodSetTag = methodSetTagTemp;
+		customDataTypeObj = customDataTypeObjTemp;
+	}
+
 	//Entity
 	static final RefMethod methodGetHandle = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity").getMethod("getHandle");
 	static final RefClass classEntity = ReflectionUtils.getRefClass("{nms}.Entity", "{nm}.world.entity.Entity");
@@ -111,7 +141,7 @@ public final class NBTTagUtils{// version = X1.0
 	static final Class<?> realNBTTagListClass = classNBTTagList.getRealClass();
 	static final RefMethod methodAdd;
 	static{
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_13") < 0){ // if version <= 1.16
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_16") < 0){ // if version <= 1.16
 			methodAdd = classNBTTagList.getMethod("add", realNBTBaseClass);
 		}
 		else{
@@ -207,13 +237,21 @@ public final class NBTTagUtils{// version = X1.0
 	public static ItemStack setTag(ItemStack item, RefNBTTagCompound tag){
 		Object nmsTag = (tag == null || methodTagIsEmpty.of(tag.nmsTag).call().equals(true)) ? null : tag.nmsTag;
 		Object nmsItem = methodAsNMSCopy.of(null).call(item);
-		methodSetTag.of(nmsItem).call(nmsTag);
+
+		if(customDataTypeObj != null) methodSetTag.call(customDataTypeObj, nmsItem, nmsTag);//1.20.5+
+		else methodSetTag.of(nmsItem).call(nmsTag);
+
 		item = (ItemStack) methodAsCraftMirror.of(null).call(nmsItem);
 		return item;
 	}
 	public static RefNBTTagCompound getTag(ItemStack item){
 		Object nmsItem = methodAsNMSCopy.of(null).call(item); // asNMSCopy() can generate a NPE in rare cases (plugin compatibility)
-		Object nmsTag = methodGetTag.of(nmsItem).call();
+		Object nmsTag;
+		if(customDataTypeObj != null){//1.20.5+
+			Object customData = methodGetTag.of(nmsItem).call(customDataTypeObj);
+			nmsTag = customData == null ? null : methodCopyTag.of(customData).call();
+		}
+		else nmsTag = methodGetTag.of(nmsItem).call();
 		return nmsTag == null ? new RefNBTTagCompound() : new RefNBTTagCompound(nmsTag);
 	};
 

@@ -19,38 +19,43 @@ import java.util.List;
  */
 public class ReflectionUtils{// version = X1.0
 	/**  prefix of bukkit classes */
-	private static final String preClassB = Bukkit.getServer().getClass().getPackage().getName();
+	private static final String preClassB;
 	/** prefix of minecraft classes */
-	private static String preClassM = "net.minecraft.server";// + ".v1_13_R2"
+	private static final String preClassM;
 	/** boolean value, TRUE if server uses forge or MCPC+ */
-	private static boolean forge = false;
+	private static final boolean forge;
 	/** vX_XX_RX server version string (e.g.: v1_13_R2) */
 	private static String serverVersionString;
 	public static String getServerVersionString(){return serverVersionString;}
 
 	/** check server version and class names */
 	static{
-		if(Bukkit.getServer() != null){
-			if(Bukkit.getVersion().contains("MCPC") || Bukkit.getVersion().contains("Forge")) forge = true;
-			final Server server = Bukkit.getServer();
-			final Class<?> bukkitServerClass = server.getClass();
-			String[] pas = bukkitServerClass.getName().split("\\.");
-			if(pas.length == 5) serverVersionString = pas[3];
-			Object handle;
-			try{
-				handle = bukkitServerClass.getDeclaredMethod("getHandle").invoke(server);
-			}
-			catch(NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e){
-				throw new RuntimeException(e);
-			}
+		forge = (Bukkit.getVersion().contains("MCPC") || Bukkit.getVersion().contains("Forge"));
+		final Server server = Bukkit.getServer();
+		preClassB = server.getClass().getPackage().getName();
 
-			Class<?> handleServerClass = handle.getClass();
-			pas = handleServerClass.getName().split("\\.");
-			if(pas.length == 5 && pas[3].matches("v[0-9]+(_[0-9]+)*(_R[0-9]+)?")){
-				String verM = pas[3];
-				preClassM += "."+verM;
-				serverVersionString = verM;
-			}
+		final Class<?> bukkitServerClass = server.getClass();
+		String[] pas = bukkitServerClass.getName().split("\\.");
+		if(pas.length == 5) serverVersionString = pas[3];
+		Object handle;
+		try{
+			handle = bukkitServerClass.getDeclaredMethod("getHandle").invoke(server);
+		}
+		catch(NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e){
+			throw new RuntimeException(e);
+		}
+
+		Class<?> handleServerClass = handle.getClass();
+		pas = handleServerClass.getName().split("\\.");
+		if(pas.length == 5 && pas[3].matches("v[0-9]+(_[0-9]+)*(_R[0-9]+)?")){
+			String verM = pas[3];
+			preClassM = "net.minecraft.server."+verM;
+			serverVersionString = verM;
+		}
+		else{
+			preClassM = "net.minecraft.server";
+			if(serverVersionString == null) serverVersionString =
+					"v" + Bukkit.getBukkitVersion().replace("-SNAPSHOT", "").replace('.', '_').replace('-', '_');
 		}
 	}
 

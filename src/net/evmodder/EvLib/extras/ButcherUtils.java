@@ -2,6 +2,7 @@ package net.evmodder.EvLib.extras;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
@@ -12,41 +13,55 @@ import org.bukkit.entity.Player;
 
 public class ButcherUtils{
 	public enum KillFlag{ANIMALS, TILE, NAMED, NEARBY, EQUIPPED, UNIQUE};
+	private static final Set<String> uniqueEtypes = Set.of(
+			// Pre-1.20.5 | 1.20.5+
+			"DROPPED_ITEM", "ITEM",
+			"FISHING_HOOK", "FISHING_BOBBER",
+			"LEASH_HITCH", "LEASH_KNOT",
+			"MINECART_CHEST", "CHEST_MINECART",
+			"MINECART_COMMAND", "COMMAND_BLOCK_MINECART",
+			"MINECART_FURNACE", "FURNACE_MINECART",
+			"MINECART_HOPPER", "HOPPER_MINECART",
+			"MINECART_MOB_SPAWNER", "SPAWNER_MINECART",
+			"MINECART_TNT", "TNT_MINECART",
+			"SNOWMAN", "SNOW_GOLEM",
+			"SPLASH_POTION", "POTION"
+	);
 	static boolean isUnique(EntityType type){
 		switch(type){
 			case AREA_EFFECT_CLOUD:
 			case ARMOR_STAND:
 			case CAT:
 			case DONKEY:
-			case DROPPED_ITEM:
+//			case DROPPED_ITEM:
 			case ELDER_GUARDIAN:
 			case ENDER_DRAGON:
 			case EVOKER:
 			case FALLING_BLOCK:
-			case FISHING_HOOK:
+//			case FISHING_HOOK:
 			case FOX:
 			case GIANT:
 			case HORSE:
 			case ILLUSIONER:
 			case IRON_GOLEM:
 			case ITEM_FRAME:
-			case LEASH_HITCH:
+//			case LEASH_HITCH:
 			case LLAMA:
 			case MINECART:
-			case MINECART_CHEST:
-			case MINECART_COMMAND:
-			case MINECART_FURNACE:
-			case MINECART_HOPPER:
-			case MINECART_MOB_SPAWNER:
-			case MINECART_TNT:
+//			case MINECART_CHEST:
+//			case MINECART_COMMAND:
+//			case MINECART_FURNACE:
+//			case MINECART_HOPPER:
+//			case MINECART_MOB_SPAWNER:
+//			case MINECART_TNT:
 			case MULE:
 			case PANDA:
 			case PARROT:
 			case PLAYER:
 			case SHULKER:
 			case SKELETON_HORSE:
-			case SNOWMAN:
-			case SPLASH_POTION:
+//			case SNOWMAN:
+//			case SPLASH_POTION:
 			case TRADER_LLAMA:
 			case TRIDENT:
 			case VILLAGER:
@@ -54,7 +69,7 @@ public class ButcherUtils{
 			case WOLF:
 				return true;
 			default:
-				return false;
+				return uniqueEtypes.contains(type.name());
 		}
 	}
 

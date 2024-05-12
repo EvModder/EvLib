@@ -431,20 +431,7 @@ public class TellrawUtils{
 					new TranslationComponent("entity.minecraft.tropical_fish.type."+pcc.pattern.name().toLowerCase())});
 	}
 	public static TranslationComponent getBestGuessLocalizedDisplayName(EntityType eType){
-		switch(eType){
-			case MUSHROOM_COW: return new TranslationComponent("entity.minecraft.mooshroom");
-			case SNOWMAN: return new TranslationComponent("entity.minecraft.snow_golem");
-			case LEASH_HITCH: return new TranslationComponent("entity.minecraft.leash_knot");
-			case MINECART_TNT: return new TranslationComponent("entity.minecraft.tnt_minecart");
-			case MINECART_CHEST: return new TranslationComponent("entity.minecraft.chest_minecart");
-			case MINECART_HOPPER: return new TranslationComponent("entity.minecraft.hopper_minecart");
-			case MINECART_FURNACE: return new TranslationComponent("entity.minecraft.furnace_minecart");
-			case MINECART_COMMAND: return new TranslationComponent("entity.minecraft.command_block_minecart");
-			case MINECART_MOB_SPAWNER: return new TranslationComponent("entity.minecraft.spawner_minecart");
-			default:
-				return new TranslationComponent("entity.minecraft."+eType.name().toLowerCase()
-						.replace("pig_zombie", "zombie_pigman"));
-		}
+		return new TranslationComponent("entity.minecraft."+EntityUtils.getNormalizedEntityName(eType.name().toLowerCase()));
 	}
 	public static Component getLocalizedDisplayName(Entity entity, boolean useDisplayName){
 		if(entity.getName() != null) return new RawTextComponent(
@@ -542,7 +529,7 @@ public class TellrawUtils{
 				return new TranslationComponent("block.minecraft."+block.getType().name().toLowerCase()); 
 		}
 	}
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({ "deprecation", "removal" })
 	public static Component getLocalizedDisplayName(ItemStack item){
 		if(item.hasItemMeta() && item.getItemMeta().hasDisplayName()) return new RawTextComponent(item.getItemMeta().getDisplayName());
 		if(item.getType().isBlock()){
