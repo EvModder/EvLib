@@ -24,7 +24,7 @@ public class ReflectionUtils{// version = X1.0
 	private static final String preClassM;
 	/** boolean value, TRUE if server uses forge or MCPC+ */
 	private static final boolean forge;
-	/** vX_XX_RX server version string (e.g.: v1_13_R2) */
+	/** vX_XX_X server version string (e.g.: v1_13_2) */
 	private static String serverVersionString;
 	public static String getServerVersionString(){return serverVersionString;}
 
@@ -33,6 +33,7 @@ public class ReflectionUtils{// version = X1.0
 		forge = (Bukkit.getVersion().contains("MCPC") || Bukkit.getVersion().contains("Forge"));
 		final Server server = Bukkit.getServer();
 		preClassB = server.getClass().getPackage().getName();
+		//Bukkit.getLogger().warning("bukkit.v: "+Bukkit.getVersion());// "git-Purpur-2169 (MC: 1.20.4)"
 
 		final Class<?> bukkitServerClass = server.getClass();
 		String[] pas = bukkitServerClass.getName().split("\\.");
@@ -54,9 +55,9 @@ public class ReflectionUtils{// version = X1.0
 		}
 		else{
 			preClassM = "net.minecraft.server";
-			if(serverVersionString == null) serverVersionString =
-					"v" + Bukkit.getBukkitVersion().replace("-SNAPSHOT", "").replace('.', '_').replace('-', '_');
+			if(serverVersionString == null) serverVersionString = "v" + Bukkit.getBukkitVersion().replace("-SNAPSHOT", "");
 		}
+		serverVersionString = serverVersionString.replace("R", "").replace('.', '_').replace('-', '_');
 	}
 
 	/**

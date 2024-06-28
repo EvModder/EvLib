@@ -29,6 +29,7 @@ import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffectType;
@@ -501,6 +502,14 @@ public class TellrawUtils{
 		}
 		return meta.getOwningPlayer().getName();
 	}
+
+	private static final Method mItemMetaGetTranslationKey;
+	static{
+		Method temp;
+		try{temp = ItemMeta.class.getMethod("getTranslationKey");}
+		catch(NoSuchMethodException | SecurityException e){temp = null;}
+		mItemMetaGetTranslationKey = temp;
+	}
 	public static TranslationComponent getLocalizedDisplayName(BlockState block){
 		switch(block.getType()){
 			case PLAYER_HEAD:
@@ -544,6 +553,10 @@ public class TellrawUtils{
 				default:
 					return new TranslationComponent("block.minecraft."+item.getType().name().toLowerCase());
 			}
+		}
+		if(item.hasItemMeta() && mItemMetaGetTranslationKey != null){
+			try{return new TranslationComponent((String)mItemMetaGetTranslationKey.invoke(item.getItemMeta()));}
+			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException e){e.printStackTrace();}
 		}
 		switch(item.getType()){
 			case POTION:
