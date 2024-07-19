@@ -231,8 +231,8 @@ public class WebUtils {
 	static HashMap<String, String> textureExists = new HashMap<>();
 	public static String getTextureURL(String texture, boolean verify){
 		if(texture.replace("xxx", "").trim().isEmpty()) return null;
-		String url = textureExists.get(texture);
-		if(url == null){
+		if(!textureExists.containsKey(texture)){
+			String url = null;
 			try{
 				String json = new String(Base64.getDecoder().decode(texture));
 				int startIndex = json.indexOf("\"url\":");
@@ -251,11 +251,11 @@ public class WebUtils {
 				conn.setDoOutput(false);
 				conn.setDoInput(true);
 				if(conn.getResponseCode() != 200) url = null;
-				textureExists.put(texture, url);
 			}
 			catch(IOException e){url = null;}
+			textureExists.put(texture, url);
 		}
-		return url;
+		return textureExists.get(texture);
 	}
 
 	static BufferedImage upsideDownHead(BufferedImage img){
@@ -330,16 +330,20 @@ public class WebUtils {
 			StringBuilder builder = new StringBuilder();
 			String line;
 			while((line=in.readLine()) != null) builder.append(line);
-			String resp = builder.toString().replaceAll(" ", "");
+			String resp = builder.toString().replaceAll("\\s+", "");
 			//System.out.println("response: "+resp);
-			String textureBeg = "\"name\":\"textures\",\"value\":\"", textureEnd = "\"}]}";
-			String newVal = resp.substring(resp.indexOf(textureBeg)+textureBeg.length());
-			newVal = newVal.substring(0, newVal.indexOf(textureEnd));
-			//System.out.println("new val: "+newVal);
-			String newJson = new String(Base64.getDecoder().decode(newVal));
-			String textureVal = newJson.substring(newJson.lastIndexOf("texture/")+8);
-			textureVal = textureVal.substring(0, textureVal.indexOf('"')).trim();
-			return textureVal;
+			String textureBeg = "\"name\":\"textures\",\"value\":\"", textureEnd = "\"}]";
+			String base64 = resp.substring(resp.indexOf(textureBeg)+textureBeg.length());
+			base64 = base64.substring(0, base64.indexOf(textureEnd));
+			//System.out.println("base64: "+base64);
+			String newJson = new String(Base64.getDecoder().decode(base64));
+			//System.out.println("decoded: "+newJson);
+			newJson = newJson.replaceAll("\\s+", "").toLowerCase();
+			final String skinBegin = "\"skin\":{\"url\":\"http://textures.minecraft.net/texture/";
+			int i = newJson.indexOf(skinBegin);
+			if(i == -1){i = newJson.indexOf("texture/")+8; System.out.println("using old texture extraction method");}
+			else i += skinBegin.length();
+			return newJson.substring(i, newJson.indexOf('"', i));
 		}
 		catch(IOException e){e.printStackTrace();}
 		return null;
@@ -349,6 +353,45 @@ public class WebUtils {
 		//System.out.println("Short Json: " + shortJson);
 		String newBase64Val = Base64.getEncoder().encodeToString(shortJson.getBytes());
 		return newBase64Val;
+	}
+	static void uploadSkin(String token, File skinFile){
+		//https://api.mojang.com/user/profile/0e314b6029c74e35bef33c652c8fb467/skin
+		//https://api.mojang.com/users/profiles/minecraft/evmodder
+		//https://sessionserver.mojang.com/session/minecraft/profile/0e314b6029c74e35bef33c652c8fb467
+		try{
+			HttpURLConnection conn = (HttpURLConnection)URI.create("https://api.minecraftservices.com/minecraft/profile/skins").toURL().openConnection();
+//			conn = (HttpURLConnection)new URL("https://api.mojang.com/user/profile/" + uuid + "/skin").openConnection();
+			conn.setRequestProperty("Authorization", "Bearer "+token);
+			conn.setRequestProperty("Content-Length", "15000");
+			String boundary = "---------------------------398324416436304970652995196601";//"someArbitraryText";
+			conn.setRequestProperty("Content-Type", "multipart/form-data; boundary="+boundary);
+			conn.setDoInput(true);
+			conn.setDoOutput(true);
+			conn.setRequestMethod("POST");
+			OutputStream conn_out = conn.getOutputStream();
+			BufferedWriter conn_out_writer = new BufferedWriter(new OutputStreamWriter(conn_out));
+	
+			conn_out_writer.write("\r\n--"+boundary+"\r\n");
+			conn_out_writer.write("Content-Disposition: form-data; name=\"variant\"\r\n\r\nclassic");
+			conn_out_writer.write("\r\n--"+boundary+"\r\n");
+			conn_out_writer.write("Content-Disposition: form-data; name=\"file\"; filename=\"yeet_grumm.png"+"\"\r\n");
+			conn_out_writer.write("Content-Type: image/png\r\n\r\n");
+			conn_out_writer.flush();
+	
+			FileInputStream ifstream = new FileInputStream(skinFile);
+			int newBytes;
+			byte[] buffer = new byte[1024];
+			while((newBytes=ifstream.read(buffer)) != -1) conn_out.write(buffer, 0, newBytes);
+			ifstream.close();
+			conn_out.flush();
+	
+			conn_out_writer.write("\r\n--"+boundary+"--\r\n");
+			conn_out_writer.flush();
+			conn_out_writer.close();
+			conn_out.close();
+			conn.getInputStream();
+		}
+		catch(IOException e){e.printStackTrace();}
 	}
 	// returns Map<HEAD|NAME, base64Value>
 	static TreeMap<String, String> makeUpsideDownCopies(String[] heads, String outfolder, String uuidNoDashes, String token){
@@ -379,45 +422,10 @@ public class WebUtils {
 
 					ImageIO.write(image, "png", outfile);
 					System.out.println("2. Saved upside down img: "+url+" ("+name+")");
-					if(token == null) continue;// Generate grumm image file only (no URL for texture code)
-
+					if(token == null) continue;// Generate grumm image file only
 					//===========================================================================================
 					try{Thread.sleep(8000);}catch(InterruptedException e1){e1.printStackTrace();}//8s
-					//https://api.mojang.com/user/profile/0e314b6029c74e35bef33c652c8fb467/skin
-					//https://api.mojang.com/users/profiles/minecraft/evmodder
-					//https://sessionserver.mojang.com/session/minecraft/profile/0e314b6029c74e35bef33c652c8fb467
-					conn = (HttpURLConnection)URI.create("https://api.minecraftservices.com/minecraft/profile/skins").toURL().openConnection();
-//					conn = (HttpURLConnection)new URL("https://api.mojang.com/user/profile/" + uuid + "/skin").openConnection();
-					conn.setRequestProperty("Authorization", "Bearer "+token);
-					conn.setRequestProperty("Content-Length", "15000");
-					String boundary = "---------------------------398324416436304970652995196601";//"someArbitraryText";
-					conn.setRequestProperty("Content-Type", "multipart/form-data; boundary="+boundary);
-					conn.setDoInput(true);
-					conn.setDoOutput(true);
-					conn.setRequestMethod("POST");
-					OutputStream conn_out = conn.getOutputStream();
-					BufferedWriter conn_out_writer = new BufferedWriter(new OutputStreamWriter(conn_out));
-
-					conn_out_writer.write("\r\n--"+boundary+"\r\n");
-					conn_out_writer.write("Content-Disposition: form-data; name=\"variant\"\r\n\r\nclassic");
-					conn_out_writer.write("\r\n--"+boundary+"\r\n");
-					conn_out_writer.write("Content-Disposition: form-data; name=\"file\"; filename=\"yeet_grumm.png"+"\"\r\n");
-					conn_out_writer.write("Content-Type: image/png\r\n\r\n");
-					conn_out_writer.flush();
-
-					FileInputStream ifstream = new FileInputStream(outfile);
-					int newBytes;
-					byte[] buffer = new byte[1024];
-					while((newBytes=ifstream.read(buffer)) != -1) conn_out.write(buffer, 0, newBytes);
-					ifstream.close();
-					conn_out.flush();
-
-					conn_out_writer.write("\r\n--"+boundary+"--\r\n");
-					conn_out_writer.flush();
-					conn_out_writer.close();
-					conn_out.close();
-
-					conn.getInputStream();
+					uploadSkin(token, outfile);
 					System.out.println("3. Skin uploaded");
 					try{Thread.sleep(25000);}catch(InterruptedException e1){e1.printStackTrace();}//25s
 					//===========================================================================================
@@ -426,8 +434,8 @@ public class WebUtils {
 					final String newBase64Val = getBase64FromTextureVal(textureVal);
 					System.out.println("5. New texture url: " + textureVal);
 					System.out.println("5. New Base64 val: " + newBase64Val);
-					newHeadsTexutureVal.put(name+"|GRUMM", textureVal);
-					newHeadsBase64Val.put(name+"|GRUMM", newBase64Val);
+					newHeadsTexutureVal.put(name, textureVal);
+					newHeadsBase64Val.put(name, newBase64Val);
 					try{Thread.sleep(5000);}catch(InterruptedException e1){e1.printStackTrace();}//5s
 				}
 				catch(IOException e){e.printStackTrace();}
@@ -435,21 +443,30 @@ public class WebUtils {
 		}
 		System.out.println("Results 1: ");
 		for(String e : newHeadsTexutureVal.keySet()){
-			System.out.println(e + ": " + newHeadsTexutureVal.get(e));
+			System.out.println(e + "|GRUMM: " + newHeadsTexutureVal.get(e));
 		}
 		System.out.println("Results 2: ");
 		for(String e : newHeadsBase64Val.keySet()){
-			System.out.println(e + ": " + newHeadsBase64Val.get(e));
+			System.out.println(e + "|GRUMM: " + newHeadsBase64Val.get(e));
 		}
 		return newHeadsBase64Val;
 	}
 
 	static void runGrumm(){
 		String[] targetHeads = new String[]{
-//				"BOAT", "LEASH_HITCH",
-				"LLAMA|BROWN", "LLAMA|GRAY"
+//				"BOAT", "CHEST_BOAT", "LEASH_KNOT", "ARMOR_STAND", "PAINTING", "ITEM_FRAME"
+				"WOLF|ASHEN|TAME|BLACK_COLLARED", "WOLF|ASHEN|TAME|BLUE_COLLARED", "WOLF|ASHEN|TAME|BROWN_COLLARED", "WOLF|ASHEN|TAME|CYAN_COLLARED", "WOLF|ASHEN|TAME|GRAY_COLLARED", "WOLF|ASHEN|TAME|GREEN_COLLARED", "WOLF|ASHEN|TAME|LIGHT_BLUE_COLLARED", "WOLF|ASHEN|TAME|LIGHT_GRAY_COLLARED", "WOLF|ASHEN|TAME|LIME_COLLARED", "WOLF|ASHEN|TAME|MAGENTA_COLLARED", "WOLF|ASHEN|TAME|ORANGE_COLLARED", "WOLF|ASHEN|TAME|PINK_COLLARED", "WOLF|ASHEN|TAME|PURPLE_COLLARED", "WOLF|ASHEN|TAME|RED_COLLARED", "WOLF|ASHEN|TAME|WHITE_COLLARED", "WOLF|ASHEN|TAME|YELLOW_COLLARED", 
+				"WOLF|BLACK|TAME|BLACK_COLLARED", "WOLF|BLACK|TAME|BLUE_COLLARED", "WOLF|BLACK|TAME|BROWN_COLLARED", "WOLF|BLACK|TAME|CYAN_COLLARED", "WOLF|BLACK|TAME|GRAY_COLLARED", "WOLF|BLACK|TAME|GREEN_COLLARED", "WOLF|BLACK|TAME|LIGHT_BLUE_COLLARED", "WOLF|BLACK|TAME|LIGHT_GRAY_COLLARED", "WOLF|BLACK|TAME|LIME_COLLARED", "WOLF|BLACK|TAME|MAGENTA_COLLARED", "WOLF|BLACK|TAME|ORANGE_COLLARED", "WOLF|BLACK|TAME|PINK_COLLARED", "WOLF|BLACK|TAME|PURPLE_COLLARED", "WOLF|BLACK|TAME|RED_COLLARED", "WOLF|BLACK|TAME|WHITE_COLLARED", "WOLF|BLACK|TAME|YELLOW_COLLARED", 
+				"WOLF|CHESTNUT|TAME|BLACK_COLLARED", "WOLF|CHESTNUT|TAME|BLUE_COLLARED", "WOLF|CHESTNUT|TAME|BROWN_COLLARED", "WOLF|CHESTNUT|TAME|CYAN_COLLARED", "WOLF|CHESTNUT|TAME|GRAY_COLLARED", "WOLF|CHESTNUT|TAME|GREEN_COLLARED", "WOLF|CHESTNUT|TAME|LIGHT_BLUE_COLLARED", "WOLF|CHESTNUT|TAME|LIGHT_GRAY_COLLARED", "WOLF|CHESTNUT|TAME|LIME_COLLARED", "WOLF|CHESTNUT|TAME|MAGENTA_COLLARED", "WOLF|CHESTNUT|TAME|ORANGE_COLLARED", "WOLF|CHESTNUT|TAME|PINK_COLLARED", "WOLF|CHESTNUT|TAME|PURPLE_COLLARED", "WOLF|CHESTNUT|TAME|RED_COLLARED", "WOLF|CHESTNUT|TAME|WHITE_COLLARED", "WOLF|CHESTNUT|TAME|YELLOW_COLLARED", 
+				"WOLF|PALE|TAME|BLACK_COLLARED", "WOLF|PALE|TAME|BLUE_COLLARED", "WOLF|PALE|TAME|BROWN_COLLARED", "WOLF|PALE|TAME|CYAN_COLLARED", "WOLF|PALE|TAME|GRAY_COLLARED", "WOLF|PALE|TAME|GREEN_COLLARED", "WOLF|PALE|TAME|LIGHT_BLUE_COLLARED", "WOLF|PALE|TAME|LIGHT_GRAY_COLLARED", "WOLF|PALE|TAME|LIME_COLLARED", "WOLF|PALE|TAME|MAGENTA_COLLARED", "WOLF|PALE|TAME|ORANGE_COLLARED", "WOLF|PALE|TAME|PINK_COLLARED", "WOLF|PALE|TAME|PURPLE_COLLARED", "WOLF|PALE|TAME|RED_COLLARED", "WOLF|PALE|TAME|WHITE_COLLARED", "WOLF|PALE|TAME|YELLOW_COLLARED", 
+				"WOLF|RUSTY|TAME|BLACK_COLLARED", "WOLF|RUSTY|TAME|BLUE_COLLARED", "WOLF|RUSTY|TAME|BROWN_COLLARED", "WOLF|RUSTY|TAME|CYAN_COLLARED", "WOLF|RUSTY|TAME|GRAY_COLLARED", "WOLF|RUSTY|TAME|GREEN_COLLARED", "WOLF|RUSTY|TAME|LIGHT_BLUE_COLLARED", "WOLF|RUSTY|TAME|LIGHT_GRAY_COLLARED", "WOLF|RUSTY|TAME|LIME_COLLARED", "WOLF|RUSTY|TAME|MAGENTA_COLLARED", "WOLF|RUSTY|TAME|ORANGE_COLLARED", "WOLF|RUSTY|TAME|PINK_COLLARED", "WOLF|RUSTY|TAME|PURPLE_COLLARED", "WOLF|RUSTY|TAME|RED_COLLARED", "WOLF|RUSTY|TAME|WHITE_COLLARED", "WOLF|RUSTY|TAME|YELLOW_COLLARED", 
+				"WOLF|SNOWY|TAME|BLACK_COLLARED", "WOLF|SNOWY|TAME|BLUE_COLLARED", "WOLF|SNOWY|TAME|BROWN_COLLARED", "WOLF|SNOWY|TAME|CYAN_COLLARED", "WOLF|SNOWY|TAME|GRAY_COLLARED", "WOLF|SNOWY|TAME|GREEN_COLLARED", "WOLF|SNOWY|TAME|LIGHT_BLUE_COLLARED", "WOLF|SNOWY|TAME|LIGHT_GRAY_COLLARED", "WOLF|SNOWY|TAME|LIME_COLLARED", "WOLF|SNOWY|TAME|MAGENTA_COLLARED", "WOLF|SNOWY|TAME|ORANGE_COLLARED", "WOLF|SNOWY|TAME|PINK_COLLARED", "WOLF|SNOWY|TAME|PURPLE_COLLARED", "WOLF|SNOWY|TAME|RED_COLLARED", "WOLF|SNOWY|TAME|WHITE_COLLARED", "WOLF|SNOWY|TAME|YELLOW_COLLARED", 
+				"WOLF|SPOTTED|TAME|BLACK_COLLARED", "WOLF|SPOTTED|TAME|BLUE_COLLARED", "WOLF|SPOTTED|TAME|BROWN_COLLARED", "WOLF|SPOTTED|TAME|CYAN_COLLARED", "WOLF|SPOTTED|TAME|GRAY_COLLARED", "WOLF|SPOTTED|TAME|GREEN_COLLARED", "WOLF|SPOTTED|TAME|LIGHT_BLUE_COLLARED", "WOLF|SPOTTED|TAME|LIGHT_GRAY_COLLARED", "WOLF|SPOTTED|TAME|LIME_COLLARED", "WOLF|SPOTTED|TAME|MAGENTA_COLLARED", "WOLF|SPOTTED|TAME|ORANGE_COLLARED", "WOLF|SPOTTED|TAME|PINK_COLLARED", "WOLF|SPOTTED|TAME|PURPLE_COLLARED", "WOLF|SPOTTED|TAME|RED_COLLARED", "WOLF|SPOTTED|TAME|WHITE_COLLARED", "WOLF|SPOTTED|TAME|YELLOW_COLLARED", 
+				"WOLF|STRIPED|TAME|BLACK_COLLARED", "WOLF|STRIPED|TAME|BLUE_COLLARED", "WOLF|STRIPED|TAME|BROWN_COLLARED", "WOLF|STRIPED|TAME|CYAN_COLLARED", "WOLF|STRIPED|TAME|GRAY_COLLARED", "WOLF|STRIPED|TAME|GREEN_COLLARED", "WOLF|STRIPED|TAME|LIGHT_BLUE_COLLARED", "WOLF|STRIPED|TAME|LIGHT_GRAY_COLLARED", "WOLF|STRIPED|TAME|LIME_COLLARED", "WOLF|STRIPED|TAME|MAGENTA_COLLARED", "WOLF|STRIPED|TAME|ORANGE_COLLARED", "WOLF|STRIPED|TAME|PINK_COLLARED", "WOLF|STRIPED|TAME|PURPLE_COLLARED", "WOLF|STRIPED|TAME|RED_COLLARED", "WOLF|STRIPED|TAME|WHITE_COLLARED", "WOLF|STRIPED|TAME|YELLOW_COLLARED", 
+				"WOLF|WOODS|TAME|BLACK_COLLARED", "WOLF|WOODS|TAME|BLUE_COLLARED", "WOLF|WOODS|TAME|BROWN_COLLARED", "WOLF|WOODS|TAME|CYAN_COLLARED", "WOLF|WOODS|TAME|GRAY_COLLARED", "WOLF|WOODS|TAME|GREEN_COLLARED", "WOLF|WOODS|TAME|LIGHT_BLUE_COLLARED", "WOLF|WOODS|TAME|LIGHT_GRAY_COLLARED", "WOLF|WOODS|TAME|LIME_COLLARED", "WOLF|WOODS|TAME|MAGENTA_COLLARED", "WOLF|WOODS|TAME|ORANGE_COLLARED", "WOLF|WOODS|TAME|PINK_COLLARED", "WOLF|WOODS|TAME|PURPLE_COLLARED", "WOLF|WOODS|TAME|RED_COLLARED", "WOLF|WOODS|TAME|WHITE_COLLARED", "WOLF|WOODS|TAME|YELLOW_COLLARED", 
+				
 		};
-		String[] headsData = FileIO.loadFile("head-textures.txt", "").split("\n");
+		String[] headsData = FileIO.loadFile("extra-textures/colored-collar-head-textures.txt", "").split("\n");
 		String[] headsToFlip = new String[targetHeads.length];
 		for(int i=0; i<targetHeads.length; ++i){
 			for(String headData : headsData){
@@ -461,16 +478,17 @@ public class WebUtils {
 			if(headsToFlip[i] == null) System.err.println("Could not find target head: "+targetHeads[i]);
 		}
 
-//		System.out.print("runGrumm() auth for "+targetHeads.length+" heads...\n"); 
-//		Scanner scanner = new Scanner(System.in); 
+		System.out.print("runGrumm() auth for "+targetHeads.length+" heads...\n"); 
+//		java.util.Scanner scanner = new java.util.Scanner(System.in); 
 //		System.out.print("Enter account email: "); String email = scanner.nextLine();//nl@nl.com
-//		System.out.print("Enter account passw: "); String passw = scanner.nextLine();//y
-//		System.out.print("Enter account uuid: "); String uuid = scanner.nextLine();//0e314b6029c74e35bef33c652c8fb467
-//		scanner.close();
-//		String token = /*authenticateMicrosoft*/authenticateMojang(email, passw);
-//		System.out.println("token = "+token);
+//		System.out.print("Enter account passw: "); String passw = scanner.nextLine();//y (or gc for MS)
+//		//System.out.print("Enter account uuid: "); String uuid = scanner.nextLine();//0e314b6029c74e35bef33c652c8fb467
 		String uuid = "0e314b6029c74e35bef33c652c8fb467";
-		String token = "eyJraWQiOiJhYzg0YSIsImFsZyI6IkhTMjU2In0.eyJ4dWlkIjoiMjUzNTQ2NjM1MzY2NjY2NiIsImFnZyI6IkFkdWx0Iiwic3ViIjoiMWUzYTgyNDYtNTNmMC00ODBmLWIwYjMtMTFiNGU5ZDVkNTY0IiwiYXV0aCI6IlhCT1giLCJucyI6ImRlZmF1bHQiLCJyb2xlcyI6W10sImlzcyI6ImF1dGhlbnRpY2F0aW9uIiwiZmxhZ3MiOlsidHdvZmFjdG9yYXV0aCIsIm1pbmVjcmFmdF9uZXQiLCJvcmRlcnNfMjAyMiJdLCJwbGF0Zm9ybSI6IlVOS05PV04iLCJ5dWlkIjoiNjU4NjllYzA4YzFkYzVkMzZjNWMxYzNjYzljOWY4OTAiLCJuYmYiOjE2ODcyNzUwNzksImV4cCI6MTY4NzM2MTQ3OSwiaWF0IjoxNjg3Mjc1MDc5fQ.7XksM6LuGDPTq1gij2aVQBFrJgI1kMVzB6Z0_SROk0Y";
+//		scanner.close();
+//		String token = authenticateMicrosoft/*authenticateMojang*/(email, passw);
+//		System.out.println("token = "+token);
+		//Paste in Inspector Console while logged into Minecraft.net: console.log(`; ${document.cookie}`.split('; bearer_token=').pop().split(';').shift())
+		String token = "eyJraWQiOiJhYzg0YSIsImFsZyI6IkhTMjU2In0.eyJ4dWlkIjoiMjUzNTQ2NjM1MzY2NjY2NiIsImFnZyI6IkFkdWx0Iiwic3ViIjoiMWUzYTgyNDYtNTNmMC00ODBmLWIwYjMtMTFiNGU5ZDVkNTY0IiwiYXV0aCI6IlhCT1giLCJucyI6ImRlZmF1bHQiLCJyb2xlcyI6W10sImlzcyI6ImF1dGhlbnRpY2F0aW9uIiwiZmxhZ3MiOlsidHdvZmFjdG9yYXV0aCIsIm1pbmVjcmFmdF9uZXQiLCJtc2FtaWdyYXRpb25fc3RhZ2U0Iiwib3JkZXJzXzIwMjIiLCJtdWx0aXBsYXllciJdLCJwcm9maWxlcyI6eyJtYyI6IjBlMzE0YjYwLTI5YzctNGUzNS1iZWYzLTNjNjUyYzhmYjQ2NyJ9LCJwbGF0Zm9ybSI6IlVOS05PV04iLCJ5dWlkIjoiNjU4NjllYzA4YzFkYzVkMzZjNWMxYzNjYzljOWY4OTAiLCJuYmYiOjE3MTk2NDI3OTEsImV4cCI6MTcxOTcyOTE5MSwiaWF0IjoxNzE5NjQyNzkxfQ.mIQRPm2YC6xx3TdN8IIbiwUtXR0Ii_Jrh2m-haBLMRg";
 
 		System.out.println(String.join("\n", headsToFlip));
 		System.out.println("Beginning conversion...");
@@ -478,10 +496,80 @@ public class WebUtils {
 		makeUpsideDownCopies(headsToFlip, "tmp_textures", uuid, token);
 	}
 
+	static void uploadSkins(){
+		String token = "eyJraWQiOiJhYzg0YSIsImFsZyI6IkhTMjU2In0.eyJ4dWlkIjoiMjUzNTQ2NjM1MzY2NjY2NiIsImFnZyI6IkFkdWx0Iiwic3ViIjoiMWUzYTgyNDYtNTNmMC00ODBmLWIwYjMtMTFiNGU5ZDVkNTY0IiwiYXV0aCI6IlhCT1giLCJucyI6ImRlZmF1bHQiLCJyb2xlcyI6W10sImlzcyI6ImF1dGhlbnRpY2F0aW9uIiwiZmxhZ3MiOlsidHdvZmFjdG9yYXV0aCIsIm1pbmVjcmFmdF9uZXQiLCJtc2FtaWdyYXRpb25fc3RhZ2U0Iiwib3JkZXJzXzIwMjIiLCJtdWx0aXBsYXllciJdLCJwcm9maWxlcyI6eyJtYyI6IjBlMzE0YjYwLTI5YzctNGUzNS1iZWYzLTNjNjUyYzhmYjQ2NyJ9LCJwbGF0Zm9ybSI6IlVOS05PV04iLCJ5dWlkIjoiNjU4NjllYzA4YzFkYzVkMzZjNWMxYzNjYzljOWY4OTAiLCJuYmYiOjE3MTk2NDI3OTEsImV4cCI6MTcxOTcyOTE5MSwiaWF0IjoxNzE5NjQyNzkxfQ.mIQRPm2YC6xx3TdN8IIbiwUtXR0Ii_Jrh2m-haBLMRg";
+		String uuid = "0e314b6029c74e35bef33c652c8fb467";
+		String[] imgFiles = new String[]{
+				"WOLF|ASHEN|TAME|BLACK_COLLARED", "WOLF|ASHEN|TAME|BLUE_COLLARED", "WOLF|ASHEN|TAME|BROWN_COLLARED", "WOLF|ASHEN|TAME|CYAN_COLLARED", "WOLF|ASHEN|TAME|GRAY_COLLARED", "WOLF|ASHEN|TAME|GREEN_COLLARED", "WOLF|ASHEN|TAME|LIGHT_BLUE_COLLARED", "WOLF|ASHEN|TAME|LIGHT_GRAY_COLLARED", "WOLF|ASHEN|TAME|LIME_COLLARED", "WOLF|ASHEN|TAME|MAGENTA_COLLARED", "WOLF|ASHEN|TAME|ORANGE_COLLARED", "WOLF|ASHEN|TAME|PINK_COLLARED", "WOLF|ASHEN|TAME|PURPLE_COLLARED", "WOLF|ASHEN|TAME|RED_COLLARED", "WOLF|ASHEN|TAME|WHITE_COLLARED", "WOLF|ASHEN|TAME|YELLOW_COLLARED", 
+				"WOLF|BLACK|TAME|BLACK_COLLARED", "WOLF|BLACK|TAME|BLUE_COLLARED", "WOLF|BLACK|TAME|BROWN_COLLARED", "WOLF|BLACK|TAME|CYAN_COLLARED", "WOLF|BLACK|TAME|GRAY_COLLARED", "WOLF|BLACK|TAME|GREEN_COLLARED", "WOLF|BLACK|TAME|LIGHT_BLUE_COLLARED", "WOLF|BLACK|TAME|LIGHT_GRAY_COLLARED", "WOLF|BLACK|TAME|LIME_COLLARED", "WOLF|BLACK|TAME|MAGENTA_COLLARED", "WOLF|BLACK|TAME|ORANGE_COLLARED", "WOLF|BLACK|TAME|PINK_COLLARED", "WOLF|BLACK|TAME|PURPLE_COLLARED", "WOLF|BLACK|TAME|RED_COLLARED", "WOLF|BLACK|TAME|WHITE_COLLARED", "WOLF|BLACK|TAME|YELLOW_COLLARED", 
+				"WOLF|CHESTNUT|TAME|BLACK_COLLARED", "WOLF|CHESTNUT|TAME|BLUE_COLLARED", "WOLF|CHESTNUT|TAME|BROWN_COLLARED", "WOLF|CHESTNUT|TAME|CYAN_COLLARED", "WOLF|CHESTNUT|TAME|GRAY_COLLARED", "WOLF|CHESTNUT|TAME|GREEN_COLLARED", "WOLF|CHESTNUT|TAME|LIGHT_BLUE_COLLARED", "WOLF|CHESTNUT|TAME|LIGHT_GRAY_COLLARED", "WOLF|CHESTNUT|TAME|LIME_COLLARED", "WOLF|CHESTNUT|TAME|MAGENTA_COLLARED", "WOLF|CHESTNUT|TAME|ORANGE_COLLARED", "WOLF|CHESTNUT|TAME|PINK_COLLARED", "WOLF|CHESTNUT|TAME|PURPLE_COLLARED", "WOLF|CHESTNUT|TAME|RED_COLLARED", "WOLF|CHESTNUT|TAME|WHITE_COLLARED", "WOLF|CHESTNUT|TAME|YELLOW_COLLARED", 
+//				"WOLF|PALE|TAME|BLACK_COLLARED", "WOLF|PALE|TAME|BLUE_COLLARED", "WOLF|PALE|TAME|BROWN_COLLARED", "WOLF|PALE|TAME|CYAN_COLLARED", "WOLF|PALE|TAME|GRAY_COLLARED", "WOLF|PALE|TAME|GREEN_COLLARED", "WOLF|PALE|TAME|LIGHT_BLUE_COLLARED", "WOLF|PALE|TAME|LIGHT_GRAY_COLLARED", "WOLF|PALE|TAME|LIME_COLLARED", "WOLF|PALE|TAME|MAGENTA_COLLARED", "WOLF|PALE|TAME|ORANGE_COLLARED", "WOLF|PALE|TAME|PINK_COLLARED", "WOLF|PALE|TAME|PURPLE_COLLARED", "WOLF|PALE|TAME|RED_COLLARED", "WOLF|PALE|TAME|WHITE_COLLARED", "WOLF|PALE|TAME|YELLOW_COLLARED", 
+				"WOLF|RUSTY|TAME|BLACK_COLLARED", "WOLF|RUSTY|TAME|BLUE_COLLARED", "WOLF|RUSTY|TAME|BROWN_COLLARED", "WOLF|RUSTY|TAME|CYAN_COLLARED", "WOLF|RUSTY|TAME|GRAY_COLLARED", "WOLF|RUSTY|TAME|GREEN_COLLARED", "WOLF|RUSTY|TAME|LIGHT_BLUE_COLLARED", "WOLF|RUSTY|TAME|LIGHT_GRAY_COLLARED", "WOLF|RUSTY|TAME|LIME_COLLARED", "WOLF|RUSTY|TAME|MAGENTA_COLLARED", "WOLF|RUSTY|TAME|ORANGE_COLLARED", "WOLF|RUSTY|TAME|PINK_COLLARED", "WOLF|RUSTY|TAME|PURPLE_COLLARED", "WOLF|RUSTY|TAME|RED_COLLARED", "WOLF|RUSTY|TAME|WHITE_COLLARED", "WOLF|RUSTY|TAME|YELLOW_COLLARED", 
+				"WOLF|SNOWY|TAME|BLACK_COLLARED", "WOLF|SNOWY|TAME|BLUE_COLLARED", "WOLF|SNOWY|TAME|BROWN_COLLARED", "WOLF|SNOWY|TAME|CYAN_COLLARED", "WOLF|SNOWY|TAME|GRAY_COLLARED", "WOLF|SNOWY|TAME|GREEN_COLLARED", "WOLF|SNOWY|TAME|LIGHT_BLUE_COLLARED", "WOLF|SNOWY|TAME|LIGHT_GRAY_COLLARED", "WOLF|SNOWY|TAME|LIME_COLLARED", "WOLF|SNOWY|TAME|MAGENTA_COLLARED", "WOLF|SNOWY|TAME|ORANGE_COLLARED", "WOLF|SNOWY|TAME|PINK_COLLARED", "WOLF|SNOWY|TAME|PURPLE_COLLARED", "WOLF|SNOWY|TAME|RED_COLLARED", "WOLF|SNOWY|TAME|WHITE_COLLARED", "WOLF|SNOWY|TAME|YELLOW_COLLARED", 
+				"WOLF|SPOTTED|TAME|BLACK_COLLARED", "WOLF|SPOTTED|TAME|BLUE_COLLARED", "WOLF|SPOTTED|TAME|BROWN_COLLARED", "WOLF|SPOTTED|TAME|CYAN_COLLARED", "WOLF|SPOTTED|TAME|GRAY_COLLARED", "WOLF|SPOTTED|TAME|GREEN_COLLARED", "WOLF|SPOTTED|TAME|LIGHT_BLUE_COLLARED", "WOLF|SPOTTED|TAME|LIGHT_GRAY_COLLARED", "WOLF|SPOTTED|TAME|LIME_COLLARED", "WOLF|SPOTTED|TAME|MAGENTA_COLLARED", "WOLF|SPOTTED|TAME|ORANGE_COLLARED", "WOLF|SPOTTED|TAME|PINK_COLLARED", "WOLF|SPOTTED|TAME|PURPLE_COLLARED", "WOLF|SPOTTED|TAME|RED_COLLARED", "WOLF|SPOTTED|TAME|WHITE_COLLARED", "WOLF|SPOTTED|TAME|YELLOW_COLLARED", 
+				"WOLF|STRIPED|TAME|BLACK_COLLARED", "WOLF|STRIPED|TAME|BLUE_COLLARED", "WOLF|STRIPED|TAME|BROWN_COLLARED", "WOLF|STRIPED|TAME|CYAN_COLLARED", "WOLF|STRIPED|TAME|GRAY_COLLARED", "WOLF|STRIPED|TAME|GREEN_COLLARED", "WOLF|STRIPED|TAME|LIGHT_BLUE_COLLARED", "WOLF|STRIPED|TAME|LIGHT_GRAY_COLLARED", "WOLF|STRIPED|TAME|LIME_COLLARED", "WOLF|STRIPED|TAME|MAGENTA_COLLARED", "WOLF|STRIPED|TAME|ORANGE_COLLARED", "WOLF|STRIPED|TAME|PINK_COLLARED", "WOLF|STRIPED|TAME|PURPLE_COLLARED", "WOLF|STRIPED|TAME|RED_COLLARED", "WOLF|STRIPED|TAME|WHITE_COLLARED", "WOLF|STRIPED|TAME|YELLOW_COLLARED", 
+				"WOLF|WOODS|TAME|BLACK_COLLARED", "WOLF|WOODS|TAME|BLUE_COLLARED", "WOLF|WOODS|TAME|BROWN_COLLARED", "WOLF|WOODS|TAME|CYAN_COLLARED", "WOLF|WOODS|TAME|GRAY_COLLARED", "WOLF|WOODS|TAME|GREEN_COLLARED", "WOLF|WOODS|TAME|LIGHT_BLUE_COLLARED", "WOLF|WOODS|TAME|LIGHT_GRAY_COLLARED", "WOLF|WOODS|TAME|LIME_COLLARED", "WOLF|WOODS|TAME|MAGENTA_COLLARED", "WOLF|WOODS|TAME|ORANGE_COLLARED", "WOLF|WOODS|TAME|PINK_COLLARED", "WOLF|WOODS|TAME|PURPLE_COLLARED", "WOLF|WOODS|TAME|RED_COLLARED", "WOLF|WOODS|TAME|WHITE_COLLARED", "WOLF|WOODS|TAME|YELLOW_COLLARED", 
+		};
+		TreeMap<String, String> newHeadsTexutureVal = new TreeMap<>(); // Map from HEAD|NAME -> mojangTextureVal
+		TreeMap<String, String> newHeadsBase64Val = new TreeMap<>(); // Map from HEAD|NAME -> base64Val
+		for(String filename : imgFiles){
+			uploadSkin(token, new File("tmp_textures/"+filename+".png"));
+			System.out.println("3. Skin uploaded");
+			try{Thread.sleep(10000);}catch(InterruptedException e1){e1.printStackTrace();}//10s
+			System.out.println("4. Getting new texture url");
+			final String textureVal = getTextureVal(uuid);
+			final String newBase64Val = getBase64FromTextureVal(textureVal);
+			System.out.println("5. New texture url: " + textureVal);
+			System.out.println("5. New Base64 val: " + newBase64Val);
+			newHeadsTexutureVal.put(filename, textureVal);
+			newHeadsBase64Val.put(filename, newBase64Val);
+			try{Thread.sleep(10000);}catch(InterruptedException e1){e1.printStackTrace();}//10s
+		}
+		System.out.println("Results 1: ");
+		for(String e : newHeadsTexutureVal.keySet()) System.out.println(e + ": " + newHeadsTexutureVal.get(e));
+		System.out.println("Results 2: ");
+		for(String e : newHeadsBase64Val.keySet()) System.out.println(e + ": " + newHeadsBase64Val.get(e));
+	}
+
+	static void overlayImgs(){
+		String[] baseImgs = new String[]{
+				"WOLF|ASHEN|TAME", "WOLF|BLACK|TAME", "WOLF|CHESTNUT|TAME", "WOLF|PALE|TAME", "WOLF|RUSTY|TAME",
+				"WOLF|SNOWY|TAME", "WOLF|SPOTTED|TAME", "WOLF|STRIPED|TAME", "WOLF|WOODS|TAME"
+		};
+		String[] overlayImgs = new String[]{
+				"BLACK", "BLUE", "BROWN", "CYAN", "GRAY", "GREEN", "LIGHT_BLUE", "LIGHT_GRAY", "LIME", "MAGENTA",
+				"ORANGE", "PINK", "PURPLE", "RED", "WHITE", "YELLOW"
+		};
+		TreeSet<String> results = new TreeSet<>();
+		for(String base : baseImgs){
+			for(String overlay : overlayImgs){
+				try{
+					String key = base+"|"+overlay+"_COLLARED";
+					BufferedImage image1 = ImageIO.read(new File("tmp_textures/wolves/"+base+".png"));
+					BufferedImage image2 = ImageIO.read(new File("tmp_textures/collars/collar_overlay_"+overlay+".png"));
+					
+					Graphics2D g = image1.createGraphics();
+					g.drawImage(image2, 0, 0, null);
+					g.dispose();
+					ImageIO.write(image1, "png", new File("tmp_textures/"+key+".png"));
+					results.add(key);
+				}
+				catch(IOException e){e.printStackTrace();return;}
+			}
+		}
+		System.out.println("Results: ");
+		String lastW = "ASHE";
+		for(String key : results){
+			if(!key.substring(5, 9).equals(lastW)){lastW=key.substring(5, 9); System.out.println();}
+			System.out.print("\""+key+"\", ");
+		}
+	}
+
 	static void checkMissingTexturesDropratesAndSpawnModifiers(){
 		TreeSet<String> expectedTxr = new TreeSet<>();
 		TreeSet<String> foundTxr = new TreeSet<>();
 		TreeSet<String> extraTxr = new TreeSet<>();
+		TreeSet<String> redirectTxr = new TreeSet<>();
 		TreeSet<String> duplicateTxr = new TreeSet<>();
 		TreeSet<String> xxxTxr = new TreeSet<>();
 		TreeSet<String> missingDrpC = new TreeSet<>(), extraDrpC = new TreeSet<>();
@@ -492,6 +580,7 @@ public class WebUtils {
 		for(EntityType type : Arrays.asList(EntityType.ARMOR_STAND, EntityType.valueOf("LEASH_KNOT"), EntityType.MINECART,
 				EntityType.valueOf("CHEST_MINECART"), EntityType.valueOf("COMMAND_BLOCK_MINECART"), EntityType.valueOf("FURNACE_MINECART"),
 				EntityType.valueOf("HOPPER_MINECART"), EntityType.valueOf("SPAWNER_MINECART"), EntityType.valueOf("TNT_MINECART"),
+				EntityType.ITEM_FRAME, EntityType.valueOf("GLOW_ITEM_FRAME"),
 				EntityType.BOAT, EntityType.PAINTING, EntityType.UNKNOWN)){
 			expectedTxr.add(type.name()); missingDrpC.add(type.name());
 		}
@@ -504,17 +593,21 @@ public class WebUtils {
 			int i = headData.indexOf(':');
 			if(i != -1){
 				String headName = headData.substring(0, i);
-				headData = headData.substring(i+1);
+				headData = headData.substring(i+1).trim();
 				if(!foundTxr.add(headName)) duplicateTxr.add(headName);
-				if(headData.replace("xxx", "").trim().isEmpty()){
+				if(headData.equals("xxx")){
 					xxxTxr.add(headName);
 					continue;
 				}
-				if(headName.indexOf('|') == -1 && !expectedTxr.remove(headName)) extraTxr.add(headName);
+				if(headName.indexOf('|') == -1 && !expectedTxr.remove(headName)){
+					if(headData.matches("^[A-Z_|]+$")) redirectTxr.add(headName+"->"+headData);
+					else extraTxr.add(headName);
+				}
 			}
 		}
 		System.out.println("Textures missing: "+expectedTxr);
 		System.out.println("Textures extra: "+extraTxr);
+		//System.out.println("Textures redirected: "+redirectTxr);
 		System.out.println("Textures duplicated: "+duplicateTxr);
 		System.out.println("Textures xxx: "+xxxTxr);
 
@@ -543,16 +636,20 @@ public class WebUtils {
 	static void checkMissingGrummTextures(){
 		TreeSet<String> regularTxtrs = new TreeSet<>();
 		TreeSet<String> grummTxtrs = new TreeSet<>();
-		final String allHeads = FileIO.loadFile("head-textures.txt", "")+"\n"+FileIO.loadFile("grumm-head-textures.txt", "")+"\n"+FileIO.loadFile("sideways-shulker-head-textures.txt", "");
+		final String allHeads = FileIO.loadFile("head-textures.txt", "")+"\n"
+				+FileIO.loadFile("extra-textures/grumm-head-textures.txt", "")+"\n"
+				+FileIO.loadFile("extra-textures/sideways-shulker-head-textures.txt", "");
 		for(String headData : allHeads.split("\n")){
 			int i = headData.indexOf(':'), j = headData.indexOf('|');
 			if(i != -1){
 				if(headData.substring(i + 1).replace("xxx", "").trim().isEmpty()) continue;
 				String headName = headData.substring(0, i);
-				if(headName.equals("LEASH_HITCH")) continue;
 				if(headName.equals("UNKNOWN")) continue;
-				if(headName.equals("PLAYER|ALEX")) continue;
-				if(headName.equals("PLAYER|STEVE")) continue;
+				if(headName.equals("LEASH_HITCH") || headName.equals("LEASH_KNOT")) continue;
+				if(headName.equals("PLAYER|ALEX") || headName.equals("PLAYER|STEVE")) continue;
+				if(headName.equals("BOAT") || headName.startsWith("CHEST_BOAT")) continue;
+				if(headName.equals("ITEM_FRAME") || headName.equals("GLOW_ITEM_FRAME")) continue;
+				if(headName.startsWith("PAINTING|")) continue;
 
 				if(j != -1 && headName.endsWith("GRUMM")) grummTxtrs.add(headName.substring(0, headName.length()-6));
 				else regularTxtrs.add(headName);
@@ -578,7 +675,7 @@ public class WebUtils {
 			if(i == -1) continue;
 			String name = headData.substring(0, i).trim();
 			String textureCode = headData.substring(i + 1).replace("xxx", "").trim();
-			if(textureCode.isEmpty()) continue;
+			if(textureCode.isEmpty() || textureCode.matches("^[A-Z_|]+$")) continue;
 			String url = getTextureURL(textureCode, /*verify=*/false);
 			//String textureId = url.substring(url.lastIndexOf('/')+1);
 //			try{Thread.sleep(2000);}catch(InterruptedException e1){e1.printStackTrace();}//2s
@@ -686,21 +783,25 @@ public class WebUtils {
 	}
 
 	public static void main(String... args){
-//		System.out.println("a");
 //		Component c = TellrawUtils.parseComponentFromString(
 //				"{\"italic\":false,\"extra\":[{\"italic\":false,\"extra\":[{\"translate\":\"item.minecraft.netherite_sword\"}],\"text\":\"\"}],\"text\":\"\"}");
-//		System.out.println("b");
 //		System.out.println(c.toString());
-//		System.out.println("c");
 		//com.sun.org.apache.xml.internal.security.Init.init();
 		FileIO.DIR = "./";
 //		reformatTexturesFile();
 //		printUUIDsForTextureKeys();
 //		printUUIDsForPlayerNames();
-		checkMissingTexturesDropratesAndSpawnModifiers();
+//		checkMissingTexturesDropratesAndSpawnModifiers();
 //		checkMissingGrummTextures();
 //		checkAbnormalHeadTextures();
-//		runGrumm();
-//		System.out.println("Test: "+Vehicle.class.isAssignableFrom(EntityType.PLAYER.getEntityClass()));
+
+//		final String textureVal = getTextureVal("0e314b6029c74e35bef33c652c8fb467");
+//		final String newBase64Val = getBase64FromTextureVal(textureVal);
+//		System.out.println("5. New texture url: " + textureVal);
+//		System.out.println("5. New Base64 val: " + newBase64Val);
+
+//		overlayImgs();
+//		uploadSkins();
+		runGrumm();
 	}
 }
