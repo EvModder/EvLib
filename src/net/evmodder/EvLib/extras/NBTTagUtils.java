@@ -139,14 +139,10 @@ public final class NBTTagUtils{// version = X1.0
 	static final RefConstructor cnstrNBTTagList = classNBTTagList.findConstructor(0);
 //	static final Class<?> realNBTBaseClass = classNBTBase.getRealClass();
 	static final Class<?> realNBTTagListClass = classNBTTagList.getRealClass();
-	static final RefMethod methodAdd;
+	static RefMethod methodAdd;
 	static{
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_16") < 0){ // if version <= 1.16
-			methodAdd = classNBTTagList.getMethod("add", realNBTBaseClass);
-		}
-		else{
-			methodAdd = ReflectionUtils.getRefClass(AbstractList.class).getMethod("add", Object.class);
-		}
+		try{methodAdd = ReflectionUtils.getRefClass(AbstractList.class).getMethod("add", Object.class);}
+		catch(RuntimeException e){methodAdd = classNBTTagList.getMethod("add", realNBTBaseClass);}// version <= 1.16
 	}
 	static final RefMethod methodGet = classNBTTagList.getMethod("get", int.class);
 

@@ -29,10 +29,12 @@ public final class ActionBarUtils{
 	private static UUID SENDER_UUID = null;
 
 	// post-1.19
-	private static RefConstructor makeLiteralContents = null;
+	private static RefConstructor literalContentsConstructor = null;//pre 1.21
 	private static RefMethod makeIChatMutableComponent = null;
 	private static RefConstructor makeClientboundSystemChatPacket = null;
 	private static boolean useBool = false;
+	//post-1.21
+	private static RefMethod createLiteralContents = null;
 	static{
 		try{
 			RefClass classChatComponentText = ReflectionUtils.getRefClass("{nms}.ChatComponentText", "{nm}.network.chat.ChatComponentText");
@@ -53,7 +55,10 @@ public final class ActionBarUtils{
 			RefClass classComponentContents = ReflectionUtils.getRefClass("{nm}.network.chat.ComponentContents");
 			RefClass classIChatMutableComponent = ReflectionUtils.getRefClass("{nm}.network.chat.IChatMutableComponent");
 			RefClass classClientboundSystemChatPacket = ReflectionUtils.getRefClass("{nm}.network.protocol.game.ClientboundSystemChatPacket");
-			makeLiteralContents = classLiteralContents.getConstructor(String.class);
+			try{literalContentsConstructor = classLiteralContents.getConstructor(String.class);}
+			catch(RuntimeException ex2){//class not found implies 1.21+
+				createLiteralContents = classLiteralContents.findMethod(/*isStatic=*/true, classLiteralContents, String.class);
+			}
 			makeIChatMutableComponent = classIChatMutableComponent.findMethod(/*isStatic=*/true, classIChatMutableComponent, classComponentContents);
 			try{makeClientboundSystemChatPacket = classClientboundSystemChatPacket.getConstructor(classIChatBaseComponent, int.class);}//1.19.0-1.19.1
 			catch(RuntimeException e){
@@ -70,7 +75,10 @@ public final class ActionBarUtils{
 			packet = makePacketPlayOutChat.create(chatComp, chatMessageType, SENDER_UUID);
 		}
 		else{
-			Object chatComp = makeIChatMutableComponent.call(makeLiteralContents.create(message));
+			Object comp;
+			if(createLiteralContents != null) comp = createLiteralContents.call(message);
+			else comp = literalContentsConstructor.create(message);
+			Object chatComp = makeIChatMutableComponent.call(comp);
 			packet = makeClientboundSystemChatPacket.create(chatComp, useBool ? true : /*typeId=*/2); // 2=GAME_INFO, I think
 		}
 		for(Player p : ppl){

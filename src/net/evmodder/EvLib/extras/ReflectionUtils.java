@@ -33,11 +33,13 @@ public class ReflectionUtils{// version = X1.0
 		forge = (Bukkit.getVersion().contains("MCPC") || Bukkit.getVersion().contains("Forge"));
 		final Server server = Bukkit.getServer();
 		preClassB = server.getClass().getPackage().getName();
-		//Bukkit.getLogger().warning("bukkit.v: "+Bukkit.getVersion());// "git-Purpur-2169 (MC: 1.20.4)"
+		//Bukkit.getLogger().warning("1: "+Bukkit.getVersion());// "git-Purpur-2233 (MC: 1.20.6)"
+		//Bukkit.getLogger().warning("2: "+Bukkit.getServer().getClass().getName());// "org.bukkit.craftbukkit.v1_20_R4.CraftServer"
+		//Bukkit.getLogger().warning("3: "+Bukkit.getVersion());// "1.20.6-R0.1-SNAPSHOT"
 
 		final Class<?> bukkitServerClass = server.getClass();
 		String[] pas = bukkitServerClass.getName().split("\\.");
-		if(pas.length == 5) serverVersionString = pas[3];
+		//if(pas.length == 5) serverVersionString = pas[3];
 		Object handle;
 		try{
 			handle = bukkitServerClass.getDeclaredMethod("getHandle").invoke(server);
@@ -51,12 +53,13 @@ public class ReflectionUtils{// version = X1.0
 		if(pas.length == 5 && pas[3].matches("v[0-9]+(_[0-9]+)*(_R[0-9]+)?")){
 			String verM = pas[3];
 			preClassM = "net.minecraft.server."+verM;
-			serverVersionString = verM;
+			//serverVersionString = verM;
 		}
 		else{
 			preClassM = "net.minecraft.server";
-			if(serverVersionString == null) serverVersionString = "v" + Bukkit.getBukkitVersion().replace("-SNAPSHOT", "");
+			//if(serverVersionString == null) serverVersionString = "v" + Bukkit.getBukkitVersion().replace("-SNAPSHOT", "");
 		}
+		serverVersionString = "v" + Bukkit.getBukkitVersion().replace("-SNAPSHOT", "");
 		serverVersionString = serverVersionString.replace("R", "").replace('.', '_').replace('-', '_');
 	}
 
