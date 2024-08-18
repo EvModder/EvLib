@@ -424,28 +424,93 @@ public class TextUtils{
 				}
 	}
 
-	private static int version = 0;
+	private static ChatColor enchAquaOr(ItemStack item, ChatColor c){return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : c;}
 	public static ChatColor getRarityColor(ItemStack item){
+		final int version = Integer.parseInt(Bukkit.getBukkitVersion().split("-")[0].split("\\.")[1]);
 		//String itemNameFormat = item.hasItemMeta() && item.getItemMeta().hasDisplayName() ? ""+ChatColor.ITALIC : "";
-		if(Bukkit.getBukkitVersion().compareTo("1.14") >= 0){
+		if(version >= 14){
 			switch(item.getType().name()){
-				// EPIC:
 				case "MOJANG_BANNER_PATTERN":
+					return Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.LIGHT_PURPLE : ChatColor.AQUA;
+				case "SKULL_BANNER_PATTERN":
+					return Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? enchAquaOr(item, ChatColor.YELLOW) : ChatColor.AQUA; 
+				// EPIC:
 				case "JIGSAW":
 				case "LIGHT":
+				case "MACE":
+				case "HEAVY_CORE":
 					return ChatColor.LIGHT_PURPLE;
 				// UNCOMMON:
+				case "SNOUT_BANNER_PATTERN":
 				case "CREEPER_BANNER_PATTERN":
-				case "SKULL_BANNER_PATTERN":
-					return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : ChatColor.YELLOW;
+					//TODO: case raid banner
+				case "PIGLIN_HEAD":
+					return enchAquaOr(item, ChatColor.YELLOW);
 				default:
 					// Fallthrough intended
 			}
 		}
+		if(Bukkit.getBukkitVersion().compareTo("1.21.2") >= 0){
+			switch(item.getType().name()){
+				case "RECOVERY_COMPASS":
+				case "GOAT_HORN":
+				case "SNIFFER_EGG":
+				case "DISC_FRAGMENT_5":
+				case "ECHO_SHARD":
+				case "OMINOUS_BOTTLE":
+				case "NETHERITE_UPGRADE_SMITHING_TEMPLATE":
+				case "SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "DUNE_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "COAST_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "WILD_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "TIDE_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "SNOUT_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "RIB_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "WAYFINDER_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "SHAPER_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "RAISER_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "HOST_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "FLOW_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "BOLT_ARMOR_TRIM_SMITHING_TEMPLATE":
+					return enchAquaOr(item, ChatColor.YELLOW);
+				case "FLOW_BANNER_PATTERN":
+				case "GUSTER_BANNER_PATTERN":
+				case "WARD_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "EYE_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "VEX_ARMOR_TRIM_SMITHING_TEMPLATE":
+				case "SPIRE_ARMOR_TRIM_SMITHING_TEMPLATE":
+					return ChatColor.AQUA;
+				case "SILENCE_ARMOR_TRIM_SMITHING_TEMPLATE":
+					return ChatColor.LIGHT_PURPLE;
+				default:
+					if(item.getType().name().endsWith("_POTTERY_SHERD")) return enchAquaOr(item, ChatColor.YELLOW);
+					// Fallthrough intended
+			}
+		}
 		switch(item.getType()){
+			// VERSION-DEPENDENT:
+			case CHAINMAIL_HELMET: case CHAINMAIL_CHESTPLATE: case CHAINMAIL_LEGGINGS: case CHAINMAIL_BOOTS:
+			case NAUTILUS_SHELL:
+				return enchAquaOr(item, Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.WHITE : ChatColor.YELLOW);
+			case TRIDENT:
+				return Bukkit.getBukkitVersion().compareTo("1.21") >= 0 ?
+						(Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.LIGHT_PURPLE : ChatColor.AQUA)
+						: enchAquaOr(item, ChatColor.WHITE);
+			case ENCHANTED_GOLDEN_APPLE:
+				return Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.LIGHT_PURPLE : ChatColor.AQUA;
+			case CONDUIT:
+				return Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.AQUA : enchAquaOr(item, ChatColor.YELLOW);
+			case MUSIC_DISC_11: case MUSIC_DISC_13: case MUSIC_DISC_BLOCKS: case MUSIC_DISC_CAT: case MUSIC_DISC_CHIRP: case MUSIC_DISC_FAR:
+			case MUSIC_DISC_MALL: case MUSIC_DISC_MELLOHI: case MUSIC_DISC_STAL: case MUSIC_DISC_WAIT: case MUSIC_DISC_WARD:
+				return Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.AQUA : enchAquaOr(item, ChatColor.YELLOW);
+			case NETHER_STAR:
+			case WITHER_SKELETON_SKULL:
+				return enchAquaOr(item, Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.YELLOW : ChatColor.AQUA);
+			case ELYTRA:
+			case DRAGON_HEAD:
+				return Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? enchAquaOr(item, ChatColor.YELLOW) : ChatColor.LIGHT_PURPLE;
 			// EPIC:
 			case DRAGON_EGG:
-			case ENCHANTED_GOLDEN_APPLE:
 			case DEBUG_STICK:
 			case KNOWLEDGE_BOOK:
 			case COMMAND_BLOCK: case CHAIN_COMMAND_BLOCK: case REPEATING_COMMAND_BLOCK:
@@ -454,36 +519,35 @@ public class TextUtils{
 			case STRUCTURE_VOID:
 				return ChatColor.LIGHT_PURPLE;
 			case SPAWNER:
-				return Bukkit.getBukkitVersion().compareTo("1.19.3") < 0 ? ChatColor.LIGHT_PURPLE : ChatColor.WHITE;
+				return Bukkit.getBukkitVersion().compareTo("1.19.3") < 0 ? ChatColor.LIGHT_PURPLE : enchAquaOr(item, ChatColor.WHITE);
 			// RARE:
 			case BEACON:
-			case CONDUIT:
 			case END_CRYSTAL:
 			case GOLDEN_APPLE:
-			case MUSIC_DISC_11: case MUSIC_DISC_13: case MUSIC_DISC_BLOCKS: case MUSIC_DISC_CAT: case MUSIC_DISC_CHIRP: case MUSIC_DISC_FAR:
-			case MUSIC_DISC_MALL: case MUSIC_DISC_MELLOHI: case MUSIC_DISC_STAL: case MUSIC_DISC_WAIT: case MUSIC_DISC_WARD:
 				return ChatColor.AQUA;
 			// UNCOMMON:
 			case EXPERIENCE_BOTTLE:
 			case DRAGON_BREATH:
-			case ELYTRA:
 			case ENCHANTED_BOOK:
-			case PLAYER_HEAD: case CREEPER_HEAD: case ZOMBIE_HEAD: case DRAGON_HEAD:
-			case SKELETON_SKULL: case WITHER_SKELETON_SKULL:
+			case PLAYER_HEAD: case CREEPER_HEAD: case ZOMBIE_HEAD:
+			case SKELETON_SKULL:
 			case HEART_OF_THE_SEA:
-			case NETHER_STAR:
 			case TOTEM_OF_UNDYING:
-				return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : ChatColor.YELLOW;
+				return enchAquaOr(item, ChatColor.YELLOW);
 			// COMMON:
 			default: {
-				if(version == 0) version = Integer.parseInt(Bukkit.getBukkitVersion().split("-")[0].split("\\.")[1]);
-				if(version >= 16 && item.getType().name().equals("MUSIC_DISC_PIGSTEP")) return ChatColor.AQUA;
-				if(version >= 17 && item.getType().name().equals("LIGHT")) return ChatColor.LIGHT_PURPLE; 
-				if(version >= 18 && item.getType().name().equals("MUSIC_DISC_OTHERSIDE")) return ChatColor.AQUA;
-				if(version >= 19 && item.getType().name().equals("MUSIC_DISC_5")) return ChatColor.AQUA;
-				if(version >= 20 && item.getType().name().equals("MUSIC_DISC_RELIC")) return ChatColor.AQUA;
-
-				return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : ChatColor.WHITE;
+				if(item.getType().name().equals("LIGHT")) return ChatColor.LIGHT_PURPLE;
+				
+				if(item.getType().name().equals("MUSIC_DISC_PIGSTEP") ||
+					item.getType().name().equals("MUSIC_DISC_OTHERSIDE") ||
+					item.getType().name().equals("MUSIC_DISC_CREATOR")){
+					return ChatColor.AQUA;
+				}
+				if(item.getType().name().equals("MUSIC_DISC_5") || item.getType().name().equals("MUSIC_DISC_RELIC") ||
+						item.getType().name().equals("MUSIC_DISC_CREATOR_MUSIC_BOX")){
+					return Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.AQUA : enchAquaOr(item, ChatColor.YELLOW);
+				}
+				return enchAquaOr(item, ChatColor.WHITE);
 			}
 		}
 	}
