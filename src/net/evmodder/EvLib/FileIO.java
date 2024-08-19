@@ -230,7 +230,7 @@ public final class FileIO{// version = X1.0
 				else if(cut > 0) file.append('\n').append(line.substring(0, cut).trim());
 			}
 			reader.close();
-			return file.substring(1);
+			return file.length() > 0 ? file.substring(1) : "";
 		}
 		catch(IOException ex){ex.printStackTrace();}
 		return defaultContent;
