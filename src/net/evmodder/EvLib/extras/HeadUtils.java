@@ -3,6 +3,8 @@ package net.evmodder.EvLib.extras;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Optional;
+import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Nameable;
@@ -12,6 +14,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.PropertyMap;
 
 public final class HeadUtils {
 	// ========================= Commented out because UNUSED =======================
@@ -91,14 +94,15 @@ public final class HeadUtils {
 	}
 
 	private static Field fieldProfileItem, fieldSerializedProfileItem, fieldProfileBlock;
-	private static Constructor<?> nbtTagCompountConstructor;
+	private static Field fieldResolveableName, fieldResolveableId, fieldResolveableProperties;
+	private static Constructor<?> nbtTagCompountConstructor, resolveableProfileConstructor;
 	private static Method methodSerializeProfile;
 	private static void defineProfileField(SkullMeta meta){
 		try{
 			fieldProfileItem = meta.getClass().getDeclaredField("profile");
 			fieldProfileItem.setAccessible(true);
-			// If possible, define the serializedProfile field as well. Requires ReflectionUtils because damnit I'm lazy
-			try{
+			try{// This doesn't seem to be needed anymore (last checked 1.21.1)
+				// If possible, define the serializedProfile field as well. Requires ReflectionUtils because damnit I'm lazy
 				fieldSerializedProfileItem = meta.getClass().getDeclaredField("serializedProfile");
 				fieldSerializedProfileItem.setAccessible(true);
 				final Class<?> clazzNBTTagCompound = fieldSerializedProfileItem.getType();
@@ -107,13 +111,50 @@ public final class HeadUtils {
 				nbtTagCompountConstructor = clazzNBTTagCompound.getConstructor();
 			}
 			catch(RuntimeException | NoSuchFieldException e){}//1.20.5+ NoSuchFieldException
+
+			// 1.21.1+ changed the field's type from GameProfile to ResolveableProfile
+			try{
+				final Class<?> clazzResolveableProfile = Class.forName("net.minecraft.world.item.component.ResolvableProfile");
+				resolveableProfileConstructor = clazzResolveableProfile.getConstructor(GameProfile.class);
+				fieldResolveableName = clazzResolveableProfile.getDeclaredField("name");
+				fieldResolveableName.setAccessible(true);
+				fieldResolveableId = clazzResolveableProfile.getDeclaredField("id");
+				fieldResolveableId.setAccessible(true);
+				fieldResolveableProperties = clazzResolveableProfile.getDeclaredField("properties");
+				fieldResolveableProperties.setAccessible(true);
+			}
+			catch(ReflectiveOperationException e){resolveableProfileConstructor = null;}
 		}
 		catch(ReflectiveOperationException e){e.printStackTrace();}
+	}
+	private static Object convertToResolvedProfileIfNeeded(GameProfile profile){
+		if(resolveableProfileConstructor != null)
+			try{return resolveableProfileConstructor.newInstance(profile);}
+			catch(ReflectiveOperationException e){}
+		return profile;
+	}
+	private static GameProfile convertFromResolveProfileIfNeeded(Object profile){
+		if(profile instanceof GameProfile == false) try{
+			@SuppressWarnings("unchecked")
+			String name = ((Optional<String>)fieldResolveableName.get(profile)).get();
+			@SuppressWarnings("unchecked")
+			UUID uuid = ((Optional<UUID>)fieldResolveableId.get(profile)).get();
+			PropertyMap properties = (PropertyMap)fieldResolveableProperties.get(profile);
+			GameProfile gp = new GameProfile(uuid, name);
+			gp.getProperties().putAll(properties);
+			return gp;
+		}
+		catch(ReflectiveOperationException e){
+			Bukkit.getLogger().severe("DropHeads-HeadUtils: Unable to convert from ResolvedProfile");
+		}
+		return (GameProfile)profile;
 	}
 	public static void setGameProfile(SkullMeta meta, GameProfile profile){
 		try{
 			if(fieldProfileItem == null) defineProfileField(meta);
-			fieldProfileItem.set(meta, profile);
+			fieldProfileItem.set(meta, convertToResolvedProfileIfNeeded(profile));
+
+			// can probably be removed in 1.21.1+:
 			if(nbtTagCompountConstructor != null) fieldSerializedProfileItem.set(meta,
 					methodSerializeProfile.invoke(null, nbtTagCompountConstructor.newInstance(), profile));//Fixes spigot warning in 1.19
 		}
@@ -123,14 +164,14 @@ public final class HeadUtils {
 		try{
 			if(fieldProfileBlock == null) fieldProfileBlock = skull.getClass().getDeclaredField("profile");
 			fieldProfileBlock.setAccessible(true);
-			fieldProfileBlock.set(skull, profile);
+			fieldProfileBlock.set(skull, convertToResolvedProfileIfNeeded(profile));
 		}
 		catch(NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e){e.printStackTrace();}
 	}
 	public static GameProfile getGameProfile(SkullMeta meta){
 		try{
 			if(fieldProfileItem == null) defineProfileField(meta);
-			return (GameProfile) fieldProfileItem.get(meta);
+			return convertFromResolveProfileIfNeeded(fieldProfileItem.get(meta));
 		}
 		catch(ReflectiveOperationException e){e.printStackTrace();}
 		return null;
@@ -139,7 +180,7 @@ public final class HeadUtils {
 		try{
 			if(fieldProfileBlock == null) fieldProfileBlock = skull.getClass().getDeclaredField("profile");
 			fieldProfileBlock.setAccessible(true);
-			return (GameProfile) fieldProfileBlock.get(skull);
+			return convertFromResolveProfileIfNeeded(fieldProfileBlock.get(skull));
 		}
 		catch(NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e){e.printStackTrace();}
 		return null;
