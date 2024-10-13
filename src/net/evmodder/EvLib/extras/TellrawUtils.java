@@ -434,6 +434,7 @@ public class TellrawUtils{
 	public static TranslationComponent getBestGuessLocalizedDisplayName(EntityType eType){
 		return new TranslationComponent("entity.minecraft."+EntityUtils.getNormalizedEntityName(eType.name().toLowerCase()));
 	}
+	@SuppressWarnings("deprecation")
 	public static Component getLocalizedDisplayName(Entity entity, boolean useDisplayName){
 		if(entity.getName() != null) return new RawTextComponent(
 				(entity instanceof Player && useDisplayName) ? ((Player)entity).getDisplayName() : entity.getName());
@@ -510,6 +511,7 @@ public class TellrawUtils{
 		catch(NoSuchMethodException | SecurityException e){temp = null;}
 		mItemMetaGetTranslationKey = temp;
 	}
+	@SuppressWarnings("deprecation")
 	public static TranslationComponent getLocalizedDisplayName(BlockState block){
 		switch(block.getType()){
 			case PLAYER_HEAD:
