@@ -113,7 +113,7 @@ public final class HeadUtils {
 			catch(RuntimeException | NoSuchFieldException e){}//1.20.5+ NoSuchFieldException
 
 			// 1.21.1+ changed the field's type from GameProfile to ResolveableProfile
-			try{
+			if(!fieldProfileItem.getType().equals(GameProfile.class)) try{
 				final Class<?> clazzResolveableProfile = Class.forName("net.minecraft.world.item.component.ResolvableProfile");
 				resolveableProfileConstructor = clazzResolveableProfile.getConstructor(GameProfile.class);
 				fieldResolveableName = clazzResolveableProfile.getDeclaredField("name");
@@ -134,9 +134,9 @@ public final class HeadUtils {
 		return profile;
 	}
 	private static GameProfile convertFromResolveProfileIfNeeded(Object profile){
-		if(profile instanceof GameProfile == false) try{
+		if(profile instanceof GameProfile == false && fieldResolveableProperties != null) try{
 			@SuppressWarnings("unchecked")
-			String name = ((Optional<String>)fieldResolveableName.get(profile)).get();
+			String name = ((Optional<String>)fieldResolveableName.get(profile)).orElse(null);
 			@SuppressWarnings("unchecked")
 			UUID uuid = ((Optional<UUID>)fieldResolveableId.get(profile)).get();
 			PropertyMap properties = (PropertyMap)fieldResolveableProperties.get(profile);
