@@ -105,11 +105,13 @@ public class SelectorUtils{
 					entities.addAll(onlinePlayers);
 					break;
 				case NEAREST_PLAYER:
-					entities.add(Collections.min(origin.getWorld().getPlayers(),
+					if(!origin.getWorld().getPlayers().isEmpty())
+						entities.add(Collections.min(origin.getWorld().getPlayers(),
 								Comparator.comparingDouble(p -> p.getLocation().distanceSquared(origin))));
 					break;
 				case RANDOM_PLAYER:
 					entities.add(onlinePlayers.stream().skip((int)(onlinePlayers.size()*Math.random())).findFirst().get());
+					break;
 				case UUID:
 					// Return immediately since UUID selector ignores arguments
 					return Arrays.asList((Entity)executer/*Bukkit.getEntity(uuid)*/);
