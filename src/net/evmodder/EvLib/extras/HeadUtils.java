@@ -95,22 +95,22 @@ public final class HeadUtils {
 	private static Field fieldProfileItem, fieldProfileBlock;
 	private static Field fieldResolveableName, fieldResolveableId, fieldResolveableProperties;
 	private static Constructor<?> resolveableProfileConstructor;
-	private static void defineProfileFields(){
+	private static Object convertToResolvedProfile(GameProfile profile){
 		try{
-			// Define for item meta ===========================
-			//fieldProfileItem = ReflectionUtils.getRefClass("{cb}.block.CraftSkullMeta", "{cb}.CraftSkullMeta").getRealClass().getDeclaredField("profile");
-			fieldProfileItem = Class.forName("org.bukkit.craftbukkit.inventory.CraftMetaSkull").getDeclaredField("profile");
-			fieldProfileItem.setAccessible(true);
-
-			// Define for block =============================
-			//fieldProfileBlock = ReflectionUtils.getRefClass("{cb}.block.CraftSkull", "{cb}.CraftSkull").getRealClass().getDeclaredField("profile");
-			fieldProfileBlock = Class.forName("org.bukkit.craftbukkit.block.CraftSkull").getDeclaredField("profile");
-			fieldProfileBlock.setAccessible(true);
-
+			if(resolveableProfileConstructor == null) resolveableProfileConstructor =
+					Class.forName("net.minecraft.world.item.component.ResolvableProfile").getConstructor(GameProfile.class);
+			return resolveableProfileConstructor.newInstance(profile);
+		}
+		catch(ReflectiveOperationException e){
+			Bukkit.getLogger().severe("DropHeads-HeadUtils: Unable to convert to ResolvedProfile");
+		}
+		return profile;
+	}
+	private static GameProfile convertFromResolvedProfile(Object profile){
+		try{
 			// 1.21.1+ changed the field's type from GameProfile to ResolveableProfile
-			if(!fieldProfileItem.getType().equals(GameProfile.class)) try{
+			if(fieldResolveableProperties == null){
 				final Class<?> clazzResolveableProfile = Class.forName("net.minecraft.world.item.component.ResolvableProfile");
-				resolveableProfileConstructor = clazzResolveableProfile.getConstructor(GameProfile.class);
 				fieldResolveableName = clazzResolveableProfile.getDeclaredField("name");
 				fieldResolveableName.setAccessible(true);
 				fieldResolveableId = clazzResolveableProfile.getDeclaredField("id");
@@ -118,18 +118,6 @@ public final class HeadUtils {
 				fieldResolveableProperties = clazzResolveableProfile.getDeclaredField("properties");
 				fieldResolveableProperties.setAccessible(true);
 			}
-			catch(ReflectiveOperationException e){resolveableProfileConstructor = null;}
-		}
-		catch(ReflectiveOperationException e){e.printStackTrace();}
-	}
-	private static Object convertToResolvedProfileIfNeeded(GameProfile profile){
-		if(resolveableProfileConstructor != null)
-			try{return resolveableProfileConstructor.newInstance(profile);}
-			catch(ReflectiveOperationException e){}
-		return profile;
-	}
-	private static GameProfile convertFromResolveProfileIfNeeded(Object profile){
-		if(profile instanceof GameProfile == false && fieldResolveableProperties != null) try{
 			@SuppressWarnings("unchecked")
 			String name = ((Optional<String>)fieldResolveableName.get(profile)).orElse("");
 			@SuppressWarnings("unchecked")
@@ -145,25 +133,35 @@ public final class HeadUtils {
 		return (GameProfile)profile;
 	}
 	public static void setGameProfile(SkullMeta meta, GameProfile profile){
-		if(fieldProfileItem == null) defineProfileFields();
-		try{fieldProfileItem.set(meta, convertToResolvedProfileIfNeeded(profile));}
+		try{
+			if(fieldProfileItem == null) fieldProfileItem = meta.getClass().getDeclaredField("profile");
+			fieldProfileItem.set(meta, fieldProfileItem.getType().equals(GameProfile.class) ? profile : convertToResolvedProfile(profile));
+		}
 		catch(ReflectiveOperationException e){e.printStackTrace();}
 	}
 	public static void setGameProfile(Skull skull, GameProfile profile){
-		if(fieldProfileBlock == null) defineProfileFields();
-		try{fieldProfileBlock.set(skull, convertToResolvedProfileIfNeeded(profile));}
-		catch(SecurityException | IllegalArgumentException | IllegalAccessException e){e.printStackTrace();}
+		try{
+			if(fieldProfileBlock == null) fieldProfileBlock = skull.getClass().getDeclaredField("profile");
+			fieldProfileBlock.set(skull, fieldProfileBlock.getType().equals(GameProfile.class) ? profile : convertToResolvedProfile(profile));
+		}
+		catch(ReflectiveOperationException e){e.printStackTrace();}
 	}
 	public static GameProfile getGameProfile(SkullMeta meta){
-		if(fieldProfileItem == null) defineProfileFields();
-		try{return convertFromResolveProfileIfNeeded(fieldProfileItem.get(meta));}
+		try{
+			if(fieldProfileItem == null) fieldProfileItem = meta.getClass().getDeclaredField("profile");
+			return fieldProfileItem.getType().equals(GameProfile.class)
+					? (GameProfile)fieldProfileItem.get(meta) : convertFromResolvedProfile(fieldProfileItem.get(meta));
+		}
 		catch(ReflectiveOperationException e){e.printStackTrace();}
 		return null;
 	}
 	public static GameProfile getGameProfile(Skull skull){
-		if(fieldProfileBlock == null) defineProfileFields();
-		try{return convertFromResolveProfileIfNeeded(fieldProfileBlock.get(skull));}
-		catch(SecurityException | IllegalArgumentException | IllegalAccessException e){e.printStackTrace();}
+		try{
+			if(fieldProfileBlock == null) fieldProfileBlock = skull.getClass().getDeclaredField("profile");
+			return fieldProfileBlock.getType().equals(GameProfile.class)
+					? (GameProfile)fieldProfileBlock.get(skull) : convertFromResolvedProfile(fieldProfileBlock.get(skull));
+		}
+		catch(ReflectiveOperationException e){e.printStackTrace();}
 		return null;
 	}
 
