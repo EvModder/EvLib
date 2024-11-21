@@ -107,6 +107,7 @@ public final class HeadUtils {
 		return profile;
 	}
 	private static GameProfile convertFromResolvedProfile(Object profile){
+		if(profile == null) return null;
 		try{
 			// 1.21.1+ changed the field's type from GameProfile to ResolveableProfile
 			if(fieldResolveableProperties == null){
@@ -134,21 +135,21 @@ public final class HeadUtils {
 	}
 	public static void setGameProfile(SkullMeta meta, GameProfile profile){
 		try{
-			if(fieldProfileItem == null) fieldProfileItem = meta.getClass().getDeclaredField("profile");
+			if(fieldProfileItem == null){fieldProfileItem = meta.getClass().getDeclaredField("profile");fieldProfileItem.setAccessible(true);}
 			fieldProfileItem.set(meta, fieldProfileItem.getType().equals(GameProfile.class) ? profile : convertToResolvedProfile(profile));
 		}
 		catch(ReflectiveOperationException e){e.printStackTrace();}
 	}
 	public static void setGameProfile(Skull skull, GameProfile profile){
 		try{
-			if(fieldProfileBlock == null) fieldProfileBlock = skull.getClass().getDeclaredField("profile");
+			if(fieldProfileBlock == null){fieldProfileBlock = skull.getClass().getDeclaredField("profile");fieldProfileBlock.setAccessible(true);}
 			fieldProfileBlock.set(skull, fieldProfileBlock.getType().equals(GameProfile.class) ? profile : convertToResolvedProfile(profile));
 		}
 		catch(ReflectiveOperationException e){e.printStackTrace();}
 	}
 	public static GameProfile getGameProfile(SkullMeta meta){
 		try{
-			if(fieldProfileItem == null) fieldProfileItem = meta.getClass().getDeclaredField("profile");
+			if(fieldProfileItem == null){fieldProfileItem = meta.getClass().getDeclaredField("profile");fieldProfileItem.setAccessible(true);}
 			return fieldProfileItem.getType().equals(GameProfile.class)
 					? (GameProfile)fieldProfileItem.get(meta) : convertFromResolvedProfile(fieldProfileItem.get(meta));
 		}
@@ -157,7 +158,7 @@ public final class HeadUtils {
 	}
 	public static GameProfile getGameProfile(Skull skull){
 		try{
-			if(fieldProfileBlock == null) fieldProfileBlock = skull.getClass().getDeclaredField("profile");
+			if(fieldProfileBlock == null){fieldProfileBlock = skull.getClass().getDeclaredField("profile");fieldProfileBlock.setAccessible(true);}
 			return fieldProfileBlock.getType().equals(GameProfile.class)
 					? (GameProfile)fieldProfileBlock.get(skull) : convertFromResolvedProfile(fieldProfileBlock.get(skull));
 		}
