@@ -422,7 +422,7 @@ public class SelectorUtils{
 					}
 					return tabCompletes;
 				}
-				// TODO: else if(type == SelectorArgumentType.TYPE) {
+				// TODO: else if(type == SelectorArgumentType.TYPE) {... see if possible to add more types besides GAMEMODE
 				return null/*currentSelectorStr*/; // might become valid once they finish typing argValue;
 			}
 			return Arrays.asList(selectorSubstr+",", selectorSubstr+"]");

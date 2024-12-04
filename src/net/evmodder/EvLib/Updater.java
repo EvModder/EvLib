@@ -11,7 +11,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -571,7 +570,6 @@ public class Updater {
 			}
 			else result = UpdateResult.UPDATE_AVAILABLE;
 		}
-		if(callback != null) new BukkitRunnable(){@Override public void run(){runCallback();}}.runTask(plugin);
+		if(callback != null) plugin.getServer().getScheduler().runTask(plugin, ()->callback.onFinish(Updater.this));
 	}
-	private void runCallback(){callback.onFinish(this);}
 }

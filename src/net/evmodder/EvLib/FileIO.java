@@ -143,6 +143,7 @@ public final class FileIO{// version = X1.0
 			try{
 				String line;
 				while((line = reader.readLine()) != null){
+					//if(exactContent) file.append(line).append('\n'); else
 					line = line.trim().replace("//", "#");
 					int cut = line.indexOf('#');
 					if(cut == -1) file.append('\n').append(line);
