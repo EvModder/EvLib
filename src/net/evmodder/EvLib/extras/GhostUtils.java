@@ -16,7 +16,6 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.scoreboard.Team.Option;
@@ -84,7 +83,7 @@ public class GhostUtils{
 	private void runInvisDetector(){
 		if(isRunning) return;
 		isRunning = true;
-		new BukkitRunnable(){@Override public void run(){
+		plugin.getServer().getScheduler().runTaskLater(plugin, ()->{
 			for(Player p : plugin.getServer().getOnlinePlayers()){
 				if(trueInvis.contains(p.getName()) && p.hasPotionEffect(PotionEffectType.INVISIBILITY) == false){
 					trueInvis.remove(p.getName());
@@ -92,7 +91,7 @@ public class GhostUtils{
 			}
 			isRunning = false;
 			if(!trueInvis.isEmpty()) runInvisDetector();
-		}}.runTaskLater(plugin, 5);
+		}, 5);
 	}
 	
 	/**
