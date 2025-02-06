@@ -40,6 +40,29 @@ public class TextUtils{
 		}
 	}
 
+	public static Character getSimpleColorByName(String name){
+		switch(name.toLowerCase()){
+			case "black": return '0';
+			case "dark_blue": return '1';
+			case "dark_green": return '2';
+			case "dark_aqua": return '3';
+			case "dark_red": return '4';
+			case "dark_purple": return '5';
+			case "gold": return '6';
+			case "gray": return '7';
+			case "dark_gray": return '8';
+			case "blue": return '9';
+			case "green": return 'a';
+			case "aqua": return 'b';
+			case "red": return 'c';
+			case "light_purple": return 'd';
+			case "yellow": return 'e';
+			case "white": return 'f';
+			case "reset": return 'r';
+			default: return null;
+		}
+	}
+
 	/*public static String generateRandomASCII(int desiredLength){//TODO: currently unused
 		StringBuilder builder = new StringBuilder();
 		Random rand = new Random();

@@ -112,6 +112,39 @@ public class TellrawUtils{
 		}
 	}
 
+	/*public class FormatMap implements Map<Format, Boolean>{
+		final Boolean[] values = new Boolean[Format.values().length];
+		
+		@Override public int size(){return values.length;}
+		@Override public boolean isEmpty(){return Arrays.stream(values).allMatch(Objects::isNull);}
+		@Override public boolean containsKey(Object key){
+			int i = (key instanceof Format ? ((Format)key).toChar : (Character)key)-'k';
+			return values[i] != null;
+		}
+		@Override public Boolean get(Object key){
+			int i = (key instanceof Format ? ((Format)key).toChar : (Character)key)-'k';
+			return values[i];
+		}
+		@Override public Boolean remove(Object key){
+			int i = (key instanceof Format ? ((Format)key).toChar : (Character)key)-'k';
+			Boolean oldV = values[i];
+			values[i] = null;
+			return oldV;
+		}
+		@Override public Boolean put(Format key, Boolean value){
+			Boolean oldV = values[key.toChar-'k'];
+			values[key.toChar-'k'] = value;
+			return oldV;
+		}
+		@Override public void putAll(Map<? extends Format, ? extends Boolean> m){m.entrySet().forEach(e -> put(e.getKey(), e.getValue()));}
+		@Override public void clear(){for(int i=0; i<values.length; ++i) values[i] = null;}
+		@Override public Set<Format> keySet(){return Set.of(Format.values());}
+
+		@Override public boolean containsValue(Object value){throw new RuntimeException("unsupported");}
+		@Override public Collection<Boolean> values(){throw new RuntimeException("unsupported");}
+		@Override public Set<Entry<Format, Boolean>> entrySet(){throw new RuntimeException("unsupported");}
+	}*/
+
 	// for toPlainText() on KeybindComponent and TranslateComponent, we fall back to using the NMS resolver
 	private static Constructor<?> translateConstructor, translateConstructorWith, translateConstructorFallbackAndWith, keybindConstructor;
 	private static Method chatMessageGetString, makeIChatMutableComponent = null;
@@ -256,15 +289,25 @@ public class TellrawUtils{
 					(potentialSingleMatchSelector() == null ? other.potentialSingleMatchSelector() == null
 						: potentialSingleMatchSelector().equals(other.potentialSingleMatchSelector()));
 		}
-		boolean overridesAllPropertiesOf(Component other){
-			return (other.getInsertion() == null || getInsertion() != null) &&
-					(other.getClickAction() == null || getClickAction() != null) &&
-					(other.getHoverAction() == null || getHoverAction() != null) &&
-					(other.getColor() == null || getColor() != null) &&
-					(other.getFormats() == null || other.getFormats().isEmpty() ||
-						(getFormats() != null && getFormats().keySet().containsAll(other.getFormats().keySet()))) &&
-					(potentialSingleMatchSelector() == null) == (other.potentialSingleMatchSelector() == null);
-		}
+//		boolean hasEverySingleProperty(){
+//			return getInsertion() != null &&
+//					getClickAction() != null &&
+//					getHoverAction() != null &&
+//					getColor() != null &&
+//					getFormats().size() == Format.values().length &&
+//					// Must be either a SelectorComponent or a list... whose first component is a SelectorComponent
+//					//note: currently only looks 1 layer deep in nested list
+//					this instanceof ListComponent ? ((ListComponent)this).components.get(0) instanceof SelectorComponent : this instanceof SelectorComponent;
+//		}
+//		boolean overridesAllPropertiesOf(Component other){
+//			return (getInsertion() != null) &&
+//					(getClickAction() != null) &&
+//					(other.getHoverAction() == null || getHoverAction() != null) &&
+//					(other.getColor() == null || getColor() != null) &&
+//					(other.getFormats() == null || other.getFormats().isEmpty() ||
+//						(getFormats() != null && getFormats().keySet().containsAll(other.getFormats().keySet()))) &&
+//					(potentialSingleMatchSelector() == null) == (other.potentialSingleMatchSelector() == null);
+//		}
 		// True if @other doesn't override any of the properties of this component
 		boolean isPropertiesSupersetOf(Component other){
 			return (other.getInsertion() == null || other.getInsertion().equals(getInsertion())) &&
@@ -279,7 +322,8 @@ public class TellrawUtils{
 		protected abstract String toStringInternal();
 		/** Returns a JSON string built from this component suitable for use in commands/tellraw.
 		 * @return a formatted JSON String representing this component */
-		@Override final public String toString(){return toString == null ? (toString = toStringInternal()) : toString;}
+		@Override final public String toString(){if(toString == null) toString = toStringInternal(); return toStringInternal();}
+//		@Override final public String toString(){return toString == null ? (toString = toStringInternal()) : toString;}
 		/** Returns what this component would appear as (in plain text) if parsed by Minecraft's JSON/tellraw resolver.
 		 * @return a String representing the resolved text of this component */
 		public abstract String toPlainText();
@@ -288,10 +332,49 @@ public class TellrawUtils{
 	public final static class RawTextComponent extends Component{
 		final String text;
 		String getRawText(){return text;}
-		public RawTextComponent(String text){this.text = text;}
+
+		private String stripNoOpColorAndFormatCodes(String str){
+			StringBuilder builder = new StringBuilder();
+//			boolean isBold, isItalic, isObfuscated, isUnderlined, isStrikethrough;
+//			isBold = isItalic = isObfuscated = isUnderlined = isStrikethrough = false;
+			int[] activeFormats = new int[5];//klmno
+			boolean noOp = true;
+			int nextColorReset = str.length(); // the next place (moving backwards) that a color is set
+			char nextColor = '@';//always initialized before use
+//			int activeBold = str.length(); // if i>activeBold, we are currently bold
+			for(int i=str.length()-1; i>=0; --i){
+				final char c = str.charAt(i);
+				if(Character.isWhitespace(c)){builder.append(c); continue;}
+				if(i == 0 || str.charAt(i-1) != ChatColor.COLOR_CHAR){noOp=false; builder.append(c); continue;}
+
+				if(i <= nextColorReset){ // Go find the next place color is set
+					Arrays.fill(activeFormats, 0);
+					int j=i-2;
+					while(j>0){
+						if(str.charAt(j-1) == ChatColor.COLOR_CHAR){
+							if(TextUtils.isSimpleColor(str.charAt(j))){nextColorReset = j; nextColor = str.charAt(j); break;}
+							if(TextUtils.isFormat(str.charAt(j))) ++activeFormats[str.charAt(j)-'k'];
+						}
+						--j;
+					}
+					if(j == 0){nextColorReset = -1; nextColor = 'r';}
+				}
+				if(TextUtils.isFormat(c) && activeFormats[c-'k'] > 1){--activeFormats[c-'k']; --i; continue;}// Skip duplicate formats
+				if(TextUtils.isSimpleColor(c) && c == nextColor && Arrays.stream(activeFormats).allMatch(n->n==0)){--i; continue;}// Skip duplicate colors
+				if(noOp && activeFormats[1] == 0){
+					if(TextUtils.isFormat(c)) --activeFormats[c-'k'];
+					--i; continue;
+				}
+				builder.append(c).append(ChatColor.COLOR_CHAR);
+				--i;
+				if(TextUtils.isSimpleColor(c)) noOp = true;
+			}
+			return builder.reverse().toString();
+		}
+		public RawTextComponent(String text){this.text = stripNoOpColorAndFormatCodes(text);}
 		public RawTextComponent(String text, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
-			this.text = text;
+			this.text = stripNoOpColorAndFormatCodes(text);
 		}
 		public RawTextComponent(String text, TextClickAction click){
 			this(text, /*insert=*/null, click, /*hover=*/null, /*color=*/null, /*formats=*/null);
@@ -431,13 +514,13 @@ public class TellrawUtils{
 					new TranslationComponent("color.minecraft."+pcc.bodyColor.name().toLowerCase()),
 					new TranslationComponent("entity.minecraft.tropical_fish.type."+pcc.pattern.name().toLowerCase())});
 	}
-	public static TranslationComponent getBestGuessLocalizedDisplayName(EntityType eType){
+	public static TranslationComponent getTypeName(EntityType eType){
 		return new TranslationComponent("entity.minecraft."+EntityUtils.getNormalizedEntityName(eType.name().toLowerCase()));
 	}
 	@SuppressWarnings("deprecation")
 	public static Component getLocalizedDisplayName(Entity entity, boolean useDisplayName){
-		if(entity.getName() != null) return new RawTextComponent(
-				(entity instanceof Player && useDisplayName) ? ((Player)entity).getDisplayName() : entity.getName());
+		if(entity.getCustomName() != null && useDisplayName) return new RawTextComponent(entity.getCustomName());
+		if(entity instanceof Player) return new RawTextComponent(useDisplayName ? ((Player)entity).getDisplayName() : entity.getName());
 		switch(entity.getType()){
 			case VILLAGER:
 				return new TranslationComponent("entity.minecraft."+entity.getType().name().toLowerCase()+"."
@@ -449,7 +532,7 @@ public class TellrawUtils{
 			case TROPICAL_FISH:
 				return getLocalizedDisplayNameForTropicalFish(EntityUtils.getPCCInt((TropicalFish)entity));
 			default:
-				return getBestGuessLocalizedDisplayName(entity.getType());
+				return getTypeName(entity.getType());
 		}
 	}
 	@SuppressWarnings("deprecation")
@@ -749,6 +832,7 @@ public class TellrawUtils{
 			color = ChatColor.getByChar(colorChar).name().toLowerCase();
 			colorAndFormatsStr = colorAndFormatsStr.substring(1);
 		}
+		@SuppressWarnings("unused")
 		final Map<Format, Boolean> formats = colorAndFormatsStr.chars().mapToObj(c -> Format.fromChar((char)c)).collect(Collectors.toMap(f -> f, f -> true));
 		return new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null, color, formats);
 	}
@@ -760,7 +844,7 @@ public class TellrawUtils{
 		@Override public String getColor(){return components.isEmpty() ? null : components.get(0).getColor();}
 		@Override public Map<Format, Boolean> getFormats(){return components.isEmpty() ? null : components.get(0).getFormats();}
 		Component last = null;
-		List<Component> components;
+		final List<Component> components;
 		public ListComponent(Component...components){
 			this.components = new ArrayList<>();
 			for(Component comp : components) addComponent(comp);
@@ -770,57 +854,58 @@ public class TellrawUtils{
 		private RawTextComponent textCompWithSameProperties(Component comp, String text){
 			return new RawTextComponent(text, comp.getInsertion(), comp.getClickAction(), comp.getHoverAction(), comp.getColor(), comp.getFormats());
 		}
-		// Cannot merge inline hex colors
-		private ChatColor getSimpleColor(String s){
-			if(s == null) return ChatColor.RESET;
-			try{return ChatColor.valueOf(s.toUpperCase());}
-			catch(IllegalArgumentException ex){return null;}
-		}
 		private RawTextComponent concatenateTextComps(RawTextComponent a, RawTextComponent b){
 			final String colorAndFormatsA = ChatColor.getLastColors(a.getRawText());
 			final String colorAndFormatsB = TextUtils.getLeadingColorAndFormats(b.getRawText());
-			final String colorB = TextUtils.stripFormatsOnly(colorAndFormatsB);
+			final String inlineColorA = TextUtils.stripFormatsOnly(colorAndFormatsA).replace(""+ChatColor.COLOR_CHAR, "").replace("x", "#").toLowerCase();
+			final String inlineColorB = TextUtils.stripFormatsOnly(colorAndFormatsB).replace(""+ChatColor.COLOR_CHAR, "").replace("x", "#").toLowerCase();
+//			assert inlineColorA.length() == (inlineColorA.startsWith("#") ? 7 : 1);
+//			assert inlineColorB.length() == (inlineColorB.startsWith("#") ? 7 : 1);
+			final String propertyColorNameA = (a.getColor() != null ? a.getColor() : getColor() != null ? getColor() : "")/*.replace("#", "")*/.toLowerCase();
+			final String propertyColorNameB = (b.getColor() != null ? b.getColor() : getColor() != null ? getColor() : "")/*.replace("#", "")*/.toLowerCase();
+			final String propertyColorA = propertyColorNameA.startsWith("#") ? propertyColorNameA : ""+TextUtils.getSimpleColorByName(propertyColorNameA);
+			final String propertyColorB = propertyColorNameB.startsWith("#") ? propertyColorNameB : ""+TextUtils.getSimpleColorByName(propertyColorNameB);
+//			assert propertyColorA.length() == (propertyColorA.startsWith("#") ? 7 : 1);
+//			assert propertyColorB.length() == (propertyColorB.startsWith("#") ? 7 : 1);
+			final String colorA = !inlineColorA.isEmpty() ? inlineColorA : propertyColorA;
+			final String colorB = !inlineColorB.isEmpty() ? inlineColorB : propertyColorB;
+			assert inlineColorA.length() == 1 ? TextUtils.isSimpleColor(inlineColorA.charAt(0)) : "^#[0-9a-f]{6}$".matches(inlineColorA);
+			assert inlineColorB.length() == 1 ? TextUtils.isSimpleColor(inlineColorB.charAt(0)) : "^#[0-9a-f]{6}$".matches(inlineColorB);
 
-			final String targetColor = b.getColor() != null ? b.getColor() : getColor();
-			final ChatColor simpleTargetColor = getSimpleColor(targetColor);
+			final Map<Format, Boolean> formatsOnA = a.getFormats() != null ? a.getFormats() : getFormats() != null ? getFormats() : Map.of();
+			final Map<Format, Boolean> formatsOnB = b.getFormats() != null ? b.getFormats() : getFormats() != null ? getFormats() : Map.of();
 
-			String joinColor = "";
+			final long formatsSetOnB = Arrays.stream(Format.values())
+					.filter(f -> formatsOnB.containsKey(f) || colorAndFormatsB.indexOf(f.toChar) != -1)
+					.count();
+			if(inlineColorB.isEmpty() && formatsSetOnB != Format.values().length) return null; // unknown target formats (inherited from list properties)
+			final boolean needToUnsetFormats = Arrays.stream(Format.values())
+					.anyMatch(f ->{
+						boolean onA = Boolean.TRUE.equals(formatsOnA.get(f)) || colorAndFormatsA.indexOf(f.toChar) != -1;
+						boolean onB = Boolean.TRUE.equals(formatsOnB.get(f)) || colorAndFormatsB.indexOf(f.toChar) != -1;
+						return onA && !onB;
+					});
+
+			String joinColorAndFormats;
 			if(colorB.isEmpty()){
-				String colorA = TextUtils.stripFormatsOnly(colorAndFormatsA);
-				if(colorA.isEmpty() ? targetColor != getColor() : !colorA.equals(targetColor)){
-					if(targetColor == null) joinColor += ChatColor.RESET;
-					else if(simpleTargetColor != null) joinColor += simpleTargetColor;
-					else return null;
-				}
+				if(!colorA.isEmpty()) return null; // unknown target color (inherited from list properties)
+				joinColorAndFormats = ""; // Both A and B colors are empty
 			}
-			String joinFormats = "";
-			if(joinColor.isEmpty()){
-				for(Format f : Format.values()){
-					final boolean globalFormat = getFormats() != null && getFormats().getOrDefault(f, false);
-					final boolean targetFormat = b.getFormats() != null && b.getFormats().containsKey(f) ? b.getFormats().get(f) : globalFormat;
-	
-					if(colorAndFormatsB.indexOf(f.toChar) == -1){//NOT in B
-						if(colorAndFormatsA.indexOf(f.toChar) == -1//NOT from A or from globalFormat
-								&& (!globalFormat || !TextUtils.stripColorsOnly(a.getRawText()).equals(a.getRawText()))){
-							if(targetFormat) joinFormats += ChatColor.COLOR_CHAR+f.toChar;
-						}
-						else if(!targetFormat){
-							if(targetColor == null) joinColor += ChatColor.RESET;
-							else if(simpleTargetColor != null) joinColor += simpleTargetColor;
-							else return null;
-							joinFormats = ""; break;
-						}
-					}
-				}
+			else if(colorB.equals(colorA) && !needToUnsetFormats) joinColorAndFormats = "";
+			else if(colorB.length() != 1) return null; // cannot switch to hex color mid- RawTextComponent
+			else joinColorAndFormats = '&'+colorB;
+
+			if(joinColorAndFormats.isEmpty()) for(Format f : Format.values()){
+				boolean onA = Boolean.TRUE.equals(formatsOnA.get(f)) || colorAndFormatsA.indexOf(f.toChar) != -1;
+				boolean onB = Boolean.TRUE.equals(formatsOnB.get(f)) || colorAndFormatsB.indexOf(f.toChar) != -1;
+				if(!onA && onB) joinColorAndFormats += '&'+f.toChar;
 			}
-			if(!joinColor.isEmpty()){
-				for(Format f : Format.values()){
-					final boolean globalFormat = getFormats() != null && getFormats().getOrDefault(f, false);
-					final boolean targetFormat = b.getFormats() != null && b.getFormats().containsKey(f) ? b.getFormats().get(f) : globalFormat;
-					if(targetFormat && colorAndFormatsB.indexOf(f.toChar) == -1) joinFormats += ChatColor.COLOR_CHAR+f.toChar;
-				}
+			else for(Format f : Format.values()){
+				boolean onB = Boolean.TRUE.equals(formatsOnB.get(f)) || colorAndFormatsB.indexOf(f.toChar) != -1;
+				if(onB) joinColorAndFormats += '&'+f.toChar;
 			}
-			return textCompWithSameProperties(a, a.getRawText() + joinColor + joinFormats + b.getRawText());
+			joinColorAndFormats = TextUtils.translateAlternateColorCodes('&', joinColorAndFormats);
+			return textCompWithSameProperties(a, a.getRawText() + joinColorAndFormats + b.getRawText());
 		}
 
 		/**
@@ -829,15 +914,18 @@ public class TellrawUtils{
 		 * @param component The component to be added
 		 * @return true if the component's contents were merged into this ListComponent
 		 */
-		public boolean addComponent(Component component){
+		public boolean addComponent(final Component component){
 			// Currently the 1st component is just properties, so we can delete it and move the properties to the new component
 			if(components.size() == 1 && ChatColor.stripColor(last.toPlainText()).isEmpty() && last.isPropertiesSupersetOf(component)){
 				components.set(0, last=component.copyWithNewProperties(
 						last.getInsertion(), last.getClickAction(), last.getHoverAction(), last.getColor(), last.getFormats()));
 				return true;
 			}
-			// Similar to above, we are unwilling to accept an empty component unless it is the first element (setting the list properties)
-			if(ChatColor.stripColor(component.toPlainText()).isEmpty() && last != null) return false;
+			// Do not accept an empty component unless it is the first element (setting the list properties)
+			if(ChatColor.stripColor(component.toPlainText()).isEmpty()){
+				if(!components.isEmpty()) return false;
+				return components.add(last = textCompWithSameProperties(component, ""));
+			}
 
 			if(component instanceof RawTextComponent && last != null){
 				if(last instanceof RawTextComponent){
@@ -865,7 +953,8 @@ public class TellrawUtils{
 					return true;
 				}
 			}
-			return components.add(last = component);
+			boolean t = components.add(last = component);
+			return t;
 		}
 		public boolean addComponent(String text){return addComponent(new RawTextComponent(text));}
 
@@ -896,8 +985,10 @@ public class TellrawUtils{
 				int matchIdx = text.indexOf(textToReplace);
 				String textBefore = text.substring(0, matchIdx);
 				String textAfter = text.substring(matchIdx+textToReplace.length());
-				boolean emptyBefore = (replacementRawText != null ? ChatColor.stripColor(textBefore) : textBefore).isEmpty();
-				boolean emptyAfter = (replacementRawText != null ? ChatColor.stripColor(textAfter) : textAfter).isEmpty();
+				boolean emptyBefore = ChatColor.stripColor(textBefore).isEmpty();
+				boolean emptyAfter = ChatColor.stripColor(textAfter).isEmpty();
+//				boolean emptyBefore = (replacementRawText != null ? ChatColor.stripColor(textBefore) : textBefore).isEmpty();
+//				boolean emptyAfter = (replacementRawText != null ? ChatColor.stripColor(textAfter) : textAfter).isEmpty();
 				// Necessary to prevent overriding this ListComponent's group properties
 				if(i == 0 && emptyBefore && !this.samePropertiesAs(replacement)){components.add(0, textCompWithSameProperties(txComp, "")); i = 1;}
 
@@ -939,23 +1030,23 @@ public class TellrawUtils{
 			return updated;
 		}
 
-		/** If the first component is properties-only and all those properties are overridden, then we can discard it. */
-		private boolean canDiscardFirstComponent(){
-			if(components.size() > 1 && ChatColor.stripColor(components.get(0).toPlainText()).isEmpty()
-					&& components.get(1).overridesAllPropertiesOf(components.get(0))){
-				for(int i=2; i<components.size(); ++i){
-					if(!components.get(i).overridesAllPropertiesOf(components.get(1))) return false;
-				}
-				return true;
-			}
-			return false;
-		}
+//		/** We can ONLY discard the first component if ALL other components in the list override it
+//		 *  AND also override any potentially inherited properties from any parent list(s). */
+//		private boolean canDiscardFirstComponent(){
+//			if(components.size() > 1 && components.get(0).toPlainText().isEmpty() && components.get(1).hasEverySingleProperty()){
+//				for(int i=2; i<components.size(); ++i){
+//					if(!components.get(i).overridesAllPropertiesOf(components.get(1))) return false;
+//				}
+//				return true;
+//			}
+//			return false;
+//		}
 
 		@Override public String toPlainText(){
 			return components.stream().map(Component::toPlainText).collect(Collectors.joining());
 		}
 		@Override protected String toStringInternal(){
-			if(canDiscardFirstComponent()) components.remove(0);
+//			if(canDiscardFirstComponent()) components.remove(0);
 			switch(components.size()){
 				case 0: return "\"\"";
 				case 1: return components.get(0).toString();
@@ -1030,8 +1121,7 @@ public class TellrawUtils{
 		}
 		ListComponent listComp = new ListComponent();
 		if(insert_comp0 != null) listComp.addComponent(insert_comp0);
-		//TODO: Empty lists are not valid JSON (last checked: 1.20.4)
-//		if(str.charAt(i+1) == ']') return new Pair<>(listComp, i + 1);
+//		if(str.charAt(i+1) == ']') return new Pair<>(listComp, i + 1); //TODO: Empty lists are not valid JSON (last checked: 1.21.4)
 		do{
 			++i;
 			Pair<Component, Integer> nextComp = parseNextComponentFromString(str, i);
@@ -1309,7 +1399,6 @@ public class TellrawUtils{
 				else return new Pair<>(parseListComponent(str, extraListStart, comp).a, i);
 			}
 			default:
-				Bukkit.getLogger().warning("TellrawUtils ERROR parsing component at index "+i+" from string: "+str);
 				return null;
 		}
 	}
