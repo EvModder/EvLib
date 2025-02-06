@@ -789,6 +789,7 @@ public class WebUtils {
 	}
 
 	public static void main(String... args){
+		System.out.println(convertUUIDFromIntArray(new int[]{-620437087, 2044610568, -1847274671, 1411016312}));
 //		Component c = TellrawUtils.parseComponentFromString(
 //				"{\"italic\":false,\"extra\":[{\"italic\":false,\"extra\":[{\"translate\":\"item.minecraft.netherite_sword\"}],\"text\":\"\"}],\"text\":\"\"}");
 //		System.out.println(c.toString());

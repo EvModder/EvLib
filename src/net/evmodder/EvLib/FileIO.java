@@ -317,6 +317,7 @@ public final class FileIO{// version = X1.0
 					result.add(entry);
 				}
 			}
+			jar.close();
 			return result.toArray(new String[result.size()]);
 		}
 		throw new UnsupportedOperationException("Cannot list files for URL " + dirURL);
