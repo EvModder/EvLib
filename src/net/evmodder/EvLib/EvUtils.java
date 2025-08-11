@@ -88,9 +88,15 @@ public final class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,
 		}).collect(Collectors.toList());
 	}
 
-	private static Random globalRand; // TODO: use the same random as vanilla Minecraft
+	private static Random globalRand;
 	public static void dropItemNaturally(Location loc, ItemStack item, Random rand){
-		if(rand == null) rand = globalRand = (globalRand != null ? globalRand : new Random());
+		if(rand == null){
+			if(globalRand == null){
+				try{globalRand = (Random)Class.forName("net.minecraft.world.entity.Entity").getField("SHARED_RANDOM").get(null);}
+				catch(ReflectiveOperationException e){globalRand = new Random();}
+			}
+			rand = globalRand;
+		}
 		loc.getWorld().dropItem(loc, item).setVelocity(new Vector(rand.nextDouble()/5D - 0.1D, 0.2D, rand.nextDouble()/5D - 0.1D));
 	}
 
