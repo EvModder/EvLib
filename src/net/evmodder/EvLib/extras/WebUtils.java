@@ -19,9 +19,9 @@ import java.net.URI;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -454,9 +454,10 @@ public class WebUtils {
 	static void runGrumm(){
 		String[] targetHeads = new String[]{
 //				"BOAT", "CHEST_BOAT", "LEASH_KNOT", "ARMOR_STAND", "PAINTING", "ITEM_FRAME"
-				"WOLF|ASHEN|TAME|BROWN_COLLARED",
+//				"PIG|COLD", "PIG|TEMPERATE", "PIG|WARM"
 		};
-		String[] headsData = FileIO.loadFile("extra-textures/colored-collar-head-textures.txt", "").split("\n");
+		String[] headsData = FileIO.loadFile("configs/head-textures.txt", "").split("\n");
+		if(headsData.length < 2) System.err.println("Empty textures file?");
 		String[] headsToFlip = new String[targetHeads.length];
 		for(int i=0; i<targetHeads.length; ++i){
 			for(String headData : headsData){
@@ -478,7 +479,7 @@ public class WebUtils {
 //		String token = authenticateMicrosoft/*authenticateMojang*/(email, passw);
 //		System.out.println("token = "+token);
 		//Paste in Inspector Console while logged into Minecraft.net: console.log(`; ${document.cookie}`.split('; bearer_token=').pop().split(';').shift())
-		String token = "eyJraWQiOiJhYzg0YSIsImFsZyI6IkhTMjD2In0.eyJ4dWlkIjoiMjUzNTQ2NjM1MzY2NjY2NiIsImFnZyI6IkFkdWx0Iiwic3ViIjoiMWUzYTgyNDYtNTNmMC00ODBmLWIwYjMtMTFiNGU5ZDVkNTY0IiwiYXV0aCI6IlhCT1giLCJucyI6ImRlZmF1bHQiLCJyb2xlcyI6W10sImlzcyI6ImF1dGhlbnRpY2F0aW9uIiwiZmxhZ3MiOlsidHdvZmFjdG9yYXV0aCIsIm1pbmVjcmFmdF9uZXQiLCJtc2FtaWdyYXRpb25fc3RhZ2U0Iiwib3JkZXJzXzIwMjIiLCJtdWx0aXBsYXllciJdLCJwcm9maWxlcyI6eyJtYyI6jjBlMzE0YjYwLTI5YzctNGUzNS1iZWYzLTNjNjUyYzhmYjQ2NyJ9LCJwbGF0Zm9ybSI6IlVOS05PV04iLCJ5dWlkIjoiNjU4NjllYzA4YzFkYzVkMzZjNWMxYzNjYzljOWY4OTAiLCJuYmYiOjE3MzIxNzk0ODQsImV4cCI6MTczMjI2NTg4NCwiaWF0IjoxNzMyMTc5NDg0fQ.9AQI1OscN9YJKC-AgokbrD-KFnA1OXOm31umVqFvmFQ";
+		String token = "eyJraWQiOiIwNDkxODEiLCJhbGciOiJSUzI1NiJ9.eyJ4dWlkIjoiMjUzNTQ2NjM1MzY2NjY2NiIsImFnZyI6IkFkdWx0Iiwic3ViIjoiMWUzYTgyNDYtNTNmMC00ODBmLWIwYjMtMTFiNGU5ZDVkNTY0IiwiYXV0aCI6IlhCT1giLCJucyI6ImRlZmF1bHQiLCJyb2xlcyI6W10sImlzcyI6ImF1dGhlbnRpY2F0aW9uIiwiZmxhZ3MiOlsib3JkZXJzXzIwMjIiLCJ0d29mYWN0b3JhdXRoIiwibXVsdGlwbGF5ZXIiLCJtc2FtaWdyYXRpb25fc3RhZ2U0IiwibWluZWNyYWZ0X25ldCJdLCJwcm9maWxlcyI6eyJtYyI6IjBlMzE0YjYwLTI5YzctNGUzNS1iZWYzLTNjNjUyYzhmYjQ2NyJ9LCJwbGF0Zm9ybSI6IldFQiIsInl1aWQiOiI2NTg2OWVjMDhjMWRjNWQzNmM1YzFjM2NjOWM5Zjg5MCIsInBmZCI6W3sidHlwZSI6Im1jIiwiaWQiOiIwZTMxNGI2MC0yOWM3LTRlMzUtYmVmMy0zYzY1MmM4ZmI0NjciLCJuYW1lIjoiRXZNb2RkZXIifV0sIm5iZiI6MTc0ODg0NDA3MCwiZXhwIjoxNzQ4OTMwNDcwLCJpYXQiOjE3NDg4NDQwNzB9.FlPLFQhu_Hqz6LTwpQeAzucadseMbi2pX7X5XceIoY0AMVHLAx5PhulNFuJ7Gem2vIKQ56EHWgvBf9BxwYYRCAmqCmqbI7GBtquFeNuO1X_OE0_yIJhsRybg36QBuOlaW0CjfrNgyP8H8GXcGhsWFSOoYih271rNv5Y4szi8kFlCT3xWVdmzXBQ2YGDRoN4N___BGI9FK0ubxlFcnmYThSF3YogBjNTikrLn_E1H4VIfPZkYMa3OdGZOlF5a3eufbFe0RKLpeE1vZ1W7c0Oy3oPGULsOGHYTb8wYjJ9z0Bhd-ioNndtiX6Hit5LpaVV8whDhNiVzMm0wxyPqXF1m9A";
 
 		System.out.println(String.join("\n", headsToFlip));
 		System.out.println("Beginning conversion...");
@@ -555,23 +556,30 @@ public class WebUtils {
 		TreeSet<String> duplicateTxr = new TreeSet<>();
 		TreeSet<String> xxxTxr = new TreeSet<>();
 		TreeSet<String> missingDrpC = new TreeSet<>(), extraDrpC = new TreeSet<>();
+		TreeSet<String> nonLivingButExpectedTextures = new TreeSet<>(List.of(
+				"ARMOR_STAND", "LEASH_KNOT",
+				"MINECART", "CHEST_MINECART", "COMMAND_BLOCK_MINECART", "FURNACE_MINECART", "HOPPER_MINECART", "SPAWNER_MINECART", "TNT_MINECART",
+				"ITEM_FRAME", "GLOW_ITEM_FRAME", "PAINTING",
+//				"BOAT", "BAMBOO_RAFT", "ACACIA_BOAT", "BIRCH_BOAT", "CHERRY_BOAT", "DARK_OAK_BOAT", "JUNGLE_BOAT", "MANGROVE_BOAT", "OAK_BOAT", "PALE_OAK_BOAT", "SPRUCE_BOAT",
+//				"CHEST_BOAT",
+				"BAMBOO_CHEST_RAFT", "ACACIA_CHEST_BOAT", "BIRCH_CHEST_BOAT", "CHERRY_CHEST_BOAT", "DARK_OAK_CHEST_BOAT",
+				"JUNGLE_CHEST_BOAT", "MANGROVE_CHEST_BOAT", "OAK_CHEST_BOAT", "PALE_OAK_CHEST_BOAT", "SPRUCE_CHEST_BOAT",
+				"UNKNOWN"
+		));
+		List<String> expectedTexturesUnsupported = nonLivingButExpectedTextures.stream().filter(s -> {
+			try{EntityType.valueOf(s); return false;}
+			catch(IllegalArgumentException e){return true;}
+		}).toList();
+		if(!expectedTexturesUnsupported.isEmpty()) System.err.println("Expected textures not supported by current Minecraft version: "+expectedTexturesUnsupported);
+
 		for(EntityType type : EntityType.values()){
-			if(type.isAlive()){expectedTxr.add(type.name()); missingDrpC.add(type.name());}
+			String name = type.name();
+			if(type == EntityType.PLAYER) continue;
+			if(!type.isAlive() && !nonLivingButExpectedTextures.contains(name)) continue;
+			expectedTxr.add(name); missingDrpC.add(name);
 		}
-		expectedTxr.remove(EntityType.PLAYER.name());
-		for(EntityType type : Arrays.asList(EntityType.ARMOR_STAND, EntityType.valueOf("LEASH_KNOT"), EntityType.MINECART,
-				EntityType.valueOf("CHEST_MINECART"), EntityType.valueOf("COMMAND_BLOCK_MINECART"), EntityType.valueOf("FURNACE_MINECART"),
-				EntityType.valueOf("HOPPER_MINECART"), EntityType.valueOf("SPAWNER_MINECART"), EntityType.valueOf("TNT_MINECART"),
-				EntityType.ITEM_FRAME, EntityType.valueOf("GLOW_ITEM_FRAME"),
-				EntityType.BOAT, EntityType.PAINTING, EntityType.UNKNOWN)){
-			expectedTxr.add(type.name()); missingDrpC.add(type.name());
-		}
-		try{
-			EntityType type = EntityType.valueOf("CHEST_BOAT");
-			expectedTxr.add(type.name()); missingDrpC.add(type.name());
-		}
-		catch(IllegalArgumentException e){}
-		for(String headData : FileIO.loadFile("head-textures.txt", "").split("\n")){
+
+		for(String headData : FileIO.loadFile("configs/head-textures.txt", "").split("\n")){
 			int i = headData.indexOf(':');
 			if(i != -1){
 				String headName = headData.substring(0, i);
@@ -579,6 +587,7 @@ public class WebUtils {
 				if(!foundTxr.add(headName)) duplicateTxr.add(headName);
 				if(headData.equals("xxx")){
 					xxxTxr.add(headName);
+					expectedTxr.remove(headName);
 					continue;
 				}
 				if(headName.indexOf('|') == -1 && !expectedTxr.remove(headName)){
@@ -593,8 +602,8 @@ public class WebUtils {
 		System.out.println("Textures duplicated: "+duplicateTxr);
 		System.out.println("Textures xxx: "+xxxTxr);
 
-		missingDrpC.addAll(extraTxr);
-		for(String headData : FileIO.loadFile("head-drop-rates.txt", "").split("\n")){
+		missingDrpC.addAll(extraTxr); missingDrpC.add("PLAYER");
+		for(String headData : FileIO.loadFile("configs/head-drop-rates.txt", "").split("\n")){
 			int i = headData.indexOf(':');
 			if(i != -1){
 				String headKey = headData.substring(0, i);
@@ -605,7 +614,7 @@ public class WebUtils {
 		System.out.println("Extra drop rates for: "+extraDrpC);
 
 		TreeSet<String> alrInConf = new TreeSet<>();
-		for(String spawnMod : FileIO.loadFile("spawn-cause-multipliers.txt", "").split("\n")){
+		for(String spawnMod : FileIO.loadFile("configs/spawn-cause-multipliers.txt", "").split("\n")){
 			final int i = spawnMod.indexOf(':');
 			if(i != -1) alrInConf.add(spawnMod.substring(0, i));
 		}
@@ -618,9 +627,14 @@ public class WebUtils {
 	static void checkMissingGrummTextures(){
 		TreeSet<String> regularTxtrs = new TreeSet<>();
 		TreeSet<String> grummTxtrs = new TreeSet<>();
-		final String allHeads = FileIO.loadFile("head-textures.txt", "")+"\n"
+		final String allHeads = FileIO.loadFile("configs/head-textures.txt", "")+"\n"
 				+FileIO.loadFile("extra-textures/grumm-head-textures.txt", "")+"\n"
-				+FileIO.loadFile("extra-textures/sideways-shulker-head-textures.txt", "");
+				+FileIO.loadFile("extra-textures/colored-collar-head-textures.txt", "")+"\n"
+				+FileIO.loadFile("extra-textures/grumm-colored-collar-head-textures.txt", "")+"\n"
+//				+FileIO.loadFile("extra-textures/pre-jappa-head-textures.txt", "")+"\n"
+				+FileIO.loadFile("extra-textures/sideways-shulker-head-textures.txt", "")+"\n"
+//				+FileIO.loadFile("extra-textures/misc-textures.txt", "")
+		;
 		for(String headData : allHeads.split("\n")){
 			int i = headData.indexOf(':'), j = headData.indexOf('|');
 			if(i != -1){
@@ -633,7 +647,7 @@ public class WebUtils {
 				if(headName.equals("ITEM_FRAME") || headName.equals("GLOW_ITEM_FRAME")) continue;
 				if(headName.startsWith("PAINTING|")) continue;
 
-				if(j != -1 && headName.endsWith("GRUMM")) grummTxtrs.add(headName.substring(0, headName.length()-6));
+				if(j != -1 && headName.endsWith("|GRUMM")) grummTxtrs.add(headName.substring(0, headName.length()-6));
 				else regularTxtrs.add(headName);
 			}
 		}
@@ -646,7 +660,8 @@ public class WebUtils {
 	}
 
 	static void checkAbnormalHeadTextures(){
-		String[] headTextures = FileIO.loadFile("head-textures.txt", "").split("\n");
+		String[] headTextures = FileIO.loadFile("configs/head-textures.txt", "").split("\n");
+		if(headTextures.length < 2){System.err.print("checkAbnormalHeadTextures(): Missing textures file"); return;}
 		TreeSet<String> abnormalSkins = new TreeSet<>();
 		int dotEvery = (int)Math.ceil(headTextures.length/80f); // Improv progress bar
 		for(int i=dotEvery; i<headTextures.length; i+=dotEvery) System.out.print('-'); System.out.println();
@@ -789,7 +804,7 @@ public class WebUtils {
 	}
 
 	public static void main(String... args){
-		System.out.println(convertUUIDFromIntArray(new int[]{-620437087, 2044610568, -1847274671, 1411016312}));
+		//System.out.println(convertUUIDFromIntArray(new int[]{-620437087, 2044610568, -1847274671, 1411016312}));
 //		Component c = TellrawUtils.parseComponentFromString(
 //				"{\"italic\":false,\"extra\":[{\"italic\":false,\"extra\":[{\"translate\":\"item.minecraft.netherite_sword\"}],\"text\":\"\"}],\"text\":\"\"}");
 //		System.out.println(c.toString());
@@ -799,8 +814,9 @@ public class WebUtils {
 //		replaceTexturesWithUpdatedTextures();
 //		printUUIDsForTextureKeys();
 //		printUUIDsForPlayerNames();
-//		checkMissingTexturesDropratesAndSpawnModifiers();
-//		checkMissingGrummTextures();
+		
+		checkMissingTexturesDropratesAndSpawnModifiers();
+		checkMissingGrummTextures();
 //		checkAbnormalHeadTextures();
 
 //		final String textureVal = getTextureVal("0e314b6029c74e35bef33c652c8fb467");
