@@ -171,7 +171,7 @@ public class TextUtils{
 	public static String stripColorsOnly(String str, char altColorChar){
 		//(?:§x(?:§[0-9a-fA-FrR]){6})|(?:§#(?:[0-9a-fA-F]{3}){1,2})|(?:§[0-9a-fA-FrR])
 		//return str.replaceAll("(?:"+altColorChar+"x(?:"+altColorChar+"[0-9a-fA-F]){6})|(?:"+altColorChar+"[0-9a-fA-FrR])", "");
-		return str.replaceAll(altColorChar+"(?:x(?:"+altColorChar+"[0-9a-fA-F]){6})|[0-9a-fA-FrR]", "");
+		return str.replaceAll(altColorChar+"(?:(?:x(?:"+altColorChar+"[0-9a-fA-F]){6})|[0-9a-fA-FrR])", "");
 	}
 	public static String stripColorsOnly(String str){return stripColorsOnly(str, ChatColor.COLOR_CHAR);}
 	public static String stripFormatsOnly(String str, char altColorChar){

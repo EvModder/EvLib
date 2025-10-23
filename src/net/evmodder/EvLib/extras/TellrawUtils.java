@@ -872,8 +872,8 @@ public class TellrawUtils{
 			final String colorA = !inlineColorA.isEmpty() ? inlineColorA : propertyColorA;
 			final String colorB = !inlineColorB.isEmpty() ? inlineColorB : propertyColorB;
 
-			assert (colorA.isEmpty() ? true : colorA.length() == 1 ? TextUtils.isSimpleColor(colorA.charAt(0)) : "^#[0-9a-f]{6}$".matches(colorA)) : colorA;
-			assert (colorB.isEmpty() ? true : colorB.length() == 1 ? TextUtils.isSimpleColor(colorB.charAt(0)) : "^#[0-9a-f]{6}$".matches(colorB)) : colorB;
+			assert (colorA.isEmpty() ? true : colorA.length() == 1 ? TextUtils.isSimpleColor(colorA.charAt(0)) : colorA.matches("^#[0-9a-f]{6}$")) : colorA;
+			assert (colorB.isEmpty() ? true : colorB.length() == 1 ? TextUtils.isSimpleColor(colorB.charAt(0)) : colorB.matches("^#[0-9a-f]{6}$")) : colorB;
 
 			final Map<Format, Boolean> formatsOnA = a.getFormats() != null ? a.getFormats() : getFormats() != null ? getFormats() : Map.of();
 			final Map<Format, Boolean> formatsOnB = b.getFormats() != null ? b.getFormats() : getFormats() != null ? getFormats() : Map.of();

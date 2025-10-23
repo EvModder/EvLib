@@ -232,11 +232,14 @@ public class Updater {
 			int count;
 			if(announce) plugin.getLogger().info("About to download a new update: " + updateTitle);
 			long downloaded = 0;
+			int lastPercentMod10 = -1;
 			while((count = in.read(data, 0, Updater.BYTE_SIZE)) != -1){
 				downloaded += count;
 				fout.write(data, 0, count);
-				final int percent = (int) ((downloaded * 100) / fileLength);
-				if(announce && ((percent % 10) == 0)) plugin.getLogger().info("Downloading update: " + percent + "% of " + fileLength + " bytes.");
+				final int percent = (int)((downloaded*100)/fileLength);
+				final int percentMod10 = percent%10;
+				if(announce && percentMod10 > lastPercentMod10) plugin.getLogger().info("Downloading update: " + percent + "% of " + fileLength + " bytes.");
+				lastPercentMod10 = percentMod10;
 			}
 		}
 		catch(Exception ex){
