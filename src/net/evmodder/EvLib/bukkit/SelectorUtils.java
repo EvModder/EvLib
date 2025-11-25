@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.extras;
+package net.evmodder.EvLib.bukkit;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +24,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
+import net.evmodder.EvLib.TextUtils;
 
 public class SelectorUtils{
 	enum SelectorArgumentType{

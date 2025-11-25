@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.extras;
+package net.evmodder.EvLib.bukkit;
 
 import java.util.Collection;
 import java.util.Map;

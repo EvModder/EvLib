@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.extras;
+package net.evmodder.EvLib.bukkit;
 
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -8,6 +8,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.TropicalFish.Pattern;
+import net.evmodder.EvLib.TextUtils;
 
 public final class EntityUtils{
 	static int version = 13;

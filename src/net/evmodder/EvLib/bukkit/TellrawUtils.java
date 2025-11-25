@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.extras;
+package net.evmodder.EvLib.bukkit;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -34,6 +34,7 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Objective;
+import net.evmodder.EvLib.TextUtils;
 
 public class TellrawUtils{
 	public enum ClickEvent{// Descriptions below are from https://minecraft.gamepedia.com/Raw_JSON_text_format
@@ -504,7 +505,7 @@ public class TellrawUtils{
 	public static TranslationComponent getLocalizedDisplayNameForTropicalFish(int pccInt){
 		Integer id = EntityUtils.commonTropicalFishIds.get(pccInt);
 		if(id != null) return new TranslationComponent("entity.minecraft.tropical_fish.predefined."+id);
-		net.evmodder.EvLib.extras.EntityUtils.PCC pcc = EntityUtils.PCCFromInt(pccInt);
+		net.evmodder.EvLib.bukkit.EntityUtils.PCC pcc = EntityUtils.PCCFromInt(pccInt);
 		return pcc.bodyColor != pcc.patternColor
 			? new TranslationComponent(tropicalFishLocaleCCP, new Component[]{
 				new TranslationComponent("color.minecraft."+pcc.bodyColor.name().toLowerCase()),
@@ -863,17 +864,14 @@ public class TellrawUtils{
 //			assert inlineColorB.length() == (inlineColorB.startsWith("#") ? 7 : 1);
 			final String propertyColorNameA = (a.getColor() != null ? a.getColor() : getColor() != null ? getColor() : "")/*.replace("#", "")*/.toLowerCase();
 			final String propertyColorNameB = (b.getColor() != null ? b.getColor() : getColor() != null ? getColor() : "")/*.replace("#", "")*/.toLowerCase();
-			final String propertyColorA = propertyColorNameA.startsWith("#") ? propertyColorNameA :
-				propertyColorNameA.isEmpty() ? "" : ""+TextUtils.getSimpleColorByName(propertyColorNameA);
-			final String propertyColorB = propertyColorNameB.startsWith("#") ? propertyColorNameB :
-				propertyColorNameB.isEmpty() ? "" : ""+TextUtils.getSimpleColorByName(propertyColorNameB);
+			final String propertyColorA = propertyColorNameA.startsWith("#") ? propertyColorNameA : ""+TextUtils.getSimpleColorByName(propertyColorNameA);
+			final String propertyColorB = propertyColorNameB.startsWith("#") ? propertyColorNameB : ""+TextUtils.getSimpleColorByName(propertyColorNameB);
 //			assert propertyColorA.length() == (propertyColorA.startsWith("#") ? 7 : 1);
 //			assert propertyColorB.length() == (propertyColorB.startsWith("#") ? 7 : 1);
 			final String colorA = !inlineColorA.isEmpty() ? inlineColorA : propertyColorA;
 			final String colorB = !inlineColorB.isEmpty() ? inlineColorB : propertyColorB;
-
-			assert (colorA.isEmpty() ? true : colorA.length() == 1 ? TextUtils.isSimpleColor(colorA.charAt(0)) : colorA.matches("^#[0-9a-f]{6}$")) : colorA;
-			assert (colorB.isEmpty() ? true : colorB.length() == 1 ? TextUtils.isSimpleColor(colorB.charAt(0)) : colorB.matches("^#[0-9a-f]{6}$")) : colorB;
+			assert inlineColorA.length() == 1 ? TextUtils.isSimpleColor(inlineColorA.charAt(0)) : "^#[0-9a-f]{6}$".matches(inlineColorA);
+			assert inlineColorB.length() == 1 ? TextUtils.isSimpleColor(inlineColorB.charAt(0)) : "^#[0-9a-f]{6}$".matches(inlineColorB);
 
 			final Map<Format, Boolean> formatsOnA = a.getFormats() != null ? a.getFormats() : getFormats() != null ? getFormats() : Map.of();
 			final Map<Format, Boolean> formatsOnB = b.getFormats() != null ? b.getFormats() : getFormats() != null ? getFormats() : Map.of();

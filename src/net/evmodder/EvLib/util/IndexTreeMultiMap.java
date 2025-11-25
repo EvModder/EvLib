@@ -922,7 +922,7 @@ implements NavigableMap<K, Collection<V>>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	public Collection<V> put(K key, Collection<V> values){
+	@Override public Collection<V> put(K key, Collection<V> values){
 		Entry<K, V> t = root;
 		if(t == null){
 			compare(key, key); // type (and possibly null) check
@@ -1021,7 +1021,7 @@ implements NavigableMap<K, Collection<V>>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	public Collection<V> put(K key, V value){
+	public Collection<V> putOne(K key, V value){
 		Entry<K, V> t = root;
 		if(t == null){
 			compare(key, key); // type (and possibly null) check

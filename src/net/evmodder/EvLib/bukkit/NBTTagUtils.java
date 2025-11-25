@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.extras;
+package net.evmodder.EvLib.bukkit;
 
 import java.util.AbstractList;
 import java.util.HashMap;
@@ -6,9 +6,9 @@ import java.util.Set;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefConstructor;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
+import net.evmodder.EvLib.bukkit.ReflectionUtils.RefClass;
+import net.evmodder.EvLib.bukkit.ReflectionUtils.RefConstructor;
+import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
 
 /**
  * Utilities for editing NBT in Bukkit plugins.

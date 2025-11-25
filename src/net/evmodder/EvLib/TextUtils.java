@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.extras;
+package net.evmodder.EvLib;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

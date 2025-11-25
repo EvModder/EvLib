@@ -1,8 +1,8 @@
-package net.evmodder.EvLib.extras;
+package net.evmodder.EvLib.bukkit;
 
 import java.util.UUID;
 import org.bukkit.entity.Player;
-import net.evmodder.EvLib.extras.ReflectionUtils.*;
+import net.evmodder.EvLib.bukkit.ReflectionUtils.*;
 
 public final class ActionBarUtils{
 	// Get playerConnection of EntityPlayer

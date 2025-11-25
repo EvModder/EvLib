@@ -12,16 +12,14 @@ implements Comparable<Tuple3<T, R, S>>{
 		return a.hashCode() ^ b.hashCode() ^ c.hashCode();
 	}
 
-	@Override
-	public int compareTo(Tuple3<T, R, S> o){
+	@Override public int compareTo(Tuple3<T, R, S> o){
 		int aComp = a.compareTo(o.a);
 		if(aComp != 0) return aComp;
 		int bComp = b.compareTo(o.b);
 		return bComp != 0 ? bComp : c.compareTo(o.c);
 	}
 
-/*	@Override
-	public String toString(){
+	@Override public String toString(){
 		return new StringBuilder().append(a).append(',').append(b).append(',').append(c).toString();
-	}*/
+	}
 }

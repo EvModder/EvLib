@@ -1,10 +1,10 @@
-package net.evmodder.EvLib.extras;
+package net.evmodder.EvLib.bukkit;
 
 import org.bukkit.entity.Player;
 import io.netty.channel.Channel;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefField;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
+import net.evmodder.EvLib.bukkit.ReflectionUtils.RefClass;
+import net.evmodder.EvLib.bukkit.ReflectionUtils.RefField;
+import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
 
 public class PacketUtils{
 /*

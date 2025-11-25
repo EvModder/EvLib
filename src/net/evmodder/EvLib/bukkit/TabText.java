@@ -1,10 +1,11 @@
-package net.evmodder.EvLib.extras;
+package net.evmodder.EvLib.bukkit;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.bukkit.ChatColor;
-import net.evmodder.EvLib.extras.TextUtils.StrAndPxLen;
+import net.evmodder.EvLib.TextUtils;
+import net.evmodder.EvLib.TextUtils.StrAndPxLen;
 
 /**<pre>
  * TabText: class to write column formatted text in minecraft chat area

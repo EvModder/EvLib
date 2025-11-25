@@ -1,4 +1,4 @@
-package net.evmodder.EvLib;
+package net.evmodder.EvLib.bukkit;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -40,31 +40,31 @@ public final class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,
 		return itemsThatWillDrop;
 	}
 	// Apparently this reflection is necessary for getting wither skulls worn by a wither skeleton :/ - last checked in 1.16? (bug reported: link?)
-//	final static RefClass craftLivingEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftLivingEntity");
-//	final static RefMethod livingEntityGetHandleMethod = craftLivingEntityClazz.getMethod("getHandle");
-//	final static RefClass nmsEntityLivingClazz = ReflectionUtils.getRefClass("{nms}.EntityLiving");
-//	final static RefClass nmsEnumItemSlotClazz = ReflectionUtils.getRefClass("{nms}.EnumItemSlot");
-//	final static Object nmsEnumItemSlotHead = nmsEnumItemSlotClazz.getMethod("valueOf", String.class).call("HEAD");
-//	final static RefMethod entityLivingGetEquipmentMethod = nmsEntityLivingClazz.getMethod("getEquipment", nmsEnumItemSlotClazz);
-//	final static RefConstructor craftItemStackCnstr = craftItemStackClazz.getConstructor(nmsItemStackClazz);
-//	public static Collection<ItemStack> getEquipmentGuaranteedToDrop(LivingEntity entity){//TODO: move to EntityUtils
-//		ArrayList<ItemStack> itemsThatWillDrop = new ArrayList<>();
-//		EntityEquipment equipment = entity.getEquipment();
-//		if(equipment.getItemInMainHandDropChance() >= 1f) itemsThatWillDrop.add(equipment.getItemInMainHand());
-//		if(equipment.getItemInOffHandDropChance() >= 1f) itemsThatWillDrop.add(equipment.getItemInOffHand());
-//		if(equipment.getChestplateDropChance() >= 1f) itemsThatWillDrop.add(equipment.getChestplate());
-//		if(equipment.getLeggingsDropChance() >= 1f) itemsThatWillDrop.add(equipment.getLeggings());
-//		Bukkit.getLogger().info("helmet drop chance: "+equipment.getHelmetDropChance());
-//		if(equipment.getHelmetDropChance() >= 1f) itemsThatWillDrop.add(
-//				(ItemStack)craftItemStackCnstr
-//				.create(entityLivingGetEquipmentMethod.of(
-//						livingEntityGetHandleMethod
-//						.of(entity).call())
-//						.call(nmsEnumItemSlotHead))
-//		);
-//		if(equipment.getBootsDropChance() >= 1f) itemsThatWillDrop.add(equipment.getBoots());
-//		return itemsThatWillDrop;
-//	}
+	/*final static RefClass craftLivingEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftLivingEntity");
+	final static RefMethod livingEntityGetHandleMethod = craftLivingEntityClazz.getMethod("getHandle");
+	final static RefClass nmsEntityLivingClazz = ReflectionUtils.getRefClass("{nms}.EntityLiving");
+	final static RefClass nmsEnumItemSlotClazz = ReflectionUtils.getRefClass("{nms}.EnumItemSlot");
+	final static Object nmsEnumItemSlotHead = nmsEnumItemSlotClazz.getMethod("valueOf", String.class).call("HEAD");
+	final static RefMethod entityLivingGetEquipmentMethod = nmsEntityLivingClazz.getMethod("getEquipment", nmsEnumItemSlotClazz);
+	final static RefConstructor craftItemStackCnstr = craftItemStackClazz.getConstructor(nmsItemStackClazz);
+	public static Collection<ItemStack> getEquipmentGuaranteedToDrop(LivingEntity entity){//TODO: move to EntityUtils
+		ArrayList<ItemStack> itemsThatWillDrop = new ArrayList<>();
+		EntityEquipment equipment = entity.getEquipment();
+		if(equipment.getItemInMainHandDropChance() >= 1f) itemsThatWillDrop.add(equipment.getItemInMainHand());
+		if(equipment.getItemInOffHandDropChance() >= 1f) itemsThatWillDrop.add(equipment.getItemInOffHand());
+		if(equipment.getChestplateDropChance() >= 1f) itemsThatWillDrop.add(equipment.getChestplate());
+		if(equipment.getLeggingsDropChance() >= 1f) itemsThatWillDrop.add(equipment.getLeggings());
+		Bukkit.getLogger().info("helmet drop chance: "+equipment.getHelmetDropChance());
+		if(equipment.getHelmetDropChance() >= 1f) itemsThatWillDrop.add(
+				(ItemStack)craftItemStackCnstr
+				.create(entityLivingGetEquipmentMethod.of(
+						livingEntityGetHandleMethod
+						.of(entity).call())
+						.call(nmsEnumItemSlotHead))
+		);
+		if(equipment.getBootsDropChance() >= 1f) itemsThatWillDrop.add(equipment.getBoots());
+		return itemsThatWillDrop;
+	}*/
 
 	public static Collection<Advancement> getVanillaAdvancements(Player p){
 		return StreamSupport
@@ -88,15 +88,9 @@ public final class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,
 		}).collect(Collectors.toList());
 	}
 
-	private static Random globalRand;
+	private static Random globalRand; // TODO: use the same random as vanilla Minecraft
 	public static void dropItemNaturally(Location loc, ItemStack item, Random rand){
-		if(rand == null){
-			if(globalRand == null){
-				try{globalRand = (Random)Class.forName("net.minecraft.world.entity.Entity").getField("SHARED_RANDOM").get(null);}
-				catch(ReflectiveOperationException e){globalRand = new Random();}
-			}
-			rand = globalRand;
-		}
+		if(rand == null) rand = globalRand = (globalRand != null ? globalRand : new Random());
 		loc.getWorld().dropItem(loc, item).setVelocity(new Vector(rand.nextDouble()/5D - 0.1D, 0.2D, rand.nextDouble()/5D - 0.1D));
 	}
 

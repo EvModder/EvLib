@@ -1,8 +1,9 @@
-package net.evmodder.EvLib;
+package net.evmodder.EvLib.bukkit;
 
 import java.io.InputStream;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import net.evmodder.EvLib.FileIO;
 
 //Export -> JAVADOC -> javadoc sources:
 // * Bukkit-latest: https://hub.spigotmc.org/javadocs/bukkit/

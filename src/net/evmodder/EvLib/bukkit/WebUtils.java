@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.extras;
+package net.evmodder.EvLib.bukkit;
 
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
@@ -455,8 +455,13 @@ public class WebUtils {
 		String[] targetHeads = new String[]{
 //				"BOAT", "CHEST_BOAT", "LEASH_KNOT", "ARMOR_STAND", "PAINTING", "ITEM_FRAME"
 //				"PIG|COLD", "PIG|TEMPERATE", "PIG|WARM"
+				"HAPPY_GHAST",
+				"COPPER_GOLEM",
+				"COPPER_GOLEM|EXPOSED",
+				"COPPER_GOLEM|WEATHERED",
+				"COPPER_GOLEM|OXIDIZED"
 		};
-		String[] headsData = FileIO.loadFile("configs/head-textures.txt", "").split("\n");
+		String[] headsData = FileIO.loadFile("configs/head-textures.txt"/*"extra-textures/colored-collar-head-textures.txt"*/, "").split("\n");
 		if(headsData.length < 2) System.err.println("Empty textures file?");
 		String[] headsToFlip = new String[targetHeads.length];
 		for(int i=0; i<targetHeads.length; ++i){
@@ -479,7 +484,7 @@ public class WebUtils {
 //		String token = authenticateMicrosoft/*authenticateMojang*/(email, passw);
 //		System.out.println("token = "+token);
 		//Paste in Inspector Console while logged into Minecraft.net: console.log(`; ${document.cookie}`.split('; bearer_token=').pop().split(';').shift())
-		String token = "eyJraWQiOiIwNDkxODEiLCJhbGciOiJSUzI1NiJ9.eyJ4dWlkIjoiMjUzNTQ2NjM1MzY2NjY2NiIsImFnZyI6IkFkdWx0Iiwic3ViIjoiMWUzYTgyNDYtNTNmMC00ODBmLWIwYjMtMTFiNGU5ZDVkNTY0IiwiYXV0aCI6IlhCT1giLCJucyI6ImRlZmF1bHQiLCJyb2xlcyI6W10sImlzcyI6ImF1dGhlbnRpY2F0aW9uIiwiZmxhZ3MiOlsib3JkZXJzXzIwMjIiLCJ0d29mYWN0b3JhdXRoIiwibXVsdGlwbGF5ZXIiLCJtc2FtaWdyYXRpb25fc3RhZ2U0IiwibWluZWNyYWZ0X25ldCJdLCJwcm9maWxlcyI6eyJtYyI6IjBlMzE0YjYwLTI5YzctNGUzNS1iZWYzLTNjNjUyYzhmYjQ2NyJ9LCJwbGF0Zm9ybSI6IldFQiIsInl1aWQiOiI2NTg2OWVjMDhjMWRjNWQzNmM1YzFjM2NjOWM5Zjg5MCIsInBmZCI6W3sidHlwZSI6Im1jIiwiaWQiOiIwZTMxNGI2MC0yOWM3LTRlMzUtYmVmMy0zYzY1MmM4ZmI0NjciLCJuYW1lIjoiRXZNb2RkZXIifV0sIm5iZiI6MTc0ODg0NDA3MCwiZXhwIjoxNzQ4OTMwNDcwLCJpYXQiOjE3NDg4NDQwNzB9.FlPLFQhu_Hqz6LTwpQeAzucadseMbi2pX7X5XceIoY0AMVHLAx5PhulNFuJ7Gem2vIKQ56EHWgvBf9BxwYYRCAmqCmqbI7GBtquFeNuO1X_OE0_yIJhsRybg36QBuOlaW0CjfrNgyP8H8GXcGhsWFSOoYih271rNv5Y4szi8kFlCT3xWVdmzXBQ2YGDRoN4N___BGI9FK0ubxlFcnmYThSF3YogBjNTikrLn_E1H4VIfPZkYMa3OdGZOlF5a3eufbFe0RKLpeE1vZ1W7c0Oy3oPGULsOGHYTb8wYjJ9z0Bhd-ioNndtiX6Hit5LpaVV8whDhNiVzMm0wxyPqXF1m9A";
+		String token = "eyJraWQiOiIwNDkxODEiLCJhbGciOiJSUzI1NiJ9.eyJ4dWlkIjoiMjUzNTQ2NjM1MzY2NjY2NiIsImFnZyI6IkFkdWx0Iiwic3ViIjoiMWUzYTgyNDYtNTNmMC00ODBmLWIwYjMtMTFiNGU5ZDVkNTY0IiwiYXV0aCI6IlhCT1giLCJucyI6ImRlZmF1bHQiLCJyb2xlcyI6W10sImlzcyI6ImF1dGhlbnRpY2F0aW9uIiwiZmxhZ3MiOlsib3JkZXJzXzIwMjIiLCJtaW5lY3JhZnRfbmV0IiwibXNhbWlncmF0aW9uX3N0YWdlNCIsIm11bHRpcGxheWVyIiwidHdvZmFjdG9yYXV0aCJdLCJwcm9maWxlcyI6eyJtYyI6IjBlMzE0YjYwLTI5YzctNGUzNS1iZWYzLTNjNjUyYzhmYjQ2NyJ9LCJwbGF0Zm9ybSI6IldFQiIsInBmZCI6W3sidHlwZSI6Im1jIiwiaWQiOiIwZTMxNGI2MC0yOWM3LTRlMzUtYmVmMy0zYzY1MmM4ZmI0NjciLCJuYW1lIjoiRXZNb2RkZXIifV0sIm5iZiI6MTc2MDk3NDA3OSwiZXhwIjoxNzYxMDYwNDc5LCJpYXQiOjE3NjA5NzQwNzksImFpZCI6IjdkNWM4NDNiLWZlMjYtNDVmNy05MDczLWI2ODNiMmFjN2VjMyJ9.sbe0GkCErdh6H-jaJ8_jzms-PW1o2a4T-IKr5jki0eFYDToEOatVDwVFcVx60dQDD90RKF8NAMRjgfI2RuJE5lle5y9sEjaHoD_0z9Py7bCFe0D0bXeNaT0odZZqVJUH0ydtuVSiY_XbaPPveGCyUhkdiubdyC0HNeeKl1rBhxdpmW4xu64aYsr596QI6EhApte7qkd4fKWxUpmucLs7Rz4Yb7PjZo8VcUQ1uFryyteUsGFGlrEhgQyKao_ARUWsANk8iXzu41wWYdQvEMDioL6t-rC8EBUK-aACF3r4HuIVZFwg6qLM4sRs7FhII6X75R_MOmkXHyzZf-J3V-k3qg";
 
 		System.out.println(String.join("\n", headsToFlip));
 		System.out.println("Beginning conversion...");
@@ -826,6 +831,6 @@ public class WebUtils {
 
 //		overlayImgs();
 //		uploadSkins();
-//		runGrumm();
+		runGrumm();
 	}
 }

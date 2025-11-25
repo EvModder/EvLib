@@ -1,4 +1,4 @@
-package net.evmodder.EvLib;
+package net.evmodder.EvLib.util;
 
 import java.util.HashMap;
 import java.util.function.Consumer;

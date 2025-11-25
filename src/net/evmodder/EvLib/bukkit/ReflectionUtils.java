@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.extras;
+package net.evmodder.EvLib.bukkit;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
@@ -281,17 +281,12 @@ public class ReflectionUtils{// version = X1.0
 		public RefField findField(Object type){
 			if(type==null) type = void.class;
 			if(type instanceof RefClass) type = ((RefClass)type).clazz;
-
-			for(Field f : clazz.getDeclaredFields()) if(type.equals(f.getAnnotatedType())) return new RefField(f);
-			for(Field f : clazz.getFields()) if(type.equals(f.getAnnotatedType())) return new RefField(f);
-
-			for(Field f : clazz.getDeclaredFields()) if(type.equals(f.getGenericType())) return new RefField(f);
-			for(Field f : clazz.getFields()) if(type.equals(f.getGenericType())) return new RefField(f);
-
-			for(Field f : clazz.getDeclaredFields()) if(type.equals(f.getType())) return new RefField(f);
-			for(Field f : clazz.getFields()) if(type.equals(f.getType())) return new RefField(f);
-
-			for(Field f : clazz.getFields()) if(type.equals(f)) return new RefField(f);
+			for(Field f: clazz.getDeclaredFields()){
+				if(type.equals(f.getType())) return new RefField(f);
+			}
+			for(Field f: clazz.getFields()){
+				if(type.equals(f.getType())) return new RefField(f);
+			}
 			throw new RuntimeException("no such field");
 		}
 
