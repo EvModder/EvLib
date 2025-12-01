@@ -749,9 +749,12 @@ public class TellrawUtils{
 		}
 	}
 	public final static class KeybindComponent extends Component{
-		final Keybind keybind;
-		public KeybindComponent(Keybind keybind){this.keybind = keybind;}
-		public KeybindComponent(Keybind keybind, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
+//		final Keybind keybind;
+		final String keybind;
+//		public KeybindComponent(Keybind keybind){this.keybind = keybind;}
+		public KeybindComponent(String keybind){this.keybind = keybind;}
+//		public KeybindComponent(Keybind keybind, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
+		public KeybindComponent(String keybind, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
 			this.keybind = keybind;
 		}
@@ -870,8 +873,10 @@ public class TellrawUtils{
 //			assert propertyColorB.length() == (propertyColorB.startsWith("#") ? 7 : 1);
 			final String colorA = !inlineColorA.isEmpty() ? inlineColorA : propertyColorA;
 			final String colorB = !inlineColorB.isEmpty() ? inlineColorB : propertyColorB;
-			assert inlineColorA.length() == 1 ? TextUtils.isSimpleColor(inlineColorA.charAt(0)) : "^#[0-9a-f]{6}$".matches(inlineColorA);
-			assert inlineColorB.length() == 1 ? TextUtils.isSimpleColor(inlineColorB.charAt(0)) : "^#[0-9a-f]{6}$".matches(inlineColorB);
+			assert inlineColorA.isEmpty() || (inlineColorA.length() == 1
+					? TextUtils.isSimpleColor(inlineColorA.charAt(0)) : "^#[0-9a-f]{6}$".matches(inlineColorA)) : "Invalid inlineColorA: "+inlineColorA;
+			assert inlineColorB.isEmpty() ||(inlineColorB.length() == 1
+					? TextUtils.isSimpleColor(inlineColorB.charAt(0)) : "^#[0-9a-f]{6}$".matches(inlineColorB)) : "Invalid inlineColorB: "+inlineColorA;
 
 			final Map<Format, Boolean> formatsOnA = a.getFormats() != null ? a.getFormats() : getFormats() != null ? getFormats() : Map.of();
 			final Map<Format, Boolean> formatsOnB = b.getFormats() != null ? b.getFormats() : getFormats() != null ? getFormats() : Map.of();
@@ -928,14 +933,14 @@ public class TellrawUtils{
 				return components.add(last = textCompWithSameProperties(component, ""));
 			}
 
-			if(component instanceof RawTextComponent && last != null){
-				if(last instanceof RawTextComponent){
+			if(component instanceof RawTextComponent thisText && last != null){
+				if(last instanceof RawTextComponent lastText){
 					if((components.size() == 1 && last.isPropertiesSupersetOf(component)) // Inheriting list's properties
 						|| component.copyWithNewProperties( // The only properties we can safely change are color and formats.
 							component.getInsertion(), component.getClickAction(), component.getHoverAction(), last.getColor(), last.getFormats())
 						.samePropertiesAs(last)
 					){
-						RawTextComponent merged = concatenateTextComps((RawTextComponent)last, (RawTextComponent)component);
+						RawTextComponent merged = concatenateTextComps(lastText, thisText);
 						if(merged != null){
 							components.set(components.size()-1, last = merged);
 							return true;
@@ -1182,7 +1187,7 @@ public class TellrawUtils{
 				String text = null;
 				String jsonKey = null, fallback = null;
 				Component[] with = null;
-				Keybind keybind = null;
+				String keybind = null;
 				Object selector = null;
 				Objective objective = null;
 				String value = null;
@@ -1363,8 +1368,8 @@ public class TellrawUtils{
 						i +=8;
 						Pair<String, Integer> textAndIdx = parseColonThenSimpleString(str, i);
 						if(textAndIdx == null) return null;
-						String keybindStr = textAndIdx.a;
-						for(Keybind k : Keybind.values()) if(k.toString().equals(keybindStr)) keybind = k;
+//						for(Keybind k : Keybind.values()) if(k.toString().equals(textAndIdx.a)){keybind = k; break;}
+						keybind = textAndIdx.a;
 						i = textAndIdx.b;
 					}
 					// TODO: else if(str.startsWith("nbt\"", i)){
