@@ -26,8 +26,8 @@ public final class FileIO_New{
 		try{
 			Object fabricLoader = Class.forName("net.fabricmc.loader.api.FabricLoader").getMethod("getInstance").invoke(null);
 			tempDir = fabricLoader.getClass().getMethod("getConfigDir").invoke(fabricLoader).toString()+"/"+
-						"keybound"
-//						Class.forName("net.evmodder.KeyBound.Main").getField("MOD_ID").get(null)
+						"evmod"
+//						Class.forName("net.evmodder.evmod.Main").getField("MOD_ID").get(null)
 						+"/";
 		}
 //		catch(IllegalArgumentException | NoSuchFieldException e){e.printStackTrace();}
