@@ -1,20 +1,12 @@
 package net.evmodder.EvLib.bukkit;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.Optional;
-import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Nameable;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.block.Skull;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.PropertyMap;
 
 public final class HeadUtils {
 	// ========================= Commented out because UNUSED =======================
@@ -93,123 +85,17 @@ public final class HeadUtils {
 		}
 	}
 
-	// 1.21.1+ changed the field's type from GameProfile to ResolveableProfile
-
-	private static Constructor<?> resolveableProfileConstructor;
-	private static Object convertToResolvedProfile(GameProfile profile){
-		try{
-			if(resolveableProfileConstructor == null) resolveableProfileConstructor =
-					Class.forName("net.minecraft.world.item.component.ResolvableProfile").getConstructor(GameProfile.class);
-			return resolveableProfileConstructor.newInstance(profile);
-		}
-		catch(ReflectiveOperationException e){
-			Bukkit.getLogger().severe("DropHeads-HeadUtils: Unable to convert to ResolvedProfile");
-		}
-		return profile;
+	public static ItemStack makeCustomHead(YetAnotherProfile profile, boolean setOwningPlayer){
+	final ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+	final SkullMeta meta = (SkullMeta) head.getItemMeta();
+	if(setOwningPlayer){
+		final OfflinePlayer p = Bukkit.getOfflinePlayer(profile.id());
+		if(p != null) meta.setOwningPlayer(p);
 	}
-
-	private static Method[] resolveableProfileRecordAccessors;
-	private static Field fieldResolveableName, fieldResolveableId, fieldResolveableProperties;
-	@SuppressWarnings("unchecked")
-	private static GameProfile convertFromResolvedProfile(Object profile){
-		if(profile == null) return null;
-		try{
-			if(resolveableProfileRecordAccessors == null && fieldResolveableProperties == null){
-				final Class<?> clazzResolveableProfile = Class.forName("net.minecraft.world.item.component.ResolvableProfile");
-				//if(clazzResolveableProfile.isInstance(profile)) printError = true;
-				try{
-					fieldResolveableName = clazzResolveableProfile.getDeclaredField("name");
-					fieldResolveableName.setAccessible(true);
-					fieldResolveableId = clazzResolveableProfile.getDeclaredField("id");
-					fieldResolveableId.setAccessible(true);
-					fieldResolveableProperties = clazzResolveableProfile.getDeclaredField("properties");
-					fieldResolveableProperties.setAccessible(true);
-				}
-				// 1.21.4+ changed ResolveableProfile class type to a Record
-				catch(NoSuchFieldException e){
-					//if((boolean)Class.class.getMethod("isRecord").invoke(clazzResolveableProfile)){
-					Object[] rcs = (Object[])Class.class.getMethod("getRecordComponents").invoke(clazzResolveableProfile);
-					Method getAccessor = rcs[0].getClass().getMethod("getAccessor");
-					resolveableProfileRecordAccessors = new Method[rcs.length];
-					for(int i=0; i<3; ++i) resolveableProfileRecordAccessors[i] = (Method)getAccessor.invoke(rcs[i]);
-				}
-			}
-			final Optional<String> nameOptional;
-			final Optional<UUID> uuidOptional;
-			final PropertyMap properties;
-			if(resolveableProfileRecordAccessors != null){
-				nameOptional = (Optional<String>)resolveableProfileRecordAccessors[0].invoke(profile);
-				uuidOptional = (Optional<UUID>)resolveableProfileRecordAccessors[1].invoke(profile);
-				properties = (PropertyMap)resolveableProfileRecordAccessors[2].invoke(profile);
-			}
-			else{
-				nameOptional = (Optional<String>)fieldResolveableName.get(profile);
-				uuidOptional = (Optional<UUID>)fieldResolveableId.get(profile);
-				properties = (PropertyMap)fieldResolveableProperties.get(profile);
-			}
-			final String name = nameOptional.orElse("");
-			final UUID uuid = uuidOptional.orElseThrow(() -> new NullPointerException("UUID missing in ResolvedProfile"));
-			GameProfile gp = new GameProfile(uuid, name);
-			gp.getProperties().putAll(properties);
-			return gp;
-		}
-		catch(ReflectiveOperationException e){
-			Bukkit.getLogger().severe("DropHeads-HeadUtils: Unable to convert from ResolvedProfile");
-			/*if(printError) */e.printStackTrace();
-			fieldResolveableProperties = null;
-			resolveableProfileRecordAccessors = null;
-		}
-		return (GameProfile)profile;
-	}
-
-	private static Field fieldProfileItem, fieldProfileBlock;
-	public static void setGameProfile(SkullMeta meta, GameProfile profile){
-		try{
-			if(fieldProfileItem == null){fieldProfileItem = meta.getClass().getDeclaredField("profile");fieldProfileItem.setAccessible(true);}
-			fieldProfileItem.set(meta, fieldProfileItem.getType().equals(GameProfile.class) ? profile : convertToResolvedProfile(profile));
-		}
-		catch(ReflectiveOperationException e){e.printStackTrace();}
-	}
-	public static void setGameProfile(Skull skull, GameProfile profile){
-		try{
-			if(fieldProfileBlock == null){fieldProfileBlock = skull.getClass().getDeclaredField("profile");fieldProfileBlock.setAccessible(true);}
-			fieldProfileBlock.set(skull, fieldProfileBlock.getType().equals(GameProfile.class) ? profile : convertToResolvedProfile(profile));
-		}
-		catch(ReflectiveOperationException e){e.printStackTrace();}
-	}
-	public static GameProfile getGameProfile(SkullMeta meta){
-		try{
-			if(fieldProfileItem == null){fieldProfileItem = meta.getClass().getDeclaredField("profile");fieldProfileItem.setAccessible(true);}
-			return fieldProfileItem.getType().equals(GameProfile.class)
-					? (GameProfile)fieldProfileItem.get(meta) : convertFromResolvedProfile(fieldProfileItem.get(meta));
-		}
-		catch(ReflectiveOperationException e){e.printStackTrace();}
-		return null;
-	}
-	public static GameProfile getGameProfile(Skull skull){
-		try{
-			if(fieldProfileBlock == null){fieldProfileBlock = skull.getClass().getDeclaredField("profile");fieldProfileBlock.setAccessible(true);}
-			return fieldProfileBlock.getType().equals(GameProfile.class)
-					? (GameProfile)fieldProfileBlock.get(skull) : convertFromResolvedProfile(fieldProfileBlock.get(skull));
-		}
-		catch(ReflectiveOperationException e){e.printStackTrace();}
-		return null;
-	}
-
-	public static ItemStack makeCustomHead(GameProfile profile, boolean setOwner){
-		final ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-		final SkullMeta meta = (SkullMeta) head.getItemMeta();
-		setGameProfile(meta, profile);
-		if(setOwner && profile.getId() != null){
-			final OfflinePlayer p = Bukkit.getOfflinePlayer(profile.getId());
-			if(p != null){
-				meta.setOwningPlayer(p);
-				//if(p.getName() != null) meta.setOwner(p.getName());
-			}
-		}
-		head.setItemMeta(meta);
-		return head;
-	}
+	profile.set(meta);
+	head.setItemMeta(meta);
+	return head;
+}
 
 	// ========================= Commented out because UNUSED =======================
 	/*public static ItemStack makeSkull(String textureCode, String headName){

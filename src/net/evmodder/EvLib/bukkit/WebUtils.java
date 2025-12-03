@@ -31,7 +31,6 @@ import javax.imageio.ImageIO;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.plugin.Plugin;
-import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.evmodder.EvLib.FileIO;
 
@@ -161,13 +160,13 @@ public class WebUtils {
 	}
 
 	//Names are [3,16] characters from [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]
-	static HashMap<String, GameProfile> playerExists = new HashMap<>();
-	public static GameProfile addGameProfileToCache(String nameOrUUID, GameProfile profile){
+	static HashMap<String, YetAnotherProfile> playerExists = new HashMap<>();
+	public static YetAnotherProfile addProfileToCache(String nameOrUUID, YetAnotherProfile profile){
 		if(nameOrUUID.matches("^[a-f0-9]{32}$")) nameOrUUID = addDashesForUUID(nameOrUUID);
 		return playerExists.put(nameOrUUID.toLowerCase(), profile);
 	}
-	private static GameProfile getGameProfileWebRequest(String nameOrUUID/*formatted*/, boolean fetchSkin){
-		GameProfile profile = null;
+	private static YetAnotherProfile getProfileWebRequest(String nameOrUUID/*formatted*/, boolean fetchSkin){
+		YetAnotherProfile profile = null;
 		try{//Lookup by UUID
 			final UUID uuid = UUID.fromString(nameOrUUID);
 			String data = getReadURL("https://sessionserver.mojang.com/session/minecraft/profile/"+nameOrUUID);
@@ -177,13 +176,13 @@ public class WebUtils {
 				final int nameEnd = data.indexOf("\"", nameStart+1);
 				if(nameStart == -1 || nameEnd <= nameStart) return null;  // No account found for this UUID
 				final String name = data.substring(nameStart, nameEnd);
-				profile = new GameProfile(uuid, name);
+				profile = new YetAnotherProfile(uuid, name);
 				if(fetchSkin){
 					final int codeStart = data.indexOf("{\"name\":\"textures\",\"value\":\"")+28;
 					final int codeEnd = data.indexOf("\"}", codeStart+1);
 					if(codeStart == -1 || codeEnd <= codeStart) System.err.println("Failed to parse skin texture from Mojang API response");
 					final String base64 = data.substring(codeStart, codeEnd);
-					profile.getProperties().put("textures", new Property("textures", base64));
+					profile.properties().put("textures", new Property("textures", base64));
 				}
 				playerExists.put(name.toLowerCase(), profile);
 			}
@@ -199,11 +198,11 @@ public class WebUtils {
 					String uuidStr = data.substring(idStart, idEnd);
 					if(uuidStr.matches("^[a-f0-9]{32}$")) uuidStr = addDashesForUUID(uuidStr);
 					final UUID uuid = UUID.fromString(uuidStr);// Important to validate UUID before recursive call
-					if(fetchSkin) return getGameProfile(uuidStr, fetchSkin, null);
+					if(fetchSkin) return getProfile(uuidStr, fetchSkin, null);
 					final int nameStart = data.indexOf("\"name\":\"")+8;
 					final int nameEnd = data.indexOf("\"", nameStart+1);
 					final String name = data.substring(nameStart, nameEnd);
-					profile = new GameProfile(uuid, name);
+					profile = new YetAnotherProfile(uuid, name);
 					playerExists.put(uuidStr.toLowerCase(), profile);
 //				}
 			}
@@ -211,18 +210,18 @@ public class WebUtils {
 		playerExists.put(nameOrUUID, profile);
 		return profile;
 	}
-	public static GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
+	public static YetAnotherProfile getProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
 		if(nameOrUUID.matches("^[a-f0-9]{32}$")) nameOrUUID = addDashesForUUID(nameOrUUID);
 		nameOrUUID = nameOrUUID.toLowerCase();
 		if(playerExists.containsKey(nameOrUUID)){
-			final GameProfile profile = playerExists.get(nameOrUUID);
-			if(fetchSkin && profile!= null && !profile.getProperties().containsKey("textures")) nameOrUUID = profile.getId().toString();
+			final YetAnotherProfile profile = playerExists.get(nameOrUUID);
+			if(fetchSkin && profile!= null && !profile.properties().containsKey("textures")) nameOrUUID = profile.id().toString();
 			else return profile;
 		}
-		if(nullForSync == null) return getGameProfileWebRequest(nameOrUUID, fetchSkin);
+		if(nullForSync == null) return getProfileWebRequest(nameOrUUID, fetchSkin);
 		else{
 			final String n = nameOrUUID;
-			nullForSync.getServer().getScheduler().runTaskAsynchronously(nullForSync, ()->getGameProfileWebRequest(n, fetchSkin));
+			nullForSync.getServer().getScheduler().runTaskAsynchronously(nullForSync, ()->getProfileWebRequest(n, fetchSkin));
 			return null;
 		}
 	}
@@ -760,8 +759,8 @@ public class WebUtils {
 		TreeSet<String> badNames = new TreeSet<>();
 		for(String line : nameAndStuff){
 			String name = line.split(",")[0];
-			GameProfile profile = getGameProfile(name, /*fetchSkin=*/false, /*nullForSync=*/null);
-			if(profile != null && profile.getId() != null) System.out.println(profile.getId()+","+line);
+			YetAnotherProfile profile = getProfile(name, /*fetchSkin=*/false, /*nullForSync=*/null);
+			if(profile != null && profile.id() != null) System.out.println(profile.id()+","+line);
 			else badNames.add(name);
 		}
 		System.out.println("unknown players: "+badNames);
