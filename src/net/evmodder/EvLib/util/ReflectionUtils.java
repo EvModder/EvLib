@@ -19,11 +19,12 @@ import java.util.List;
 public class ReflectionUtils{// version = X1.0
 	private static final String pkgCraftBukkit; // org.bukkit.craftbukkit.vX_XX_RX
 	private static final String pkgMinecraft; // net.minecraft.server.vX_XX_RX, or just 'net.minecraft'
-	private static final String serverVersionString; // v1_13_2
+	private static final String serverVersionString; // 1_13_2
 	public static final boolean isForge; // TRUE if server uses Force or MCPC+
 //	public static String getServerVersionString(){return serverVersionString;}
 	public static boolean isAtLeastVersion(String version){
-		String[] partsA = version.split("_"), partsB = serverVersionString.split("_");
+		String[] partsA = version.replaceAll("[A-Za-z]+", "").replaceAll("[^0-9]+", "_").split("_");
+		String[] partsB = serverVersionString.split("_");
 		for(int i=0; i<partsA.length; ++i){
 			if(i == partsB.length) return true;
 			try{
@@ -74,7 +75,7 @@ public class ReflectionUtils{// version = X1.0
 		isForge = tempIsForge;
 		pkgCraftBukkit = tempPkgCraftBukkit;
 		pkgMinecraft = tempPkgMinecraft;
-		serverVersionString = "v" + bukkitVersion.replace("-SNAPSHOT", "").replace("R", "").replace('.', '_').replace('-', '_');
+		serverVersionString = bukkitVersion.replaceAll("[A-Za-z]+", "").replaceAll("[^0-9]+", "_");
 	}
 
 
