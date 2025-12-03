@@ -1,14 +1,14 @@
 package net.evmodder.EvLib.bukkit;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.AbstractList;
 import java.util.HashMap;
 import java.util.Set;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefConstructor;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
+import net.evmodder.EvLib.util.ReflectionUtils;
 
 /**
  * Utilities for editing NBT in Bukkit plugins.
@@ -17,39 +17,38 @@ import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
  */
 public final class NBTTagUtils{// version = X1.0
 	//-------------------------------------------------- ReflectionUtils used by RefNBTTag: --------------------------------------------------//
-	static final RefClass classNBTTagCompound = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound"
+	static final Class<?> classNBTTagCompound = ReflectionUtils.getClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound"
 			);
 //			,"{nm}.nbt.CompoundTag");//1.20.5+
-	static final RefClass classNBTBase = ReflectionUtils.getRefClass("{nms}.NBTBase", "{nm}.nbt.NBTBase"); 
-	//ItemStack
-	static final RefClass classItemStack = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
-	static final RefClass classCraftItemStack = ReflectionUtils.getRefClass("{cb}.inventory.CraftItemStack");
-	static final RefMethod methodAsNMSCopy = classCraftItemStack.getMethod("asNMSCopy", ItemStack.class);
-	static final RefMethod methodAsCraftMirror = classCraftItemStack.getMethod("asCraftMirror", classItemStack);
-//	static final RefMethod methodGetTag = classItemStack.getMethod("getTag");
-//	static final RefMethod methodSetTag = classItemStack.getMethod("setTag", classNBTTagCompound);
-//	static final RefMethod methodGetTag = classItemStack.findMethod(/*isStatic=*/false, classNBTTagCompound);
-//	static final RefMethod methodSetTag = classItemStack.findMethod(/*isStatic=*/false, Void.TYPE, classNBTTagCompound);
-	static final RefMethod methodGetTag, methodCopyTag, methodSetTag;
+	static final Class<?> classNBTBase = ReflectionUtils.getClass("{nms}.NBTBase", "{nm}.nbt.NBTBase");
+	static final Class<?> classItemStack = ReflectionUtils.getClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
+	static final Class<?> classCraftItemStack = ReflectionUtils.getClass("{cb}.inventory.CraftItemStack");
+	static final Method methodAsNMSCopy = ReflectionUtils.getMethod(classCraftItemStack, "asNMSCopy", ItemStack.class);
+	static final Method methodAsCraftMirror = ReflectionUtils.getMethod(classCraftItemStack, "asCraftMirror", classItemStack);
+//	static final Method methodGetTag = classItemStack.getMethod("getTag");
+//	static final Method methodSetTag = classItemStack.getMethod("setTag", classNBTTagCompound);
+//	static final Method methodGetTag = classItemStack.findMethod(/*isStatic=*/false, classNBTTagCompound);
+//	static final Method methodSetTag = classItemStack.findMethod(/*isStatic=*/false, Void.TYPE, classNBTTagCompound);
+	static final Method methodGetTag, methodCopyTag, methodSetTag;
 	static final Object customDataTypeObj;
 	static{
-		RefMethod methodGetTagTemp, methodSetTagTemp, methodCopyTagTemp = null;
+		Method methodGetTagTemp, methodSetTagTemp, methodCopyTagTemp = null;
 		Object customDataTypeObjTemp = null;
 		try{
-			RefClass classCustomData = ReflectionUtils.getRefClass("{nm}.world.item.component.CustomData");
-			RefClass classDataComponentType = ReflectionUtils.getRefClass("{nm}.core.component.DataComponentType");
-			RefClass classDataComponentHolder = ReflectionUtils.getRefClass("{nm}.core.component.DataComponentHolder");
-			methodGetTagTemp = classDataComponentHolder.getMethod("get", classDataComponentType);
-			methodCopyTagTemp = classCustomData.getMethod("copyTag");
-			customDataTypeObjTemp = ReflectionUtils.getRefClass("{nm}.core.component.DataComponents").getField("CUSTOM_DATA").of(null).get();
+			Class<?> classCustomData = ReflectionUtils.getClass("{nm}.world.item.component.CustomData");
+			Class<?> classDataComponentType = ReflectionUtils.getClass("{nm}.core.component.DataComponentType");
+			Class<?> classDataComponentHolder = ReflectionUtils.getClass("{nm}.core.component.DataComponentHolder");
+			methodGetTagTemp = ReflectionUtils.getMethod(classDataComponentHolder, "get", classDataComponentType);
+			methodCopyTagTemp = ReflectionUtils.getMethod(classCustomData, "copyTag");
+			customDataTypeObjTemp = ReflectionUtils.getStatic(ReflectionUtils.getField(ReflectionUtils.getClass("{nm}.core.component.DataComponents"), "CUSTOM_DATA"));
 
-			methodSetTagTemp = classCustomData.getMethod("set", classDataComponentType, classItemStack, ReflectionUtils.getRefClass("{nm}.nbt.CompoundTag"));
+			methodSetTagTemp = ReflectionUtils.getMethod(classCustomData, "set", classDataComponentType, classItemStack, ReflectionUtils.getClass("{nm}.nbt.CompoundTag"));
 		}
 		catch(RuntimeException e){
 			e.printStackTrace();
 			Bukkit.getLogger().warning("\n\n\n");
-			methodGetTagTemp = classItemStack.findMethod(/*isStatic=*/false, classNBTTagCompound);
-			methodSetTagTemp = classItemStack.findMethod(/*isStatic=*/false, Void.TYPE, classNBTTagCompound);
+			methodGetTagTemp = ReflectionUtils.findMethod(classItemStack, /*isStatic=*/false, classNBTTagCompound);
+			methodSetTagTemp = ReflectionUtils.findMethod(classItemStack, /*isStatic=*/false, Void.TYPE, classNBTTagCompound);
 		}
 		methodGetTag = methodGetTagTemp;
 		methodCopyTag = methodCopyTagTemp;
@@ -58,31 +57,29 @@ public final class NBTTagUtils{// version = X1.0
 	}
 
 	//Entity
-	static final RefMethod methodGetHandle = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity").getMethod("getHandle");
-	static final RefClass classEntity = ReflectionUtils.getRefClass("{nms}.Entity", "{nm}.world.entity.Entity");
-//	static final RefMethod methodSaveToTag = classEntity.findMethodByName("save");
-//	static final RefMethod methodLoadFromTag = classEntity.findMethodByName("load");
-	static final RefMethod methodSaveToTag = classEntity.findMethod(/*isStatic=*/false, boolean.class, classNBTTagCompound);
-	static final RefMethod methodLoadFromTag = classEntity.findMethod(/*isStatic=*/false, Void.TYPE, classNBTTagCompound);
-	static final RefMethod methodGetBukkitEntity = classEntity.findMethodByName("getBukkitEntity");
+	static final Method methodGetHandle = ReflectionUtils.getMethod(ReflectionUtils.getClass("{cb}.entity.CraftEntity"), "getHandle");
+	static final Class<?> classEntity = ReflectionUtils.getClass("{nms}.Entity", "{nm}.world.entity.Entity");
+//	static final Method methodSaveToTag = classEntity.findMethodByName("save");
+//	static final Method methodLoadFromTag = classEntity.findMethodByName("load");
+	static final Method methodSaveToTag = ReflectionUtils.findMethod(classEntity, /*isStatic=*/false, boolean.class, classNBTTagCompound);
+	static final Method methodLoadFromTag = ReflectionUtils.findMethod(classEntity, /*isStatic=*/false, Void.TYPE, classNBTTagCompound);
+	static final Method methodGetBukkitEntity = ReflectionUtils.findMethodByName(classEntity, "getBukkitEntity");
 
-//	static final RefMethod methodTagRemove = classNBTTagCompound.getMethod("remove", String.class);
-//	static final RefMethod methodHasKey = classNBTTagCompound.getMethod("hasKey", String.class);
-	static final RefMethod methodTagRemove = classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class);
-	static RefMethod methodHasKey = null, methodGetAllKeys = null;
+//	static final Method methodTagRemove = classNBTTagCompound.getMethod("remove", String.class);
+//	static final Method methodHasKey = classNBTTagCompound.getMethod("hasKey", String.class);
+	static final Method methodTagRemove = ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, Void.TYPE, String.class);
+	static Method methodHasKey = null, methodGetAllKeys = null;
 	static{
-		try{methodHasKey = classNBTTagCompound.getMethod("hasKey");}
+		try{methodHasKey = ReflectionUtils.getMethod(classNBTTagCompound, "hasKey");}
 		catch(RuntimeException e){
-			try{methodGetAllKeys = classNBTTagCompound.findMethod(/*isStatic=*/false, Set.class);}
+			try{methodGetAllKeys = ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, Set.class);}
 			catch(RuntimeException e2){System.err.println("Unable to find getAllKeys() method");}
 		}
 	}
-//	static final RefMethod methodTagIsEmpty = classNBTTagCompound.getMethod("isEmpty");
-	static final RefMethod methodTagIsEmpty = classNBTTagCompound.findMethod(/*isStatic=*/false, boolean.class);
-	static final HashMap<Class<?>, RefMethod> tagSetters = new HashMap<>();
-	static final HashMap<Class<?>, RefMethod> tagGetters = new HashMap<>();
-	static final Class<?> realNBTTagCompoundClass = classNBTTagCompound.getRealClass();
-	static final Class<?> realNBTBaseClass = classNBTBase.getRealClass();
+//	static final Method methodTagIsEmpty = classNBTTagCompound.getMethod("isEmpty");
+	static final Method methodTagIsEmpty = ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, boolean.class);
+	static final HashMap<Class<?>, Method> tagSetters = new HashMap<>();
+	static final HashMap<Class<?>, Method> tagGetters = new HashMap<>();
 	static{
 //		tagSetters.put(realNBTBaseClass,classNBTTagCompound.getMethod("set",			String.class, classNBTBase));
 //		tagSetters.put(boolean.class,	classNBTTagCompound.getMethod("setBoolean",		String.class, boolean.class));
@@ -95,17 +92,17 @@ public final class NBTTagUtils{// version = X1.0
 //		tagSetters.put(long.class,		classNBTTagCompound.getMethod("setLong",		String.class, long.class));
 //		tagSetters.put(short.class,		classNBTTagCompound.getMethod("setShort",		String.class, short.class));
 //		tagSetters.put(String.class,	classNBTTagCompound.getMethod("setString",		String.class, String.class));
-		tagSetters.put(realNBTBaseClass,classNBTTagCompound.findMethod(/*isStatic=*/false, classNBTBase, String.class, classNBTBase));
-		tagSetters.put(boolean.class,	classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, boolean.class));
-		tagSetters.put(byte.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, byte.class));
-		tagSetters.put(byte[].class,	classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, byte[].class));
-		tagSetters.put(double.class,	classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, double.class));
-		tagSetters.put(float.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, float.class));
-		tagSetters.put(int.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, int.class));
-		tagSetters.put(int[].class,		classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, int[].class));
-		tagSetters.put(long.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, long.class));
-		tagSetters.put(short.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, short.class));
-		tagSetters.put(String.class,	classNBTTagCompound.findMethod(/*isStatic=*/false, Void.TYPE, String.class, String.class));
+		tagSetters.put(classNBTBase,	ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, classNBTBase, String.class, classNBTBase));
+		tagSetters.put(boolean.class,	ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, Void.TYPE, String.class, boolean.class));
+		tagSetters.put(byte.class,		ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, Void.TYPE, String.class, byte.class));
+		tagSetters.put(byte[].class,	ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, Void.TYPE, String.class, byte[].class));
+		tagSetters.put(double.class,	ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, Void.TYPE, String.class, double.class));
+		tagSetters.put(float.class,		ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, Void.TYPE, String.class, float.class));
+		tagSetters.put(int.class,		ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, Void.TYPE, String.class, int.class));
+		tagSetters.put(int[].class,		ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, Void.TYPE, String.class, int[].class));
+		tagSetters.put(long.class,		ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, Void.TYPE, String.class, long.class));
+		tagSetters.put(short.class,		ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, Void.TYPE, String.class, short.class));
+		tagSetters.put(String.class,	ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, Void.TYPE, String.class, String.class));
 	}
 	static{
 //		tagGetters.put(realNBTBaseClass,classNBTTagCompound.getMethod("get",			String.class));
@@ -119,32 +116,31 @@ public final class NBTTagUtils{// version = X1.0
 //		tagGetters.put(long.class,		classNBTTagCompound.getMethod("getLong",		String.class));
 //		tagGetters.put(short.class,		classNBTTagCompound.getMethod("getShort",		String.class));
 //		tagGetters.put(String.class,	classNBTTagCompound.getMethod("getString",		String.class));
-		tagGetters.put(realNBTBaseClass,classNBTTagCompound.findMethod(/*isStatic=*/false, classNBTBase, String.class));
-		tagGetters.put(boolean.class,	classNBTTagCompound.findMethod(/*isStatic=*/false, boolean.class, String.class));
-		tagGetters.put(byte.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, byte.class, String.class));
-		tagGetters.put(byte[].class,	classNBTTagCompound.findMethod(/*isStatic=*/false, byte[].class, String.class));
-		tagGetters.put(double.class,	classNBTTagCompound.findMethod(/*isStatic=*/false, double.class, String.class));
-		tagGetters.put(float.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, float.class, String.class));
-		tagGetters.put(int.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, int.class, String.class));
-		tagGetters.put(int[].class,		classNBTTagCompound.findMethod(/*isStatic=*/false, int[].class, String.class));
-		tagGetters.put(long.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, long.class, String.class));
-		tagGetters.put(short.class,		classNBTTagCompound.findMethod(/*isStatic=*/false, short.class, String.class));
-		tagGetters.put(String.class,	classNBTTagCompound.findMethod(/*isStatic=*/false, String.class, String.class));
+		tagGetters.put(classNBTBase,	ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, classNBTBase, String.class));
+		tagGetters.put(boolean.class,	ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, boolean.class, String.class));
+		tagGetters.put(byte.class,		ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, byte.class, String.class));
+		tagGetters.put(byte[].class,	ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, byte[].class, String.class));
+		tagGetters.put(double.class,	ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, double.class, String.class));
+		tagGetters.put(float.class,		ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, float.class, String.class));
+		tagGetters.put(int.class,		ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, int.class, String.class));
+		tagGetters.put(int[].class,		ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, int[].class, String.class));
+		tagGetters.put(long.class,		ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, long.class, String.class));
+		tagGetters.put(short.class,		ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, short.class, String.class));
+		tagGetters.put(String.class,	ReflectionUtils.findMethod(classNBTTagCompound, /*isStatic=*/false, String.class, String.class));
 	}
-	static final RefConstructor cnstrNBTTagCompound = classNBTTagCompound.findConstructor(0);
+	static final Constructor<?> cnstr_NBTTagCompound = ReflectionUtils.findConstructor(classNBTTagCompound, 0);
 
 	//-------------------------------------------------- ReflectionUtils used by RefNBTTagList: --------------------------------------------------//
-//	static final RefClass classNBTBase = ReflectionUtils.getRefClass("{nms}.NBTBase"); 
-	static final RefClass classNBTTagList = ReflectionUtils.getRefClass("{nms}.NBTTagList", "{nm}.nbt.NBTTagList");
-	static final RefConstructor cnstrNBTTagList = classNBTTagList.findConstructor(0);
+//	static final Class<?> classNBTBase = ReflectionUtils.getRefClass("{nms}.NBTBase"); 
+	static final Class<?> classNBTTagList = ReflectionUtils.getClass("{nms}.NBTTagList", "{nm}.nbt.NBTTagList");
+	static final Constructor<?> cnstr_NBTTagList = ReflectionUtils.findConstructor(classNBTTagList, 0);
 //	static final Class<?> realNBTBaseClass = classNBTBase.getRealClass();
-	static final Class<?> realNBTTagListClass = classNBTTagList.getRealClass();
-	static RefMethod methodAdd;
+	static Method methodAdd;
 	static{
-		try{methodAdd = ReflectionUtils.getRefClass(AbstractList.class).getMethod("add", Object.class);}
-		catch(RuntimeException e){methodAdd = classNBTTagList.getMethod("add", realNBTBaseClass);}// version <= 1.16
+		try{methodAdd = ReflectionUtils.getMethod(AbstractList.class, "add", Object.class);}
+		catch(RuntimeException e){methodAdd = ReflectionUtils.getMethod(classNBTTagList, "add", classNBTTagList);}// version <= 1.16
 	}
-	static final RefMethod methodGet = classNBTTagList.getMethod("get", int.class);
+	static final Method methodGet = ReflectionUtils.getMethod(classNBTTagList, "get", int.class);
 
 	abstract static class RefNBTBase{
 		public RefNBTBase(){};
@@ -153,26 +149,25 @@ public final class NBTTagUtils{// version = X1.0
 	}
 
 	// String tag
-	static final RefClass classNBTTagString = ReflectionUtils.getRefClass("{nms}.NBTTagString", "{nm}.nbt.NBTTagString");
-	static final RefConstructor cnstrNBTTagString = classNBTTagString.getConstructor(String.class);
-	static final Class<?> realNBTTagStringClass = classNBTTagString.getRealClass();
+	static final Class<?> classNBTTagString = ReflectionUtils.getClass("{nms}.NBTTagString", "{nm}.nbt.NBTTagString");
+	static final Constructor<?> cnstr_NBTTagString = ReflectionUtils.getConstructor(classNBTTagString, String.class);
 	public static final class RefNBTTagString extends RefNBTBase{
-		public RefNBTTagString(String str){nmsTag = cnstrNBTTagString.create(str);}
+		public RefNBTTagString(String str){nmsTag = ReflectionUtils.construct(cnstr_NBTTagString, str);}
 	}
 
 	// List tag
 	public static final class RefNBTTagList extends RefNBTBase{
-		public RefNBTTagList(){nmsTag = cnstrNBTTagList.create();}
+		public RefNBTTagList(){nmsTag = ReflectionUtils.construct(cnstr_NBTTagList);}
 		//public RefNBTTagList(RefNBTTagList base){nmsTagList = base;};
 		RefNBTTagList(Object nmsTagList){nmsTag = nmsTagList;}
 
-		public void add(RefNBTBase tag){methodAdd.of(nmsTag).call(tag.nmsTag);}
+		public void add(RefNBTBase tag){ReflectionUtils.call(methodAdd, nmsTag, tag.nmsTag);}
 		public RefNBTBase get(int i){
-			Object value = methodGet.of(nmsTag).call(i);
+			Object value = ReflectionUtils.call(methodGet, nmsTag, i);
 			if(value == null) return null;
-			if(value.getClass().equals(realNBTTagCompoundClass)) return new RefNBTTagCompound(value);
-			if(value.getClass().equals(realNBTTagListClass)) return new RefNBTTagList(value);
-			if(value.getClass().equals(realNBTTagStringClass)) return new RefNBTTagString(value.toString());
+			if(value.getClass().equals(classNBTTagCompound)) return new RefNBTTagCompound(value);
+			if(value.getClass().equals(classNBTTagList)) return new RefNBTTagList(value);
+			if(value.getClass().equals(classNBTTagString)) return new RefNBTTagString(value.toString());
 			return null;
 		}
 		//TODO: add getLength/getSize
@@ -181,16 +176,16 @@ public final class NBTTagUtils{// version = X1.0
 	// Compound tag
 	public static final class RefNBTTagCompound extends RefNBTBase{
 		Object nmsTag;
-		public RefNBTTagCompound(){nmsTag = cnstrNBTTagCompound.create();}
+		public RefNBTTagCompound(){nmsTag = ReflectionUtils.construct(cnstr_NBTTagCompound);}
 		//public RefNBTTagCompound(RefNBTTagCompound base){nmsTag = base;};
 		RefNBTTagCompound(Object nmsTag){this.nmsTag = nmsTag;}
-		private void addToTag(String key, Object value, Class<?> type) {tagSetters.get(type).of(nmsTag).call(key, value);}
-		private Object getFromTag(String key, Class<?> type) {return tagGetters.get(type).of(nmsTag).call(key);}
+		private void addToTag(String key, Object value, Class<?> type) {ReflectionUtils.call(tagSetters.get(type), nmsTag, key, value);}
+		private Object getFromTag(String key, Class<?> type) {return ReflectionUtils.call(tagGetters.get(type), nmsTag, key);}
 		@Override public String toString(){return nmsTag.toString();}
 	
-		public void set(String key, RefNBTTagCompound value){addToTag(key, value.nmsTag, realNBTBaseClass);}
-		public void set(String key, RefNBTTagList value){addToTag(key, value.nmsTag, realNBTBaseClass);}
-		public void set(String key, RefNBTTagString value){addToTag(key, value.nmsTag, realNBTBaseClass);}
+		public void set(String key, RefNBTTagCompound value){addToTag(key, value.nmsTag, classNBTBase);}
+		public void set(String key, RefNBTTagList value){addToTag(key, value.nmsTag, classNBTBase);}
+		public void set(String key, RefNBTTagString value){addToTag(key, value.nmsTag, classNBTBase);}
 		public void setBoolean	(String key, boolean		value){addToTag(key, value, boolean.class);}
 		public void setByte		(String key, byte			value){addToTag(key, value, byte.class);}
 		public void setByteArray(String key, byte[]			value){addToTag(key, value, byte[].class);}
@@ -203,11 +198,11 @@ public final class NBTTagUtils{// version = X1.0
 		public void setString	(String key, String			value){addToTag(key, value, String.class);}
 		//
 		public RefNBTBase get(String key){
-			Object value = getFromTag(key, realNBTBaseClass);
+			Object value = getFromTag(key, classNBTBase);
 			if(value == null) return null;
-			if(value.getClass().equals(realNBTTagCompoundClass)) return new RefNBTTagCompound(value);
-			if(value.getClass().equals(realNBTTagListClass)) return new RefNBTTagList(value);
-			if(value.getClass().equals(realNBTTagStringClass)) return new RefNBTTagString(value.toString());
+			if(value.getClass().equals(classNBTTagCompound)) return new RefNBTTagCompound(value);
+			if(value.getClass().equals(classNBTTagList)) return new RefNBTTagList(value);
+			if(value.getClass().equals(classNBTTagString)) return new RefNBTTagString(value.toString());
 			return null;
 		}
 		public boolean getBoolean	(String key){return (boolean)	getFromTag(key, boolean.class);}
@@ -221,50 +216,50 @@ public final class NBTTagUtils{// version = X1.0
 		public short getShort		(String key){return (short)		getFromTag(key, short.class);}
 		public String getString		(String key){return (String)	getFromTag(key, String.class);}
 		//
-		public void remove(String key){methodTagRemove.of(nmsTag).call(key);}
+		public void remove(String key){ReflectionUtils.call(methodTagRemove, nmsTag, key);}
 		@SuppressWarnings("unchecked")
 		public boolean hasKey(String key){
-			if(methodHasKey == null) return ((Set<String>)methodGetAllKeys.of(nmsTag).call()).contains(key);
-			else return (boolean)methodHasKey.of(nmsTag).call(key);
+			if(methodHasKey == null) return ((Set<String>)ReflectionUtils.call(methodGetAllKeys, nmsTag)).contains(key);
+			else return (boolean)ReflectionUtils.call(methodHasKey, nmsTag, key);
 		}
 	}
 
 	// For ItemStacks ----------------------------------------------------
 	public static ItemStack setTag(ItemStack item, RefNBTTagCompound tag){
-		Object nmsTag = (tag == null || methodTagIsEmpty.of(tag.nmsTag).call().equals(true)) ? null : tag.nmsTag;
-		Object nmsItem = methodAsNMSCopy.of(null).call(item);
+		Object nmsTag = (tag == null || ReflectionUtils.call(methodTagIsEmpty, tag.nmsTag).equals(true)) ? null : tag.nmsTag;
+		Object nmsItem = ReflectionUtils.callStatic(methodAsNMSCopy, item);
 
-		if(customDataTypeObj != null) methodSetTag.call(customDataTypeObj, nmsItem, nmsTag);//1.20.5+
-		else methodSetTag.of(nmsItem).call(nmsTag);
+		if(customDataTypeObj != null) ReflectionUtils.call(methodSetTag, customDataTypeObj, nmsItem, nmsTag);//1.20.5+
+		else ReflectionUtils.call(methodSetTag, nmsItem, nmsTag);
 
-		item = (ItemStack) methodAsCraftMirror.of(null).call(nmsItem);
+		item = (ItemStack) ReflectionUtils.callStatic(methodAsCraftMirror, nmsItem);
 		return item;
 	}
 	public static RefNBTTagCompound getTag(ItemStack item){
-		Object nmsItem = methodAsNMSCopy.of(null).call(item); // asNMSCopy() can generate a NPE in rare cases (plugin compatibility)
+		Object nmsItem = ReflectionUtils.callStatic(methodAsNMSCopy, item); // asNMSCopy() can generate a NPE in rare cases (plugin compatibility)
 		Object nmsTag;
 		if(customDataTypeObj != null){//1.20.5+
-			Object customData = methodGetTag.of(nmsItem).call(customDataTypeObj);
-			nmsTag = customData == null ? null : methodCopyTag.of(customData).call();
+			Object customData = ReflectionUtils.call(methodGetTag, nmsItem, customDataTypeObj);
+			nmsTag = customData == null ? null : ReflectionUtils.call(methodCopyTag, customData);
 		}
-		else nmsTag = methodGetTag.of(nmsItem).call();
+		else nmsTag = ReflectionUtils.call(methodGetTag, nmsItem);
 		return nmsTag == null ? new RefNBTTagCompound() : new RefNBTTagCompound(nmsTag);
 	};
 
 	// For Entities ----------------------------------------------------
 	public static Entity setTag(Entity entity, RefNBTTagCompound tag){
-		Object nmsTag = (tag == null || methodTagIsEmpty.of(tag.nmsTag).call().equals(true)) ? null : tag.nmsTag;
-		Object nmsEntity = methodGetHandle.of(entity).call();
-		methodLoadFromTag.of(nmsEntity).call(nmsTag);
-		entity = (Entity)methodGetBukkitEntity.of(nmsEntity).call();
+		Object nmsTag = (tag == null || ReflectionUtils.call(methodTagIsEmpty, tag.nmsTag).equals(true)) ? null : tag.nmsTag;
+		Object nmsEntity = ReflectionUtils.call(methodGetHandle, entity);
+		ReflectionUtils.call(methodLoadFromTag, nmsEntity, nmsTag);
+		entity = (Entity)ReflectionUtils.call(methodGetBukkitEntity, nmsEntity);
 		return entity;
 	}
 	public static RefNBTTagCompound getTag(Entity entity){
-		Object nmsEntity = methodGetHandle.of(entity).call();
-		Object nmsTag = classNBTTagCompound.getConstructor().create();
+		Object nmsEntity = ReflectionUtils.call(methodGetHandle, entity);
+		Object nmsTag = ReflectionUtils.construct(cnstr_NBTTagCompound);
 //		NBTTagCompound tag = new NBTTagCompound();
 //		net.minecraft.world.entity.Entity ee = null; ee.save(tag);
-		methodSaveToTag.of(nmsEntity).call(nmsTag);
+		ReflectionUtils.call(methodSaveToTag, nmsEntity, nmsTag);
 		return nmsTag == null ? new RefNBTTagCompound() : new RefNBTTagCompound(nmsTag);
 	};
 }

@@ -1,18 +1,39 @@
 package net.evmodder.EvLib.bukkit;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.*;
+import net.evmodder.EvLib.util.ReflectionUtils;
 
 public class DisguiseUtils{
 	private DisguiseType disguise;
 	private UUID player;
-	private RefClass entity;
-	private Class<?> entityObject;
+	private Class<?> entity;
+	private Class<?> lastClassEntity;
 	private Object thisObject;
+
+	private Class<?> getEntity(String entity, UUID p) {
+		Class<?> classEntity = ReflectionUtils.getClass("{nms}." + entity);
+
+		Constructor<?> entConstructor = ReflectionUtils.getConstructor(classEntity, ReflectionUtils.getClass("{nms}.World"));
+
+		Class<?> classCraftWorld = ReflectionUtils.getClass("{cb}.CraftWorld");
+		Method methodGetHandle = ReflectionUtils.getMethod(classCraftWorld, "getHandle");
+
+		org.bukkit.World world = Bukkit.getServer().getPlayer(p).getWorld();
+		Object handle = ReflectionUtils.call(methodGetHandle, world);
+
+		Object fin = ReflectionUtils.construct(entConstructor, handle);
+
+		this.thisObject = fin;
+		this.lastClassEntity = fin.getClass();
+		return lastClassEntity;
+	}
 
 	public DisguiseUtils(DisguiseType d, UUID p) {
 		disguise = d;
@@ -24,10 +45,7 @@ public class DisguiseUtils{
 			break;
 		case WITHER_SKELETON:
 			entity = getEntity("EntitySkeleton", p);
-
-			RefMethod methodSkeleton = entity.findMethodByName("setSkeletonType");
-
-			methodSkeleton.of(thisObject).call(1);
+			ReflectionUtils.call(ReflectionUtils.findMethodByName(entity, "setSkeletonType"), 1);
 			break;
 		case SKELETON:
 			entity = getEntity("EntitySkeleton", p);
@@ -61,81 +79,56 @@ public class DisguiseUtils{
 			break;
 		}
 		if(d != null) {
+			Method m = ReflectionUtils.getMethod(entity, "setPosition", double.class, double.class, double.class);
+			Method mm = ReflectionUtils.getMethod(entity, "d", int.class);
+			Method mmm = ReflectionUtils.getMethod(entity, "setCustomName", String.class);
+			Method mmmm = ReflectionUtils.getMethod(entity, "setCustomNameVisible", boolean.class);
 
-			RefMethod m = entity.getMethod("setPosition", double.class, double.class, double.class);
-			RefMethod mm = entity.getMethod("d", int.class);
-			RefMethod mmm = entity.getMethod("setCustomName", String.class);
-			RefMethod mmmm = entity.getMethod("setCustomNameVisible", boolean.class);
+			ReflectionUtils.call(m, thisObject, location.getX(), location.getY(), location.getZ());
+			ReflectionUtils.call(mm, thisObject, Bukkit.getServer().getPlayer(p).getEntityId());
+			ReflectionUtils.call(mmm, thisObject, ChatColor.YELLOW + Bukkit.getServer().getPlayer(p).getName());
+			ReflectionUtils.call(mmmm, thisObject, true);
 
-			m.of(thisObject).call(location.getX(), location.getY(), location.getZ());
-			mm.of(thisObject).call(Bukkit.getServer().getPlayer(p).getEntityId());
-			mmm.of(thisObject).call(ChatColor.YELLOW + Bukkit.getServer().getPlayer(p).getName());
-			mmmm.of(thisObject).call(true);
-
-			RefField rf = entity.getField("locX");
-
-			rf.of(thisObject).set(location.getX());
-
-			RefField rf1 = entity.getField("locY");
-
-			rf1.of(thisObject).set(location.getY());
-
-			RefField rf2 = entity.getField("locZ");
-
-			rf2.of(thisObject).set(location.getZ());
-
-
-			RefField rf3 = entity.getField("yaw");
-
-			rf3.of(thisObject).set(location.getYaw());
-
-			RefField rf4 = entity.getField("pitch");
-
-			rf4.of(thisObject).set(location.getPitch());
-
+			ReflectionUtils.set(ReflectionUtils.getField(entity, "locX"), thisObject, location.getX());
+			ReflectionUtils.set(ReflectionUtils.getField(entity, "locY"), thisObject, location.getY());
+			ReflectionUtils.set(ReflectionUtils.getField(entity, "locZ"), thisObject, location.getZ());
+			ReflectionUtils.set(ReflectionUtils.getField(entity, "yaw"), thisObject, location.getYaw());
+			ReflectionUtils.set(ReflectionUtils.getField(entity, "pitch"), thisObject, location.getPitch());
 		}
 	}
 
 	public void removeDisguise() {
 		this.disguise = null;
 
-		RefClass p29 = ReflectionUtils.getRefClass("{nms}.PacketPlayOutEntityDestroy");
+		Class<?> p29 = ReflectionUtils.getClass("{nms}.PacketPlayOutEntityDestroy");
+		Class<?> p20 = ReflectionUtils.getClass("{nms}.PacketPlayOutNamedEntitySpawn");
 
-		RefClass p20 = ReflectionUtils.getRefClass("{nms}.PacketPlayOutNamedEntitySpawn");
+		Class<?> classEntityPlayer = ReflectionUtils.getClass("{nms}.EntityPlayer");
+		Constructor<?> pp20 = ReflectionUtils.getConstructor(p20, classEntityPlayer);
+		Constructor<?> pp29 = ReflectionUtils.getConstructor(p29, int[].class);
 
-		RefConstructor pp20 = p20.getConstructor(ReflectionUtils.getRefClass("{nms}.EntityHuman"));
+		final int[] entityId = new int[]{Bukkit.getPlayer(player).getEntityId()};
 
-		RefConstructor pp29 = p29.getConstructor(int[].class);
+		Object packetEntityDestroy = ReflectionUtils.construct(pp29, entityId);
 
-		int[] entityId;
+		Class<?> classCraftPlayer = ReflectionUtils.getClass("{cb}.entity.CraftPlayer");
+		Method methodGetHandle = ReflectionUtils.getMethod(classCraftPlayer, "getHandle");
+		Object handle = ReflectionUtils.call(methodGetHandle, Bukkit.getPlayer(player));
+		Object packetNamedEntitySpawn = ReflectionUtils.construct(pp20, handle);
 
-		entityId = new int[1];
+		Field fieldPlayerConnection = ReflectionUtils.getField(classEntityPlayer, "playerConnection");
+		Class<?> classPlayerConnection = ReflectionUtils.getClass("{nms}.PlayerConnection");
+		Method methodSendPacket = ReflectionUtils.findMethodByName(classPlayerConnection, "sendPacket");
 
-		entityId[0] = Bukkit.getPlayer(player).getEntityId();
-
-		Object packetEntityDestroy = pp29.create(entityId);
-
-		Object packetNamedEntitySpawn = pp20.create((ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer"))
-				.getMethod("getHandle").of(Bukkit.getPlayer(player)).call());
-
-		RefClass classCraftPlayer = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
-		RefMethod methodGetHandle = classCraftPlayer.getMethod("getHandle");
-		RefClass classEntityPlayer = ReflectionUtils.getRefClass("{nms}.EntityPlayer");
-		RefField fieldPlayerConnection = classEntityPlayer.getField("playerConnection");
-		RefClass classPlayerConnection = ReflectionUtils.getRefClass("{nms}.PlayerConnection");
-		RefMethod methodSendPacket = classPlayerConnection.findMethodByName("sendPacket");
-
-		for (Player player : Bukkit.getOnlinePlayers()) {
-
+		for(Player player : Bukkit.getOnlinePlayers()){
 			if(player != Bukkit.getPlayer(this.player)) {
-				Object handle = methodGetHandle.of(player).call();
-				Object connection = fieldPlayerConnection.of(handle).get();
+				Object handle2 = ReflectionUtils.call(methodGetHandle, player);
+				Object connection = ReflectionUtils.get(fieldPlayerConnection, handle2);
 
-				methodSendPacket.of(connection).call(packetEntityDestroy);
-				methodSendPacket.of(connection).call(packetNamedEntitySpawn);
+				ReflectionUtils.call(methodSendPacket, connection, packetEntityDestroy);
+				ReflectionUtils.call(methodSendPacket, connection, packetNamedEntitySpawn);
 			}
 		}
-
 	}
 
 	public void changeDisguise(DisguiseType d) {
@@ -146,14 +139,11 @@ public class DisguiseUtils{
 	}
 
 	public void disguiseToAll() {
+		Class<?> p29 = ReflectionUtils.getClass("{nms}.PacketPlayOutEntityDestroy");
+		Class<?> p20 = ReflectionUtils.getClass("{nms}.PacketPlayOutSpawnEntityLiving");
 
-		RefClass p29 = ReflectionUtils.getRefClass("{nms}.PacketPlayOutEntityDestroy");
-
-		RefClass p20 = ReflectionUtils.getRefClass("{nms}.PacketPlayOutSpawnEntityLiving");
-
-		RefConstructor pp20 = p20.getConstructor(ReflectionUtils.getRefClass("{nms}.EntityLiving"));
-
-		RefConstructor pp29 = p29.getConstructor(int[].class);
+		Constructor<?> pp20 = ReflectionUtils.getConstructor(p20, ReflectionUtils.getClass("{nms}.EntityLiving"));
+		Constructor<?> pp29 = ReflectionUtils.getConstructor(p29, int[].class);
 
 		int[] entityId;
 
@@ -161,24 +151,23 @@ public class DisguiseUtils{
 
 		entityId[0] = Bukkit.getPlayer(player).getEntityId();
 
-		Object packetEntityDestroy = pp29.create(entityId);
+		Object packetEntityDestroy = ReflectionUtils.construct(pp29, entityId);
+		Object packetNamedEntitySpawn = ReflectionUtils.construct(pp20, thisObject);
 
-		Object packetNamedEntitySpawn = pp20.create(thisObject);
-
-		RefClass classCraftPlayer = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
-		RefMethod methodGetHandle = classCraftPlayer.getMethod("getHandle");
-		RefClass classEntityPlayer = ReflectionUtils.getRefClass("{nms}.EntityPlayer");
-		RefField fieldPlayerConnection = classEntityPlayer.getField("playerConnection");
-		RefClass classPlayerConnection = ReflectionUtils.getRefClass("{nms}.PlayerConnection");
-		RefMethod methodSendPacket = classPlayerConnection.findMethodByName("sendPacket");
+		Class<?> classCraftPlayer = ReflectionUtils.getClass("{cb}.entity.CraftPlayer");
+		Method methodGetHandle = ReflectionUtils.getMethod(classCraftPlayer, "getHandle");
+		Class<?> classEntityPlayer = ReflectionUtils.getClass("{nms}.EntityPlayer");
+		Field fieldPlayerConnection = ReflectionUtils.getField(classEntityPlayer, "playerConnection");
+		Class<?> classPlayerConnection = ReflectionUtils.getClass("{nms}.PlayerConnection");
+		Method methodSendPacket = ReflectionUtils.findMethodByName(classPlayerConnection, "sendPacket");
 
 		for (Player all : Bukkit.getOnlinePlayers()) {
 			if(all != Bukkit.getPlayer(player)) {
-				Object handle = methodGetHandle.of(all).call();
-				Object connection = fieldPlayerConnection.of(handle).get();
+				Object handle = ReflectionUtils.call(methodGetHandle, player);
+				Object connection = ReflectionUtils.get(fieldPlayerConnection, handle);
 
-				methodSendPacket.of(connection).call(packetEntityDestroy);
-				methodSendPacket.of(connection).call(packetNamedEntitySpawn);
+				ReflectionUtils.call(methodSendPacket, connection, packetEntityDestroy);
+				ReflectionUtils.call(methodSendPacket, connection, packetNamedEntitySpawn);
 			}
 		}
 	}
@@ -218,23 +207,4 @@ public class DisguiseUtils{
 			BIPED, MOB;
 		}
 	}
-
-	private RefClass getEntity(String entity, UUID p) {
-		RefClass ent = ReflectionUtils.getRefClass("{nms}." + entity);
-
-		RefConstructor entConstructor = ent.getConstructor(ReflectionUtils.getRefClass("{nms}.World"));
-
-		RefClass classCraftWorld = ReflectionUtils.getRefClass("{cb}.CraftWorld");
-		RefMethod methodGetHandle = classCraftWorld.getMethod("getHandle");
-
-		Object handle = methodGetHandle.of(Bukkit.getServer().getPlayer(p).getWorld()).call();
-
-		Object fin = entConstructor.create(handle);
-
-		this.thisObject = fin;
-		this.entityObject = fin.getClass();
-
-		return ReflectionUtils.getRefClass(entityObject);
-	}
-
 }

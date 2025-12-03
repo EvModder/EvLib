@@ -15,17 +15,17 @@ import com.google.common.collect.Multimap;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
+import net.evmodder.EvLib.util.ReflectionUtils;
 
 public record YetAnotherProfile(UUID id, String name, Multimap<String, Property> properties){
 	public YetAnotherProfile(UUID id, String name){this(id, name, LinkedListMultimap.create());}
 
-	private static final RefMethod method_GameProfile_id = ReflectionUtils.getRefClass(GameProfile.class).findMethodByName("id", "getId");
-	private static final RefMethod method_GameProfile_name = ReflectionUtils.getRefClass(GameProfile.class).findMethodByName("name", "getName");
-	private static final RefMethod method_GameProfile_properties = ReflectionUtils.getRefClass(GameProfile.class).findMethodByName("properties", "getProperties");
-	private static final UUID getId(GameProfile profile){return (UUID)method_GameProfile_id.of(profile).call();}
-	private static final String getName(GameProfile profile){return (String)method_GameProfile_name.of(profile).call();}
-	public static final PropertyMap getProperties(GameProfile profile){return (PropertyMap)method_GameProfile_properties.of(profile).call();}
+	private static final Method method_GameProfile_id = ReflectionUtils.findMethodByName(GameProfile.class, "id", "getId");
+	private static final Method method_GameProfile_name = ReflectionUtils.findMethodByName(GameProfile.class, "name", "getName");
+	private static final Method method_GameProfile_properties = ReflectionUtils.findMethodByName(GameProfile.class, "properties", "getProperties");
+	private static final UUID getId(GameProfile profile){return (UUID)ReflectionUtils.call(method_GameProfile_id, profile);}
+	private static final String getName(GameProfile profile){return (String)ReflectionUtils.call(method_GameProfile_name, profile);}
+	public static final PropertyMap getProperties(GameProfile profile){return (PropertyMap)ReflectionUtils.call(method_GameProfile_properties, profile);}
 	private static Multimap<String, Property> convertMapType(PropertyMap pm){
 		Multimap<String, Property> properties = LinkedListMultimap.create();
 		for(var e : pm.entries()) properties.put(e.getKey(), e.getValue());
@@ -39,7 +39,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 	private static Field field_CraftPlayerProfile_uniqueId, field_CraftPlayerProfile_name, field_CraftPlayerProfile_properties;
 	static{
 		try{
-			class_CraftPlayerProfile = ReflectionUtils.getRefClass("{cb}.profile.CraftPlayerProfile").getRealClass();
+			class_CraftPlayerProfile = ReflectionUtils.getClass("{cb}.profile.CraftPlayerProfile");
 			field_CraftPlayerProfile_uniqueId = class_CraftPlayerProfile.getField("uniqueId");
 			field_CraftPlayerProfile_name = class_CraftPlayerProfile.getField("name");
 			field_CraftPlayerProfile_properties = class_CraftPlayerProfile.getField("properties");
@@ -119,8 +119,8 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 		}
 		catch(ReflectiveOperationException e1){
 			try{
-				method_asResolvableProfile = ReflectionUtils.getRefClass(class_ResolvableProfile)
-						.findMethod(/*isStatic=*/true, class_ResolvableProfile, GameProfile.class).getRealMethod();
+				method_asResolvableProfile = ReflectionUtils.findMethod(
+						class_ResolvableProfile, /*isStatic=*/true, class_ResolvableProfile, GameProfile.class);
 			}
 			catch(RuntimeException e2){
 				Bukkit.getLogger().severe("YetAnotherProfile: Unable to convert to ResolvableProfile");

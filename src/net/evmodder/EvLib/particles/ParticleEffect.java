@@ -14,8 +14,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
-import net.evmodder.EvLib.bukkit.ReflectionUtils;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefClass;
+import net.evmodder.EvLib.util.ReflectionUtils;
 /**
  * <b>ParticleEffect_BROKEN Library</b>
  * <p>
@@ -1012,12 +1011,12 @@ public enum ParticleEffect {
 				return;
 			}
 			try {
-				enumParticle = ReflectionUtils.getRefClass("{nms}.EnumParticle").getClass();
-				RefClass packetClass = ReflectionUtils.getRefClass("{nms}.PacketPlayOutWorldParticles");
-				packetConstructor = packetClass.getConstructor(packetClass).getRealConstructor();
-				getHandle = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer").getMethod("getHandle").getRealMethod();
-				playerConnection = ReflectionUtils.getRefClass("{nms}.EntityPlayer").getField("playerConnection").getRealField();
-				RefClass packet = ReflectionUtils.getRefClass("{nms}.Packet");
+				enumParticle = ReflectionUtils.getClass("{nms}.EnumParticle");
+				Class<?> packetClass = ReflectionUtils.getClass("{nms}.PacketPlayOutWorldParticles");
+				packetConstructor = ReflectionUtils.getConstructor(packetClass, packetClass);
+				getHandle = ReflectionUtils.getClass("{cb}.entity.CraftPlayer").getMethod("getHandle");
+				playerConnection = ReflectionUtils.getClass("{nms}.EntityPlayer").getField("playerConnection");
+				Class<?> packet = ReflectionUtils.getClass("{nms}.Packet");
 				sendPacket = playerConnection.getType().getMethod("sendPacket", packet.getClass());
 			} catch (Exception exception) {
 				throw new VersionIncompatibleException("Your current bukkit version seems to be incompatible with this library", exception);

@@ -1,4 +1,4 @@
-package net.evmodder.EvLib.bukkit;
+package net.evmodder.EvLib.util;
 
 import java.util.Arrays;
 import java.util.HashMap;

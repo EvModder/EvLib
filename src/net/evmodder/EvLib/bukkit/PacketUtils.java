@@ -1,10 +1,10 @@
 package net.evmodder.EvLib.bukkit;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import org.bukkit.entity.Player;
 import io.netty.channel.Channel;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefField;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
+import net.evmodder.EvLib.util.ReflectionUtils;
 
 public class PacketUtils{
 /*
@@ -54,38 +54,37 @@ public class PacketUtils{
 		@EventHandler public void onQuit(PlayerQuitEvent evt){removePlayer(evt.getPlayer());}
 	}, pl);*/
 
-	private final static RefClass craftPlayerClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
-	private final static RefMethod playerGetHandleMethod = craftPlayerClazz.getMethod("getHandle");
-	private final static RefClass entityPlayerClazz = ReflectionUtils.getRefClass("{nms}.EntityPlayer", "{nm}.server.level.EntityPlayer");
-	private final static RefClass playerConnectionClazz = ReflectionUtils.getRefClass("{nms}.PlayerConnection", "{nm}.server.network.PlayerConnection");
-	private final static RefField playerConnectionField = entityPlayerClazz.findField(playerConnectionClazz);
-	private final static RefClass networkManagerClazz = ReflectionUtils.getRefClass("{nms}.NetworkManager", "{nm}.network.NetworkManager");
-	private final static RefField networkManagerField;
+	private final static Class<?> classCraftPlayer = ReflectionUtils.getClass("{cb}.entity.CraftPlayer");
+	private final static Method method_CraftPlayer_getHandle = ReflectionUtils.getMethod(classCraftPlayer, "getHandle");
+	private final static Class<?> classEntityPlayer = ReflectionUtils.getClass("{nms}.EntityPlayer", "{nm}.server.level.EntityPlayer");
+	private final static Class<?> classPlayerConnection = ReflectionUtils.getClass("{nms}.PlayerConnection", "{nm}.server.network.PlayerConnection");
+	private final static Field fieldPlayerConnection = ReflectionUtils.findField(classEntityPlayer, classPlayerConnection);
+	private final static Class<?> classNetworkManager = ReflectionUtils.getClass("{nms}.NetworkManager", "{nm}.network.NetworkManager");
+	private final static Field fieldNetworkManager;
 	static{
-		RefField field;
+		Field field;
 		try{
-			field = playerConnectionClazz.findField(networkManagerClazz);
+			field = ReflectionUtils.findField(classPlayerConnection, classNetworkManager);
 		}
 		catch(RuntimeException ex){
-			field = ReflectionUtils.getRefClass("{nm}.server.network.ServerCommonPacketListenerImpl").findField(networkManagerClazz);
+			field = ReflectionUtils.findField(ReflectionUtils.getClass("{nm}.server.network.ServerCommonPacketListenerImpl"), classNetworkManager);
 		}
-		networkManagerField = field;
+		fieldNetworkManager = field;
 	}
-	private final static RefField channelField = networkManagerClazz.findField(Channel.class);
+	private final static Field fieldChannel = ReflectionUtils.findField(classNetworkManager, Channel.class);
 
 	public static Channel getPlayerChannel(Player player){
-		final Object playerEntity = playerGetHandleMethod.of(player).call();
-		final Object playerConnection = playerConnectionField.of(playerEntity).get();
-		final Object networkManager = networkManagerField.of(playerConnection).get();
-		return (Channel)channelField.of(networkManager).get();
+		final Object playerEntity = ReflectionUtils.call(method_CraftPlayer_getHandle, player);
+		final Object playerConnection = ReflectionUtils.get(fieldPlayerConnection, playerEntity);
+		final Object networkManager = ReflectionUtils.get(fieldNetworkManager, playerConnection);
+		return (Channel)ReflectionUtils.get(fieldChannel, networkManager);
 	}
 
-	private final static RefClass classPacket = ReflectionUtils.getRefClass("{nms}.Packet", "{nm}.network.protocol.Packet");
-	private final static RefMethod sendPacketMethod = playerConnectionClazz.findMethod(/*isStatic=*/false, Void.TYPE, classPacket);
+	private final static Class<?> classPacket = ReflectionUtils.getClass("{nms}.Packet", "{nm}.network.protocol.Packet");
+	private final static Method method_PlayerConnection_sendPacket = ReflectionUtils.findMethod(classPlayerConnection, /*isStatic=*/false, Void.TYPE, classPacket);
 	public static void sendPacket(Player player, Object packet){
-		Object entityPlayer = playerGetHandleMethod.of(player).call();
-		Object playerConnection = playerConnectionField.of(entityPlayer).get();
-		Object castPacket = classPacket.getRealClass().cast(packet);
-		sendPacketMethod.of(playerConnection).call(castPacket);
+		Object entityPlayer = ReflectionUtils.call(method_CraftPlayer_getHandle, player);
+		Object playerConnection = ReflectionUtils.get(fieldPlayerConnection, entityPlayer);
+		ReflectionUtils.call(method_PlayerConnection_sendPacket, playerConnection, classPacket.cast(packet));
 	}
 }
