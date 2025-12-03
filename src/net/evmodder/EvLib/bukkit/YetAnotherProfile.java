@@ -18,7 +18,7 @@ import com.mojang.authlib.properties.PropertyMap;
 import net.evmodder.EvLib.util.ReflectionUtils;
 
 public record YetAnotherProfile(UUID id, String name, Multimap<String, Property> properties){
-	public YetAnotherProfile(UUID id, String name){this(id, name, LinkedListMultimap.create());}
+	public YetAnotherProfile(UUID id, String name){this(id, name, null);}
 
 	private static final Method method_GameProfile_id = ReflectionUtils.findMethodByName(GameProfile.class, "id", "getId");
 	private static final Method method_GameProfile_name = ReflectionUtils.findMethodByName(GameProfile.class, "name", "getName");
@@ -27,6 +27,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 	private static final String getName(GameProfile profile){return (String)ReflectionUtils.call(method_GameProfile_name, profile);}
 	public static final PropertyMap getProperties(GameProfile profile){return (PropertyMap)ReflectionUtils.call(method_GameProfile_properties, profile);}
 	private static Multimap<String, Property> convertMapType(PropertyMap pm){
+		if(pm == null) return null;
 		Multimap<String, Property> properties = LinkedListMultimap.create();
 		for(var e : pm.entries()) properties.put(e.getKey(), e.getValue());
 		return properties;
@@ -37,32 +38,41 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 
 	private static Class<?> class_CraftPlayerProfile;
 	private static Field field_CraftPlayerProfile_uniqueId, field_CraftPlayerProfile_name, field_CraftPlayerProfile_properties;
+	private static Field field_CraftPlayerProfile_profile;
 	static{
-		try{
-			class_CraftPlayerProfile = ReflectionUtils.getClass("{cb}.profile.CraftPlayerProfile");
-			field_CraftPlayerProfile_uniqueId = class_CraftPlayerProfile.getField("uniqueId");
-			field_CraftPlayerProfile_name = class_CraftPlayerProfile.getField("name");
-			field_CraftPlayerProfile_properties = class_CraftPlayerProfile.getField("properties");
+		class_CraftPlayerProfile = ReflectionUtils.getClass("com.destroystokyo.paper.profile.CraftPlayerProfile", "{cb}.profile.CraftPlayerProfile");
+		try{ // Paper 1.21.9+
+			field_CraftPlayerProfile_profile = ReflectionUtils.getField(class_CraftPlayerProfile, "profile");
 		}
-		catch(RuntimeException | ReflectiveOperationException e){
-//			e.printStackTrace();
+		catch(RuntimeException e1){
+			try{
+				field_CraftPlayerProfile_uniqueId = ReflectionUtils.getField(class_CraftPlayerProfile, "uniqueId");
+				field_CraftPlayerProfile_name = ReflectionUtils.getField(class_CraftPlayerProfile, "name");
+				field_CraftPlayerProfile_properties = ReflectionUtils.getField(class_CraftPlayerProfile, "properties");
+			}
+			catch(RuntimeException e2){
+//				e.printStackTrace();
+			}
 		}
 	}
 	private static UUID getId(Object playerProfile){
-		try{return (UUID)field_CraftPlayerProfile_uniqueId.get(playerProfile);}
-		catch(ReflectiveOperationException e){e.printStackTrace(); return null;}
+		try{return (UUID)ReflectionUtils.get(field_CraftPlayerProfile_uniqueId, playerProfile);}
+		catch(RuntimeException e){e.printStackTrace(); return null;}
 	}
 	private static String getName(Object playerProfile){
-		try{return (String)field_CraftPlayerProfile_name.get(playerProfile);}
-		catch(ReflectiveOperationException e){e.printStackTrace(); return null;}
+		try{return (String)ReflectionUtils.get(field_CraftPlayerProfile_name, playerProfile);}
+		catch(RuntimeException e){e.printStackTrace(); return null;}
 	}
 	@SuppressWarnings("unchecked")
 	private static Multimap<String, Property> getProperties(Object playerProfile){
-		try{return (Multimap<String, Property>)field_CraftPlayerProfile_properties.get(playerProfile);}
-		catch(ReflectiveOperationException e){e.printStackTrace(); return null;}
+		try{return (Multimap<String, Property>)ReflectionUtils.get(field_CraftPlayerProfile_properties, playerProfile);}
+		catch(RuntimeException e){e.printStackTrace(); return null;}
 	}
 	public static YetAnotherProfile fromPlayerProfile(Object playerProfile){
-		return new YetAnotherProfile(getId(playerProfile), getName(playerProfile), getProperties(playerProfile));
+		if(field_CraftPlayerProfile_profile != null){
+			return fromGameProfile((GameProfile)ReflectionUtils.get(field_CraftPlayerProfile_profile, playerProfile));
+		}
+		else return new YetAnotherProfile(getId(playerProfile), getName(playerProfile), getProperties(playerProfile));
 	}
 
 	private static Method method_OfflinePlayer_getPlayerProfile;
@@ -84,7 +94,21 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 		}
 	}
 
+	private static Constructor<?> cnstr_GameProfile;
+	private static Constructor<?> cnstr_PropertyMap;
+	static{
+		try{
+			cnstr_PropertyMap = ReflectionUtils.getConstructor(PropertyMap.class, Multimap.class);
+			cnstr_GameProfile = ReflectionUtils.getConstructor(GameProfile.class, UUID.class, String.class, PropertyMap.class);
+		}
+		catch(RuntimeException e){}
+	}
 	public GameProfile asGameProfile(){
+		if(properties == null) return new GameProfile(id, name);
+		if(cnstr_GameProfile != null){
+			PropertyMap pm = (PropertyMap)ReflectionUtils.construct(cnstr_PropertyMap, properties);
+			return (GameProfile)ReflectionUtils.construct(cnstr_GameProfile, id, name, pm);
+		}
 		GameProfile gp = new GameProfile(id, name);
 		getProperties(gp).putAll(properties);
 		return gp;
@@ -97,8 +121,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 	public Object asPlayerProfile(){
 		try{
 			Object playerProfile = method_Bukkit_createPlayerProfile.invoke(null, id, name);
-			Multimap<String, Property> properties = getProperties(playerProfile);
-			properties.putAll(this.properties);
+			if(properties != null) getProperties(playerProfile).putAll(properties);
 			return playerProfile;
 		}
 		catch(ReflectiveOperationException e){
@@ -139,25 +162,37 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 
 	private static Method[] method_ResolvableProfile_RecordAccessors;
 	private static Field field_ResolvableProfile_name, field_ResolvableProfile_id, field_ResolvableProfile_properties;
+	private static Field field_ResolvableProfile_partialProfile;
 	static{
 		try{
 			final Class<?> class_ResolveableProfile = Class.forName("net.minecraft.world.item.component.ResolvableProfile");
 			//if(class_ResolveableProfile.isInstance(profile)) printError = true;
 			try{
-				field_ResolvableProfile_id = class_ResolveableProfile.getDeclaredField("id");
-				field_ResolvableProfile_id.setAccessible(true);
-				field_ResolvableProfile_name = class_ResolveableProfile.getDeclaredField("name");
-				field_ResolvableProfile_name.setAccessible(true);
-				field_ResolvableProfile_properties = class_ResolveableProfile.getDeclaredField("properties");
-				field_ResolvableProfile_properties.setAccessible(true);
+				// 1.21.9+
+				field_ResolvableProfile_partialProfile = class_ResolveableProfile.getDeclaredField("partialProfile");
 			}
-			// 1.21.4+ changed ResolveableProfile class type to a Record
-			catch(NoSuchFieldException e){
-				//if((boolean)Class.class.getMethod("isRecord").invoke(clazzResolveableProfile)){
-				Object[] rcs = (Object[])Class.class.getMethod("getRecordComponents").invoke(class_ResolveableProfile);
-				Method getAccessor = rcs[0].getClass().getMethod("getAccessor");
-				method_ResolvableProfile_RecordAccessors = new Method[rcs.length];
-				for(int i=0; i<3; ++i) method_ResolvableProfile_RecordAccessors[i] = (Method)getAccessor.invoke(rcs[i]);
+			catch(NoSuchFieldException e1){
+				try{ // Pre 1.21.5
+					field_ResolvableProfile_id = class_ResolveableProfile.getDeclaredField("id");
+					field_ResolvableProfile_id.setAccessible(true);
+					field_ResolvableProfile_name = class_ResolveableProfile.getDeclaredField("name");
+					field_ResolvableProfile_name.setAccessible(true);
+					field_ResolvableProfile_properties = class_ResolveableProfile.getDeclaredField("properties");
+					field_ResolvableProfile_properties.setAccessible(true);
+				}
+				// 1.21.4+ changed ResolveableProfile class type to a Record
+				catch(NoSuchFieldException e2){
+					//if((boolean)Class.class.getMethod("isRecord").invoke(clazzResolveableProfile)){
+					Object[] rcs = (Object[])Class.class.getMethod("getRecordComponents").invoke(class_ResolveableProfile);
+					if(rcs == null){
+//						Bukkit.getLogger().warning("YAP: No support ResolvableProfile data extraction method found");
+					}
+					else{
+						Method getAccessor = rcs[0].getClass().getMethod("getAccessor");
+						method_ResolvableProfile_RecordAccessors = new Method[rcs.length];
+						for(int i=0; i<3; ++i) method_ResolvableProfile_RecordAccessors[i] = (Method)getAccessor.invoke(rcs[i]);
+					}
+				}
 			}
 		}
 		catch(ReflectiveOperationException e){
@@ -172,7 +207,10 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 		final Optional<UUID> uuidOptional;
 		final PropertyMap properties;
 		try{
-			if(method_ResolvableProfile_RecordAccessors != null){
+			if(field_ResolvableProfile_partialProfile != null){
+				return fromGameProfile((GameProfile)field_ResolvableProfile_partialProfile.get(profile));
+			}
+			else if(method_ResolvableProfile_RecordAccessors != null){
 				uuidOptional = (Optional<UUID>)method_ResolvableProfile_RecordAccessors[1].invoke(profile);
 				nameOptional = (Optional<String>)method_ResolvableProfile_RecordAccessors[0].invoke(profile);
 				properties = (PropertyMap)method_ResolvableProfile_RecordAccessors[2].invoke(profile);
@@ -183,19 +221,19 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 				properties = (PropertyMap)field_ResolvableProfile_properties.get(profile);
 			}
 			else{
-				Bukkit.getLogger().severe("DropHeads-YAP: Unable to convert from ResolvableProfile");
+				Bukkit.getLogger().severe("YAP: Unable to convert from ResolvableProfile");
 				return null;
 			}
 		}
 		catch(ReflectiveOperationException e){
-			Bukkit.getLogger().severe("DropHeads-YAP: Unable to convert from ResolvableProfile");
+			Bukkit.getLogger().severe("YAP: Unable to convert from ResolvableProfile");
 			e.printStackTrace();
 			return null;
 		}
 		final String name = nameOptional.orElse("");
 		final UUID uuid = uuidOptional.orElseThrow(() -> new NullPointerException("UUID missing in ResolvableProfile"));
 //		GameProfile gp = new GameProfile(uuid, name);
-//		getProperties(gp).putAll(properties);
+//		if(properties != null) getProperties(gp).putAll(properties);
 //		return new YetAnotherProfile(gp);
 		return new YetAnotherProfile(uuid, name, convertMapType(properties));
 	}
@@ -204,14 +242,12 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 	private static boolean useGameProfileForMetas;
 	static{
 		try{
-			field_SkullMeta_profile = SkullMeta.class.getDeclaredField("profile");
-			field_Skull_profile = Skull.class.getDeclaredField("profile");
+			field_SkullMeta_profile = ReflectionUtils.getField(ReflectionUtils.getClass("{cb}.inventory.CraftMetaSkull"), "profile");
+			field_Skull_profile = ReflectionUtils.getField(ReflectionUtils.getClass("{cb}.block.CraftSkull"), "profile");
 		}
-		catch(ReflectiveOperationException e){
+		catch(RuntimeException e){
 			e.printStackTrace();
 		}
-		field_SkullMeta_profile.setAccessible(true);
-		field_Skull_profile.setAccessible(true);
 		useGameProfileForMetas = field_SkullMeta_profile.getType().equals(GameProfile.class);
 	}
 	public void set(SkullMeta skullMeta){

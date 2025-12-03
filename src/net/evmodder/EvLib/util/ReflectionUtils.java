@@ -22,9 +22,19 @@ public class ReflectionUtils{// version = X1.0
 	private static final String serverVersionString; // 1_13_2
 	public static final boolean isForge; // TRUE if server uses Force or MCPC+
 //	public static String getServerVersionString(){return serverVersionString;}
+
+	private static String stripUnderscore(String str){
+		int i=0;
+		while(i < str.length() && str.charAt(i) == '_') ++i;
+		int j=str.length()-1;
+		while(j > i && str.charAt(j) == '_') --j;
+		return j == i ? "" : str.substring(i, j+1);
+	}
 	public static boolean isAtLeastVersion(String version){
-		String[] partsA = version.replaceAll("[A-Za-z]+", "").replaceAll("[^0-9]+", "_").split("_");
-		String[] partsB = serverVersionString.split("_");
+		version = stripUnderscore(version.replaceAll("[^0-9]+", "_"));
+		String[] partsA = serverVersionString.split("_");
+		String[] partsB = version.split("_");
+//		org.bukkit.Bukkit.getLogger().info("verA:"+version+",versionB:"+serverVersionString);
 		for(int i=0; i<partsA.length; ++i){
 			if(i == partsB.length) return true;
 			try{
@@ -39,7 +49,6 @@ public class ReflectionUtils{// version = X1.0
 		}
 		return partsA.length >= partsB.length;
 	}
-
 	static{
 		boolean tempIsForge = false;
 		String tempPkgCraftBukkit = "org.bukkit.craftbukkit";
@@ -75,7 +84,7 @@ public class ReflectionUtils{// version = X1.0
 		isForge = tempIsForge;
 		pkgCraftBukkit = tempPkgCraftBukkit;
 		pkgMinecraft = tempPkgMinecraft;
-		serverVersionString = bukkitVersion.replaceAll("[A-Za-z]+", "").replaceAll("[^0-9]+", "_");
+		serverVersionString = stripUnderscore(bukkitVersion.replaceAll("[^0-9]+", "_"));
 	}
 
 
@@ -186,8 +195,15 @@ public class ReflectionUtils{// version = X1.0
 	 * @throws RuntimeException if field not found
 	 */
 	public static Field getField(Class<?> clazz, String name){
-		try{return clazz.getField(name);}
-		catch(NoSuchFieldException | SecurityException e){throw new RuntimeException(e);}
+		try{
+			Field f = clazz.getDeclaredField(name);
+			f.setAccessible(true);
+			return f;
+		}
+		catch(NoSuchFieldException | SecurityException e1){
+			try{return clazz.getField(name);}
+			catch(NoSuchFieldException | SecurityException e2){throw new RuntimeException(e2);}
+		}
 	}
 
 	/**
