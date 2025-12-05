@@ -8,7 +8,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.TropicalFish.Pattern;
-import net.evmodder.EvLib.TextUtils;
+import net.evmodder.EvLib.util.TextUtils_New;
 
 public final class EntityUtils{
 	static int version = 13;
@@ -119,7 +119,7 @@ public final class EntityUtils{
 		PCC pcc = PCCFromInt(pccInt);
 		StringBuilder builder = new StringBuilder(fishColorNames.get(pcc.bodyColor));
 		if(pcc.bodyColor != pcc.patternColor) builder.append('-').append(fishColorNames.get(pcc.patternColor));
-		builder.append(' ').append(TextUtils.capitalizeAndSpacify(pcc.pattern.name(), '_'));
+		builder.append(' ').append(TextUtils_New.capitalizeAndSpacify(pcc.pattern.name(), '_'));
 		name = builder.toString();
 		cachedTropicalFishNames.put(pccInt, name); // Cache size can reach up to 2700 varieties (15*15*12)
 		return name;

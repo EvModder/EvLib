@@ -3,9 +3,7 @@ package net.evmodder.EvLib.util;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.bukkit.ChatColor;
-import net.evmodder.EvLib.TextUtils;
-import net.evmodder.EvLib.TextUtils.StrAndPxLen;
+import net.evmodder.EvLib.util.TextUtils_New.StrAndPxLen;
 
 /**<pre>
  * TabText: class to write column formatted text in minecraft chat area
@@ -81,7 +79,7 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 				fixI = i;
 			}
 			for(int j=0; j<fields.length; ++j){
-				tt.tabs[j] = Math.max(tt.tabs[j], TextUtils.strLenExact(fields[j], mono));
+				tt.tabs[j] = Math.max(tt.tabs[j], TextUtils_New.strLenExact(fields[j], mono));
 				fields[j] = fields[j].trim();// Absorb any leading/trailing buffer provided by the caller
 			}
 			int missingTabs = tt.tabs.length - fields.length;
@@ -98,7 +96,7 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 			double leftover = ((mono ? MONO_WIDTH : CHAT_WIDTH) - sum) / tt.tabs.length;
 			for(int i=0; i<tt.tabs.length; ++i) tt.tabs[i] += leftover;
 		}
-		return tt.getPage(0, mono, ChatColor.BLACK);
+		return tt.getPage(0, mono, TextUtils_New.COLOR_CHAR+"0");
 	}
 
 	// SETTER METHODS
@@ -151,21 +149,21 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 			double needShift = lenLeft % 4;
 			if(needShift == 0){builder.append(' '); pxLen += 4;}
 			else if(needShift == 1){
-				if(lenLeft >= 5){builder.append(ChatColor.BOLD).append(' ').append(resumeColor); pxLen += 5;}
+				if(lenLeft >= 5){builder.append(TextUtils_New.COLOR_CHAR).append('l').append(' ').append(resumeColor); pxLen += 5;}
 				else{builder.append(W1_HALF_C); pxLen += 1;}
 			}
 			else if(needShift == 2){
-				if(lenLeft >= 10){builder.append(ChatColor.BOLD).append("  ").append(resumeColor); pxLen += 10;}
+				if(lenLeft >= 10){builder.append(TextUtils_New.COLOR_CHAR).append('l').append("  ").append(resumeColor); pxLen += 10;}
 				else{builder.append(W2_HALF_C); pxLen += 2;}
 			}
 			else if(needShift == 3){
-				if(lenLeft >= 15){builder.append(ChatColor.BOLD).append("   ").append(resumeColor); pxLen += 15;}
+				if(lenLeft >= 15){builder.append(TextUtils_New.COLOR_CHAR).append('l').append("   ").append(resumeColor); pxLen += 15;}
 				else{builder.append(W3_HALF_C); pxLen += 3;}
 			}
-			else if(needShift == 1.5){builder.append(ChatColor.BOLD).append(W1_HALF_C).append(resumeColor); pxLen += 1.5;}
-			else if(needShift == 2.5){builder.append(ChatColor.BOLD).append(W2_HALF_C).append(resumeColor); pxLen += 2.5;}
-			else if(needShift == 3.5){builder.append(ChatColor.BOLD).append(W3_HALF_C).append(resumeColor); pxLen += 3.5;}
-			else if(needShift == 0.5){builder.append(ChatColor.BOLD).append(W4_HALF_C).append(resumeColor); pxLen += 4.5;}
+			else if(needShift == 1.5){builder.append(TextUtils_New.COLOR_CHAR).append('l').append(W1_HALF_C).append(resumeColor); pxLen += 1.5;}
+			else if(needShift == 2.5){builder.append(TextUtils_New.COLOR_CHAR).append('l').append(W2_HALF_C).append(resumeColor); pxLen += 2.5;}
+			else if(needShift == 3.5){builder.append(TextUtils_New.COLOR_CHAR).append('l').append(W3_HALF_C).append(resumeColor); pxLen += 3.5;}
+			else if(needShift == 0.5){builder.append(TextUtils_New.COLOR_CHAR).append('l').append(W4_HALF_C).append(resumeColor); pxLen += 4.5;}
 		}
 		return builder.toString();
 	}
@@ -176,7 +174,7 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 	 * @param monospace true if fonts are fixed width (for server console) or false if variable with (for chat area)
 	 * @return desired formatted, tabbed page
 	 */
-	public String getPage(int page, boolean monospace, ChatColor hideTabs){
+	public String getPage(int page, boolean monospace, String hideTabs){
 		// get bounds if user wants pages
 		int fromLine = (--page) * chatHeight;
 		int toLine = (fromLine + chatHeight > lines.length) ? lines.length : fromLine + chatHeight;
@@ -200,10 +198,10 @@ public class TabText{//max chat width is 53*6 + 2 = 320
 					double lenLeft = stopLen - lineLen;
 					if(hideTabs != null) line.append(hideTabs);
 					line.append(getPxSpaces(lenLeft, monospace, ""+hideTabs));
-					line.append(ChatColor.RESET);
+					line.append(TextUtils_New.COLOR_CHAR+"r");
 				}
 				// get field and set line properties
-				subStrAndSubPxLen = TextUtils.pxSubstring(fields[fieldPos], tabs[fieldPos], monospace);
+				subStrAndSubPxLen = TextUtils_New.pxSubstring(fields[fieldPos], tabs[fieldPos], monospace);
 				line.append(subStrAndSubPxLen.str);
 				lineLen += subStrAndSubPxLen.pxLen;
 				stopLen += tabs[fieldPos];
