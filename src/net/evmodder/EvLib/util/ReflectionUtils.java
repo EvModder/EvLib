@@ -216,9 +216,9 @@ public class ReflectionUtils{// version = X1.0
 	public static Method getMethod(Class<?> clazz, String name, Object... types){
 		Class<?>[] classes = new Class[types.length];
 		for(int i=0; i<types.length; ++i) classes[i] = types[i] instanceof Class c ? c : types[i].getClass();
-		try{return clazz.getMethod(name, classes);}
+		try{return clazz.getDeclaredMethod(name, classes);}
 		catch(NoSuchMethodException ignored){
-			try{return clazz.getDeclaredMethod(name, classes);}
+			try{return clazz.getMethod(name, classes);}
 			catch(NoSuchMethodException | SecurityException e){throw new RuntimeException(e);}
 		}
 	}
@@ -233,12 +233,12 @@ public class ReflectionUtils{// version = X1.0
 		Class<?>[] classes = new Class[types.length];
 		for(int i=0; i<types.length; ++i) classes[i] = types[i] instanceof Class c ? c : types[i].getClass();
 		try{
-			Constructor<?> c = clazz.getConstructor(classes);
+			Constructor<?> c = clazz.getDeclaredConstructor(classes);
 			c.setAccessible(true);
 			return c;
 		}
 		catch(NoSuchMethodException ignored){
-			try{return clazz.getDeclaredConstructor(classes);}
+			try{return clazz.getConstructor(classes);}
 			catch(NoSuchMethodException | SecurityException e){throw new RuntimeException(e);}
 		}
 	}
@@ -257,8 +257,8 @@ public class ReflectionUtils{// version = X1.0
 		Class<?>[] classes = new Class[types.length];
 		for(int i=0; i<types.length; ++i) classes[i] = types[i] instanceof Class c ? c : types[i].getClass();
 		List<Method> methods = new ArrayList<>();
-		Collections.addAll(methods, clazz.getMethods());
 		Collections.addAll(methods, clazz.getDeclaredMethods());
+		Collections.addAll(methods, clazz.getMethods());
 		Method deprecatedM = null;
 		for(Method m : methods){
 			if(Modifier.isStatic(m.getModifiers()) != isStatic) continue;
@@ -279,8 +279,8 @@ public class ReflectionUtils{// version = X1.0
 	 */
 	public static Method findMethodByName(Class<?> clazz, String... names){
 		HashSet<String> nameCheck = new HashSet<>(Arrays.asList(names));
-		for(Method m : clazz.getMethods()) if(nameCheck.contains(m.getName())) return m;
 		for(Method m : clazz.getDeclaredMethods()) if(nameCheck.contains(m.getName())) return m;
+		for(Method m : clazz.getMethods()) if(nameCheck.contains(m.getName())) return m;
 		throw new RuntimeException("no such method");
 	}
 
@@ -292,8 +292,8 @@ public class ReflectionUtils{// version = X1.0
 	 */
 	public static Method findMethodByReturnType(Class<?> clazz, Class<?> type){
 		if(type == null) type = void.class;
-		for(Method m : clazz.getMethods()) if(type.equals(m.getReturnType())) return m;
 		for(Method m : clazz.getDeclaredMethods()) if(type.equals(m.getReturnType())) return m;
+		for(Method m : clazz.getMethods()) if(type.equals(m.getReturnType())) return m;
 		throw new RuntimeException("no such method");
 	}
 
@@ -304,8 +304,8 @@ public class ReflectionUtils{// version = X1.0
 	 * @throws RuntimeException if constructor not found
 	 */
 	public static Constructor<?> findConstructor(Class<?> clazz, int number){
-		for(Constructor<?> c : clazz.getConstructors()) if(c.getParameterTypes().length == number) return c;
 		for(Constructor<?> c : clazz.getDeclaredConstructors()) if(c.getParameterTypes().length == number) return c;
+		for(Constructor<?> c : clazz.getConstructors()) if(c.getParameterTypes().length == number) return c;
 		throw new RuntimeException("no such constructor");
 	}
 
