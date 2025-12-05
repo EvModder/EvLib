@@ -1,6 +1,4 @@
-package net.evmodder.EvLib.bukkit;
-
-import org.bukkit.Location;
+package net.evmodder.EvLib.util;
 
 public class Section {
 	public final int maxX, minX;
@@ -20,12 +18,45 @@ public class Section {
 		else{this.maxZ = minZ; this.minZ = maxZ;}
 	}
 
-	public boolean contains(Location l){
-		if(l.getWorld().getName().equals(world) &&
-			maxX >= l.getBlockX() && minX <= l.getBlockX() &&
-			maxY >= l.getBlockY() && minY <= l.getBlockY() &&
-			maxZ >= l.getBlockZ() && minZ <= l.getBlockZ()) return true;
+	public boolean contains(String world, int x, int y, int z){
+		if(this.world.equals(world) &&
+			maxX >= x && minX <= x &&
+			maxY >= y && minY <= y &&
+			maxZ >= z && minZ <= z) return true;
 		else return false;
+	}
+	private static Class<?> classLocation, classVec3i;
+	private static java.lang.reflect.Method methodWorld_getName;
+	static{
+		try{
+			classLocation = Class.forName("org.bukkit.Location");
+			methodWorld_getName = Class.forName("org.bukkit.World").getMethod("getName");
+		}
+		catch(ReflectiveOperationException e){}
+		try{classVec3i = Class.forName("net.minecraft.util.math.Vec3i");} catch(ClassNotFoundException e){}
+	}
+	public boolean contains(Object obj){
+		try{
+			if(classLocation != null && classLocation.isInstance(obj)){
+				String world = (String)methodWorld_getName.invoke(classLocation.getMethod("getWorld").invoke(obj));
+				int x = (int)classLocation.getMethod("getBlockX").invoke(obj);
+				int y = (int)classLocation.getMethod("getBlockY").invoke(obj);
+				int z = (int)classLocation.getMethod("getBlockZ").invoke(obj);
+				return contains(world, x, y, z);
+			}
+			else if(classVec3i != null && classVec3i.isInstance(obj)){
+				String world = null;
+				int x = (int)classVec3i.getMethod("getX").invoke(obj);
+				int y = (int)classVec3i.getMethod("getY").invoke(obj);
+				int z = (int)classVec3i.getMethod("getZ").invoke(obj);
+				return contains(world, x, y, z);
+			}
+			else throw new RuntimeException("Section.contains(obj) doesn't recognize class-type: "+obj.getClass().getName());
+		}
+		catch(ReflectiveOperationException e){
+//			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
