@@ -2,15 +2,16 @@ package net.evmodder.EvLib;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
+import net.evmodder.EvLib.util.ReflectionUtils;
 
 public class TextUtils{
+	public static final char COLOR_CHAR = '\u00A7';
 	public static final char[] COLOR_CHARS = new char[]
 			{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', /*r*/};
 	public static final char[] FORMAT_CHARS = new char[]{'k', 'l', 'm', 'n', 'o', /*r*/};
@@ -93,23 +94,23 @@ public class TextUtils{
 			else{
 				colorPending = false;
 				if(isSimpleColorOrFormat(msg[i])){
-					builder.append(ChatColor.COLOR_CHAR).append(msg[i]);
+					builder.append(COLOR_CHAR).append(msg[i]);
 				}
 				else if(msg[i] == '#' || msg[i] == 'x' && i+3 < msg.length){//§x§0§0§9§9§0§0
 					if(msg[i+1] == altColorChar){
 						if(i+6 < msg.length && isHex(msg[i+2]) && isHex(msg[i+4]) && isHex(msg[i+6])){//&#&r&r&g&g&b&b or &#&r&g&b
 							if(i+12 < msg.length && isHex(msg[i+8]) && isHex(msg[i+10]) && isHex(msg[i+12])){//&#&r&r&g&g&b&b
-								builder.append(ChatColor.COLOR_CHAR).append('x')
-									.append(ChatColor.COLOR_CHAR).append(msg[i+2]).append(ChatColor.COLOR_CHAR).append(msg[i+4])//r
-									.append(ChatColor.COLOR_CHAR).append(msg[i+6]).append(ChatColor.COLOR_CHAR).append(msg[i+8])//g
-									.append(ChatColor.COLOR_CHAR).append(msg[i+10]).append(ChatColor.COLOR_CHAR).append(msg[i+12]);//b
+								builder.append(COLOR_CHAR).append('x')
+									.append(COLOR_CHAR).append(msg[i+2]).append(COLOR_CHAR).append(msg[i+4])//r
+									.append(COLOR_CHAR).append(msg[i+6]).append(COLOR_CHAR).append(msg[i+8])//g
+									.append(COLOR_CHAR).append(msg[i+10]).append(COLOR_CHAR).append(msg[i+12]);//b
 								i += 12;
 							}
 							else{//&#&r&g&b
-								builder.append(ChatColor.COLOR_CHAR).append('x')
-									.append(ChatColor.COLOR_CHAR).append(msg[i+2]).append(ChatColor.COLOR_CHAR).append(msg[i+2])//r
-									.append(ChatColor.COLOR_CHAR).append(msg[i+4]).append(ChatColor.COLOR_CHAR).append(msg[i+4])//g
-									.append(ChatColor.COLOR_CHAR).append(msg[i+6]).append(ChatColor.COLOR_CHAR).append(msg[i+6]);//b
+								builder.append(COLOR_CHAR).append('x')
+									.append(COLOR_CHAR).append(msg[i+2]).append(COLOR_CHAR).append(msg[i+2])//r
+									.append(COLOR_CHAR).append(msg[i+4]).append(COLOR_CHAR).append(msg[i+4])//g
+									.append(COLOR_CHAR).append(msg[i+6]).append(COLOR_CHAR).append(msg[i+6]);//b
 								i += 6;
 							}
 						}
@@ -118,17 +119,17 @@ public class TextUtils{
 					else{
 						if(isHex(msg[i+1]) && isHex(msg[i+2]) && isHex(msg[i+3])){//&#rrggbb or //&#rgb
 							if(i+6 < msg.length && isHex(msg[i+4]) && isHex(msg[i+5]) && isHex(msg[i+6])){//&#rrggbb
-								builder.append(ChatColor.COLOR_CHAR).append('x')
-									.append(ChatColor.COLOR_CHAR).append(msg[i+1]).append(ChatColor.COLOR_CHAR).append(msg[i+2])//r
-									.append(ChatColor.COLOR_CHAR).append(msg[i+3]).append(ChatColor.COLOR_CHAR).append(msg[i+4])//g
-									.append(ChatColor.COLOR_CHAR).append(msg[i+5]).append(ChatColor.COLOR_CHAR).append(msg[i+6]);//b
+								builder.append(COLOR_CHAR).append('x')
+									.append(COLOR_CHAR).append(msg[i+1]).append(COLOR_CHAR).append(msg[i+2])//r
+									.append(COLOR_CHAR).append(msg[i+3]).append(COLOR_CHAR).append(msg[i+4])//g
+									.append(COLOR_CHAR).append(msg[i+5]).append(COLOR_CHAR).append(msg[i+6]);//b
 								i += 6;
 							}
 							else{//&#rgb
-								builder.append(ChatColor.COLOR_CHAR).append('x')
-									.append(ChatColor.COLOR_CHAR).append(msg[i+1]).append(ChatColor.COLOR_CHAR).append(msg[i+1])//r
-									.append(ChatColor.COLOR_CHAR).append(msg[i+2]).append(ChatColor.COLOR_CHAR).append(msg[i+2])//g
-									.append(ChatColor.COLOR_CHAR).append(msg[i+3]).append(ChatColor.COLOR_CHAR).append(msg[i+3]);//b
+								builder.append(COLOR_CHAR).append('x')
+									.append(COLOR_CHAR).append(msg[i+1]).append(COLOR_CHAR).append(msg[i+1])//r
+									.append(COLOR_CHAR).append(msg[i+2]).append(COLOR_CHAR).append(msg[i+2])//g
+									.append(COLOR_CHAR).append(msg[i+3]).append(COLOR_CHAR).append(msg[i+3]);//b
 								i += 3;
 							}
 						}
@@ -173,12 +174,12 @@ public class TextUtils{
 		//return str.replaceAll("(?:"+altColorChar+"x(?:"+altColorChar+"[0-9a-fA-F]){6})|(?:"+altColorChar+"[0-9a-fA-FrR])", "");
 		return str.replaceAll(altColorChar+"(?:(?:x(?:"+altColorChar+"[0-9a-fA-F]){6})|[0-9a-fA-FrR])", "");
 	}
-	public static String stripColorsOnly(String str){return stripColorsOnly(str, ChatColor.COLOR_CHAR);}
+	public static String stripColorsOnly(String str){return stripColorsOnly(str, COLOR_CHAR);}
 	public static String stripFormatsOnly(String str, char altColorChar){
 		//§[k-oK-O]
 		return str.replaceAll(altColorChar+"[k-oK-O]", "");
 	}
-	public static String stripFormatsOnly(String str){return stripFormatsOnly(str, ChatColor.COLOR_CHAR);}
+	public static String stripFormatsOnly(String str){return stripFormatsOnly(str, COLOR_CHAR);}
 
 	// TODO: rewrite without regex because performance is nice
 	public static String getLeadingColorAndFormats(String str){
@@ -213,13 +214,13 @@ public class TextUtils{
 	public static String getCurrentColor(String str){
 		final char[] msg = str.toCharArray();
 		for(int i=msg.length-1; i>0; --i){
-			if(msg[i-1] == ChatColor.COLOR_CHAR){
-				if(i >= 13 && msg[i-13] == ChatColor.COLOR_CHAR && msg[i-12] == 'x' 
-						&& msg[i-11] == ChatColor.COLOR_CHAR && isHex(msg[i-10])
-						&& msg[i-9] == ChatColor.COLOR_CHAR && isHex(msg[i-8])
-						&& msg[i-7] == ChatColor.COLOR_CHAR && isHex(msg[i-6])
-						&& msg[i-5] == ChatColor.COLOR_CHAR && isHex(msg[i-4])
-						&& msg[i-3] == ChatColor.COLOR_CHAR && isHex(msg[i-2])
+			if(msg[i-1] == COLOR_CHAR){
+				if(i >= 13 && msg[i-13] == COLOR_CHAR && msg[i-12] == 'x' 
+						&& msg[i-11] == COLOR_CHAR && isHex(msg[i-10])
+						&& msg[i-9] == COLOR_CHAR && isHex(msg[i-8])
+						&& msg[i-7] == COLOR_CHAR && isHex(msg[i-6])
+						&& msg[i-5] == COLOR_CHAR && isHex(msg[i-4])
+						&& msg[i-3] == COLOR_CHAR && isHex(msg[i-2])
 						&& isHex(msg[i])) return str.substring(i-13, i+1);//&x&1&1&2&2&9&9
 				if(isSimpleColor(msg[i])) return str.substring(i-1, i+1);//&9
 			}
@@ -231,8 +232,8 @@ public class TextUtils{
 		StringBuilder builder = new StringBuilder();
 		final char[] msg = str.toCharArray();
 		int i=msg.length-1;
-		for(; i>0; --i) if(msg[i-1] == ChatColor.COLOR_CHAR && (isSimpleColor(msg[i]) || msg[i] == 'x')){++i; break;}
-		for(++i; i<msg.length; ++i) if(msg[i-1] == ChatColor.COLOR_CHAR && isFormat(msg[i])){
+		for(; i>0; --i) if(msg[i-1] == COLOR_CHAR && (isSimpleColor(msg[i]) || msg[i] == 'x')){++i; break;}
+		for(++i; i<msg.length; ++i) if(msg[i-1] == COLOR_CHAR && isFormat(msg[i])){
 			final String formatStr = str.substring(i-1, i+1);
 			if(builder.indexOf(formatStr) == -1) builder.append(formatStr);
 		}
@@ -244,17 +245,17 @@ public class TextUtils{
 		StringBuilder builder = new StringBuilder();
 		final char[] msg = str.toCharArray();
 		int i=msg.length-1;
-		for(; i>0; --i) if(msg[i-1] == ChatColor.COLOR_CHAR){
-			if(i >= 13 && msg[i-13] == ChatColor.COLOR_CHAR && msg[i-12] == 'x' 
-					&& msg[i-11] == ChatColor.COLOR_CHAR && isHex(msg[i-10])
-					&& msg[i-9] == ChatColor.COLOR_CHAR && isHex(msg[i-8])
-					&& msg[i-7] == ChatColor.COLOR_CHAR && isHex(msg[i-6])
-					&& msg[i-5] == ChatColor.COLOR_CHAR && isHex(msg[i-4])
-					&& msg[i-3] == ChatColor.COLOR_CHAR && isHex(msg[i-2])
+		for(; i>0; --i) if(msg[i-1] == COLOR_CHAR){
+			if(i >= 13 && msg[i-13] == COLOR_CHAR && msg[i-12] == 'x' 
+					&& msg[i-11] == COLOR_CHAR && isHex(msg[i-10])
+					&& msg[i-9] == COLOR_CHAR && isHex(msg[i-8])
+					&& msg[i-7] == COLOR_CHAR && isHex(msg[i-6])
+					&& msg[i-5] == COLOR_CHAR && isHex(msg[i-4])
+					&& msg[i-3] == COLOR_CHAR && isHex(msg[i-2])
 					&& isHex(msg[i])){builder.insert(0, str.substring(i-13, i+1)); ++i; break;}
 			if(isSimpleColor(msg[i])){builder.insert(0, str.substring(i-1, i+1)); ++i; break;}
 		}
-		for(++i; i<msg.length; ++i) if(msg[i-1] == ChatColor.COLOR_CHAR && isFormat(msg[i])){
+		for(++i; i<msg.length; ++i) if(msg[i-1] == COLOR_CHAR && isFormat(msg[i])){
 			final String formatStr = str.substring(i-1, i+1);
 			if(builder.indexOf(formatStr) == -1) builder.append(formatStr);
 		}
@@ -449,14 +450,13 @@ public class TextUtils{
 
 	private static ChatColor enchAquaOr(ItemStack item, ChatColor c){return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : c;}
 	public static ChatColor getRarityColor(ItemStack item){
-		final int version = Integer.parseInt(Bukkit.getBukkitVersion().split("-")[0].split("\\.")[1]);
 		//String itemNameFormat = item.hasItemMeta() && item.getItemMeta().hasDisplayName() ? ""+ChatColor.ITALIC : "";
-		if(version >= 14){
+		if(ReflectionUtils.isAtLeastVersion("1.14")){
 			switch(item.getType().name()){
 				case "MOJANG_BANNER_PATTERN":
-					return Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.LIGHT_PURPLE : ChatColor.AQUA;
+					return ReflectionUtils.isAtLeastVersion("1.21.2") ? ChatColor.LIGHT_PURPLE : ChatColor.AQUA;
 				case "SKULL_BANNER_PATTERN":
-					return Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? enchAquaOr(item, ChatColor.YELLOW) : ChatColor.AQUA; 
+					return ReflectionUtils.isAtLeastVersion("1.21.2") ? enchAquaOr(item, ChatColor.YELLOW) : ChatColor.AQUA; 
 				// EPIC:
 				case "JIGSAW":
 				case "LIGHT":
@@ -473,7 +473,7 @@ public class TextUtils{
 					// Fallthrough intended
 			}
 		}
-		if(Bukkit.getBukkitVersion().compareTo("1.21.2") >= 0){
+		if(ReflectionUtils.isAtLeastVersion("1.21.2")){
 			switch(item.getType().name()){
 				case "RECOVERY_COMPASS":
 				case "GOAT_HORN":
@@ -514,24 +514,24 @@ public class TextUtils{
 			// VERSION-DEPENDENT:
 			case CHAINMAIL_HELMET: case CHAINMAIL_CHESTPLATE: case CHAINMAIL_LEGGINGS: case CHAINMAIL_BOOTS:
 			case NAUTILUS_SHELL:
-				return enchAquaOr(item, Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.WHITE : ChatColor.YELLOW);
+				return enchAquaOr(item, ReflectionUtils.isAtLeastVersion("1.21.2") ? ChatColor.WHITE : ChatColor.YELLOW);
 			case TRIDENT:
-				return Bukkit.getBukkitVersion().compareTo("1.21") >= 0 ?
-						(Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.LIGHT_PURPLE : ChatColor.AQUA)
+				return ReflectionUtils.isAtLeastVersion("1.21") ?
+						(ReflectionUtils.isAtLeastVersion("1.21.2") ? ChatColor.LIGHT_PURPLE : ChatColor.AQUA)
 						: enchAquaOr(item, ChatColor.WHITE);
 			case ENCHANTED_GOLDEN_APPLE:
-				return Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.LIGHT_PURPLE : ChatColor.AQUA;
+				return ReflectionUtils.isAtLeastVersion("1.21.2") ? ChatColor.LIGHT_PURPLE : ChatColor.AQUA;
 			case CONDUIT:
-				return Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.AQUA : enchAquaOr(item, ChatColor.YELLOW);
+				return ReflectionUtils.isAtLeastVersion("1.21.2") ? ChatColor.AQUA : enchAquaOr(item, ChatColor.YELLOW);
 			case MUSIC_DISC_11: case MUSIC_DISC_13: case MUSIC_DISC_BLOCKS: case MUSIC_DISC_CAT: case MUSIC_DISC_CHIRP: case MUSIC_DISC_FAR:
 			case MUSIC_DISC_MALL: case MUSIC_DISC_MELLOHI: case MUSIC_DISC_STAL: case MUSIC_DISC_WAIT: case MUSIC_DISC_WARD:
-				return Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.AQUA : enchAquaOr(item, ChatColor.YELLOW);
+				return ReflectionUtils.isAtLeastVersion("1.21.2") ? ChatColor.AQUA : enchAquaOr(item, ChatColor.YELLOW);
 			case NETHER_STAR:
 			case WITHER_SKELETON_SKULL:
-				return enchAquaOr(item, Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.YELLOW : ChatColor.AQUA);
+				return enchAquaOr(item, ReflectionUtils.isAtLeastVersion("1.21.2") ? ChatColor.YELLOW : ChatColor.AQUA);
 			case ELYTRA:
 			case DRAGON_HEAD:
-				return Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? enchAquaOr(item, ChatColor.YELLOW) : ChatColor.LIGHT_PURPLE;
+				return ReflectionUtils.isAtLeastVersion("1.21.2") ? enchAquaOr(item, ChatColor.YELLOW) : ChatColor.LIGHT_PURPLE;
 			// EPIC:
 			case DRAGON_EGG:
 			case DEBUG_STICK:
@@ -542,7 +542,7 @@ public class TextUtils{
 			case STRUCTURE_VOID:
 				return ChatColor.LIGHT_PURPLE;
 			case SPAWNER:
-				return Bukkit.getBukkitVersion().compareTo("1.19.3") < 0 ? ChatColor.LIGHT_PURPLE : enchAquaOr(item, ChatColor.WHITE);
+				return ReflectionUtils.isAtLeastVersion("1.19.3") ? ChatColor.LIGHT_PURPLE : enchAquaOr(item, ChatColor.WHITE);
 			// RARE:
 			case BEACON:
 			case END_CRYSTAL:
@@ -568,7 +568,7 @@ public class TextUtils{
 				}
 				if(item.getType().name().equals("MUSIC_DISC_5") || item.getType().name().equals("MUSIC_DISC_RELIC") ||
 						item.getType().name().equals("MUSIC_DISC_CREATOR_MUSIC_BOX")){
-					return Bukkit.getBukkitVersion().compareTo("1.21.2") < 0 ? ChatColor.AQUA : enchAquaOr(item, ChatColor.YELLOW);
+					return ReflectionUtils.isAtLeastVersion("1.21.2") ? ChatColor.AQUA : enchAquaOr(item, ChatColor.YELLOW);
 				}
 				return enchAquaOr(item, ChatColor.WHITE);
 			}
