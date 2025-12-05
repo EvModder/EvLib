@@ -130,7 +130,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 		return null;
 	}
 	private static Constructor<?> cnstr_ResolvableProfile;
-	private static Method method_asResolvableProfile;
+	private static Method method_ResolvableProfile_fromGameProfile;
 	static{
 		Class<?> class_ResolvableProfile = null;
 		try{
@@ -142,7 +142,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 		}
 		catch(ReflectiveOperationException e1){
 			try{
-				method_asResolvableProfile = ReflectionUtils.findMethod(
+				method_ResolvableProfile_fromGameProfile = ReflectionUtils.findMethod(
 						class_ResolvableProfile, /*isStatic=*/true, class_ResolvableProfile, GameProfile.class);
 			}
 			catch(RuntimeException e2){
@@ -154,7 +154,8 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 	public Object asResolvableProfile(){
 		try{
 			if(cnstr_ResolvableProfile != null) return cnstr_ResolvableProfile.newInstance(asGameProfile());
-			if(method_asResolvableProfile != null) method_asResolvableProfile.invoke(null, asGameProfile());
+			if(method_ResolvableProfile_fromGameProfile != null) return method_ResolvableProfile_fromGameProfile.invoke(null, asGameProfile());
+			throw new RuntimeException("no conversion function found for YetAnotherProfile -> ResolvableProfile");
 		}
 		catch(ReflectiveOperationException e){e.printStackTrace();}
 		return null;
@@ -239,7 +240,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 	}
 
 	private static Field field_SkullMeta_profile, field_Skull_profile;
-	private static boolean useGameProfileForMetas;
+	private static boolean useGameProfileForCraftSkull;
 	static{
 		try{
 			field_SkullMeta_profile = ReflectionUtils.getField(ReflectionUtils.getClass("{cb}.inventory.CraftMetaSkull"), "profile");
@@ -248,11 +249,12 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 		catch(RuntimeException e){
 			e.printStackTrace();
 		}
-		useGameProfileForMetas = field_SkullMeta_profile.getType().equals(GameProfile.class);
+		useGameProfileForCraftSkull = field_SkullMeta_profile.getType().equals(GameProfile.class);
+		Bukkit.getLogger().info("YetAnotherProfile: use GameProfile for Skull/SkullMeta: "+useGameProfileForCraftSkull);
 	}
 	public void set(SkullMeta skullMeta){
 		try{
-			field_SkullMeta_profile.set(skullMeta, useGameProfileForMetas ? asGameProfile() : asResolvableProfile());
+			field_SkullMeta_profile.set(skullMeta, useGameProfileForCraftSkull ? asGameProfile() : asResolvableProfile());
 		}
 		catch(ReflectiveOperationException e){
 			e.printStackTrace();
@@ -260,7 +262,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 	}
 	public void set(Skull skull){
 		try{
-			field_Skull_profile.set(skull, useGameProfileForMetas ? asGameProfile() : asResolvableProfile());
+			field_Skull_profile.set(skull, useGameProfileForCraftSkull ? asGameProfile() : asResolvableProfile());
 		}
 		catch(ReflectiveOperationException e){
 			e.printStackTrace();
@@ -269,7 +271,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 	public static YetAnotherProfile fromSkullMeta(SkullMeta skullMeta){
 		try{
 			Object profile = field_SkullMeta_profile.get(skullMeta);
-			return useGameProfileForMetas ? fromGameProfile((GameProfile)profile) : fromResolvableProfile(profile);
+			return useGameProfileForCraftSkull ? fromGameProfile((GameProfile)profile) : fromResolvableProfile(profile);
 		}
 		catch(ReflectiveOperationException e){
 			e.printStackTrace();
@@ -279,7 +281,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 	public static YetAnotherProfile fromSkull(Skull skull){
 		try{
 			Object profile = field_Skull_profile.get(skull);
-			return useGameProfileForMetas ? fromGameProfile((GameProfile)profile) : fromResolvableProfile(profile);
+			return useGameProfileForCraftSkull ? fromGameProfile((GameProfile)profile) : fromResolvableProfile(profile);
 		}
 		catch(ReflectiveOperationException e){
 			e.printStackTrace();
