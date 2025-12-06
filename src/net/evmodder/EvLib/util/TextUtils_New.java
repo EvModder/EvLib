@@ -176,6 +176,15 @@ public class TextUtils_New{
 		return str.replaceAll(altColorChar+"[k-oK-O]", "");
 	}
 	public static String stripFormatsOnly(String str){return stripFormatsOnly(str, COLOR_CHAR);}
+	public static String stripColorAndFormats(String str, char altColorChar){
+		return stripColorsOnly(stripFormatsOnly(str, altColorChar), altColorChar);
+	}
+	public static String stripColorAndFormats(String str){return stripColorAndFormats(str, COLOR_CHAR);}
+
+//	// Copied directly from ChatColor.stripColor, to remove dependency
+//	// TODO: consider custom implementation (optimized?), or some other justification for using copied code instead of reference
+//	private static final Pattern STRIP_COLOR_PATTERN = Pattern.compile("(?i)" + String.valueOf(COLOR_CHAR) + "[0-9A-FK-ORX]");
+//	private static String stripColor(final String input){return input == null ? null : STRIP_COLOR_PATTERN.matcher(input).replaceAll("");}
 
 	// TODO: rewrite without regex because performance is nice
 	public static String getLeadingColorAndFormats(String str, char altColorChar){
@@ -479,21 +488,13 @@ public class TextUtils_New{
 		}
 	}
 
-	private static final Pattern STRIP_COLOR_PATTERN = Pattern.compile("(?i)" + String.valueOf(COLOR_CHAR) + "[0-9A-FK-ORX]");
-
-	// Copied directly from ChatColor.stripColor, to remove dependency
-	// TODO: consider custom implementation (optimized?), or some other justification for using copied code instead of reference
-	private static String stripColor(final String input) {
-		return input == null ? null : STRIP_COLOR_PATTERN.matcher(input).replaceAll("");
-	}
-
 	/**
 	 * returns String pixel-width, considering format codes
 	 * @param str the String to check
 	 * @return String width in pixels
 	 */
 	public static int strLen(String str, boolean mono){
-		if(mono) return stripColor(str).length();
+		if(mono) return stripColorAndFormats(str).length();
 		int len = 0;
 		boolean bold = false, colorPick = false, halfPixel = false;
 		for(char ch : str.toCharArray()){
@@ -524,7 +525,7 @@ public class TextUtils_New{
 	}
 
 	public static double strLenExact(String str, boolean mono){
-		if(mono) return stripColor(str).length();
+		if(mono) return stripColorAndFormats(str).length();
 		double len = 0;
 		boolean bold = false, colorPick = false;
 		for(char ch : str.toCharArray()){
