@@ -32,7 +32,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.plugin.Plugin;
 import com.mojang.authlib.properties.Property;
-import net.evmodder.EvLib.FileIO;
+import net.evmodder.EvLib.util.FileIO;
 
 public class WebUtils {
 	private final static String authserver = "https://authserver.mojang.com";
@@ -813,7 +813,6 @@ public class WebUtils {
 //				"{\"italic\":false,\"extra\":[{\"italic\":false,\"extra\":[{\"translate\":\"item.minecraft.netherite_sword\"}],\"text\":\"\"}],\"text\":\"\"}");
 //		System.out.println(c.toString());
 		//com.sun.org.apache.xml.internal.security.Init.init();
-		FileIO.DIR = "./";
 //		reformatTexturesFile();
 //		replaceTexturesWithUpdatedTextures();
 //		printUUIDsForTextureKeys();
