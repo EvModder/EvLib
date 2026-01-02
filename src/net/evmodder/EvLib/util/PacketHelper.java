@@ -180,29 +180,29 @@ public final class PacketHelper{
 		}
 		else{
 			if(msg.length > Short.MAX_VALUE){LOGGER.severe("sendPacket() called with invalid message (length > Short.MAX_VALUE)!"); return;}
-			if(socketTCP == null || socketTCP.isClosed() || !socketTCP.isConnected()){
-				try{
-					socketTCP = new Socket();
-					socketTCP.setPerformancePreferences(2, 1, 0);//TODO: Java standard library has not implemented this yet???
-					socketTCP.setTrafficClass(/*IPTOS_LOWDELAY=*/0x10);
-//					socketTCP.setTcpNoDelay(true);
 
-					//socketTCP.setOption(ExtendedSocketOptions.IP_DONTFRAGMENT, true);//java.lang.UnsupportedOperationException
-//					socketTCP.setSendBufferSize(64);   //TODO: find a way to resize BEFORE connect, not after, without having it overridden by server socket
-//					socketTCP.setReceiveBufferSize(64);//TODO: find a way to resize BEFORE connect, not after, without having it overridden by server socket
-				}
-				catch(SocketException e){e.printStackTrace(); return;}
-			}
-
-			if(lastTimeoutTCP != timeout){
-				lastTimeoutTCP = timeout;
-//				try{socketTCP.setSoTimeout((int)timeout);}
-//				catch(SocketException e){e.printStackTrace(); return;}
-			}
-
+			final long stopWaitingTs = timeout == 0 ? Long.MAX_VALUE : System.currentTimeMillis() + timeout;
 			new Thread(()->{
-				final long stopWaitingTs = timeout == 0 ? Long.MAX_VALUE : System.currentTimeMillis() + timeout;
-				if(socketTCP.isClosed() || !socketTCP.isConnected() || lastPortTCP != port || socketTCP.isOutputShutdown()){
+				if(socketTCP == null || socketTCP.isClosed()){
+					try{
+						socketTCP = new Socket();
+						socketTCP.setPerformancePreferences(2, 1, 0);//TODO: Java standard library has not implemented this yet???
+						socketTCP.setTrafficClass(/*IPTOS_LOWDELAY=*/0x10);
+//						socketTCP.setTcpNoDelay(true);
+
+						//socketTCP.setOption(ExtendedSocketOptions.IP_DONTFRAGMENT, true);//java.lang.UnsupportedOperationException
+//						socketTCP.setSendBufferSize(64);   //TODO: find a way to resize BEFORE connect, not after, without having it overridden by server socket
+//						socketTCP.setReceiveBufferSize(64);//TODO: find a way to resize BEFORE connect, not after, without having it overridden by server socket
+					}
+					catch(SocketException e){e.printStackTrace(); return;}
+				}
+
+				if(lastTimeoutTCP != timeout){
+					lastTimeoutTCP = timeout;
+//					try{socketTCP.setSoTimeout((int)timeout);}
+//					catch(SocketException e){e.printStackTrace(); return;}
+				}
+				if(!socketTCP.isConnected() || lastPortTCP != port || socketTCP.isOutputShutdown()){
 					lastPortTCP = port;
 					try{socketTCP.connect(new InetSocketAddress(addr, port), (int)timeout);}
 					catch(ConnectException e){LOGGER.severe("Failed to connect to RemoteServer"); return;}
