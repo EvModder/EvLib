@@ -171,6 +171,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 			try{
 				// 1.21.9+
 				field_ResolvableProfile_partialProfile = class_ResolveableProfile.getDeclaredField("partialProfile");
+				field_ResolvableProfile_partialProfile.setAccessible(true);
 			}
 			catch(NoSuchFieldException e1){
 				try{ // Pre 1.21.5
