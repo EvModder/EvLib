@@ -23,9 +23,7 @@ import java.util.logging.Logger;
 
 public final class FileIO{
 	private static final Logger LOGGER;
-
-	// TODO: Make final (only modifier: ConfigUtils)
-	public static String DIR;//= FabricLoader.getInstance().getConfigDir().toString()+"/";
+	public static final String DIR;//= FabricLoader.getInstance().getConfigDir().toString()+"/";
 	static{
 		String tempDir = "./";
 		try{
@@ -36,7 +34,7 @@ public final class FileIO{
 			try{
 				Object fabricLoader = Class.forName("net.fabricmc.loader.api.FabricLoader").getMethod("getInstance").invoke(null);
 				tempDir = fabricLoader.getClass().getMethod("getConfigDir").invoke(fabricLoader).toString()+"/"+
-							// TODO: dynamic config dir for specific mod?
+					// TODO: dynamic config dir for specific mod?
 							"evmod"
 //							Class.forName("net.evmodder.evmod.Main").getField("MOD_ID").get(null)
 							+"/";
