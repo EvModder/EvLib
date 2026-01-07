@@ -2,6 +2,8 @@ package net.evmodder.EvLib.util;
 
 public enum Command{
 	PING,
+	REQUEST_CLIENT_KEY,
+
 	DB_PEARL_FETCH_BY_UUID,
 	DB_PEARL_FETCH_BY_XZ,
 	DB_PEARL_STORE_BY_UUID,
