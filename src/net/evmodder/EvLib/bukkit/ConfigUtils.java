@@ -7,45 +7,38 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Vector;
+import java.util.List;
+import java.util.stream.Stream;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 import net.evmodder.EvLib.util.FileIO;
 
-public final class ConfigUtils{// version = X1.0
-	static private final String EV_DIR = "./plugins/EvFolder/";
-	/** Defaults to <code>"./plugins/&lt;EvPluginName&gt;/"</code>
-	 */
-//	static public String DIR = EV_DIR;//TODO: remove public? (only user: EvLib/extras/WebUtils.java)
-	static final int MERGE_EV_DIR_THRESHOLD = 4;
+public final class ConfigUtils{// version = X1.1
 
-	public static Vector<String> installedEvPlugins(){
-		final Vector<String> evPlugins = new Vector<>();
-		for(final Plugin pl : Bukkit.getServer().getPluginManager().getPlugins()){
-			if(pl instanceof EvPlugin) evPlugins.add(pl.getName());
-		}
-		return evPlugins;
+	public static List<String> installedEvPlugins(){
+		return Stream.of(Bukkit.getServer().getPluginManager().getPlugins()).filter(EvPlugin.class::isInstance).map(Plugin::getName).toList();
 	}
 
-	public static void verifyDir(Plugin evPl){
-		final Vector<String> evPlugins = ConfigUtils.installedEvPlugins();
+	private static final String DEFAULT_DIR_NAME = "./plugins/EvFolder/";
+	private static final int MERGE_EV_DIR_THRESHOLD = 4;
+	public static void updateConfigDirName(Plugin evPl){
+		final List<String> evPlugins = ConfigUtils.installedEvPlugins();
 		final String CUSTOM_DIR = "./plugins/"+evPl.getName()+"/";
-		if(!new File(EV_DIR).exists() && (evPl.getName().equals("DropHeads") || evPlugins.size() < MERGE_EV_DIR_THRESHOLD)){
+		if(!new File(DEFAULT_DIR_NAME).exists() && (evPl.getName().equals("DropHeads") || evPlugins.size() < MERGE_EV_DIR_THRESHOLD)){
 			FileIO.DIR = CUSTOM_DIR;
 		}
 		else if(new File(CUSTOM_DIR).exists()){//merge with EvFolder
 			//Bukkit.getLogger().info("EvPlugins installed: "+String.join(", ", evPlugins));
 			evPl.getLogger().warning("Relocating data in "+CUSTOM_DIR+", this might take a minute..");
-			final File evFolder = new File(EV_DIR);
+			final File evFolder = new File(DEFAULT_DIR_NAME);
 			if(!evFolder.exists()) evFolder.mkdir();
 			net.evmodder.EvLib.util.FileIO.moveDirectoryContents(new File(CUSTOM_DIR), evFolder);
 		}
 	}
-
-	public static YamlConfiguration loadConfig(JavaPlugin pl, String configName, InputStream defaultConfig, boolean notifyIfNew){
+	
+	public static YamlConfiguration loadConfig(Plugin pl, String configName, InputStream defaultConfig, boolean notifyIfNew){
 		if(!configName.endsWith(".yml")){
 			pl.getLogger().severe("Invalid config file!");
 			pl.getLogger().severe("Configuation files must end in .yml");

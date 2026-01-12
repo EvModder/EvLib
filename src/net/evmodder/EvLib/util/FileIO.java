@@ -15,39 +15,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 public final class FileIO{
-//	private static final Logger LOGGER;
-	public static final String DIR;//= FabricLoader.getInstance().getConfigDir().toString()+"/";
-	static{
-		String tempDir = "./";
-		try{
-			Class.forName("org.bukkit.Bukkit");
-			tempDir = "./plugins/EvFolder/";
-		}
-		catch(ClassNotFoundException e1){
-			try{
-				Object fabricLoader = Class.forName("net.fabricmc.loader.api.FabricLoader").getMethod("getInstance").invoke(null);
-				tempDir = fabricLoader.getClass().getMethod("getConfigDir").invoke(fabricLoader).toString()+"/"+
-					// TODO: dynamic config dir for specific mod?
-							"evmod"
-//							Class.forName("net.evmodder.evmod.Main").getField("MOD_ID").get(null)
-							+"/";
-			}
-//			catch(IllegalArgumentException | NoSuchFieldException e){e.printStackTrace();}
-			catch(ClassNotFoundException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | SecurityException e){
-			}
-		}
-		DIR = tempDir;
-
-//		Logger tempLogger = Logger.getLogger("EvLibMod-FileIO");
-//		try{tempLogger = (Logger)Class.forName("net.evmodder.ServerMain").getField("LOGGER").get(null);}
-//		catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException | ClassNotFoundException e){}
-//		LOGGER = tempLogger;
-	}
+	// Modifiers: FabricEntryPoint(mods), ConfigUtils(plugins)
+	// (ServerLogic(DB) leaves it unchanged)
+	public static String DIR = "./";
 
 	public static final String loadFile(String filename, String defaultValue){
 		BufferedReader reader = null;
