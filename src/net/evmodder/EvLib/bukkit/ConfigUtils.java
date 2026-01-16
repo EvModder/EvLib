@@ -34,7 +34,7 @@ public final class ConfigUtils{// version = X1.1
 			evPl.getLogger().warning("Relocating data in "+CUSTOM_DIR+", this might take a minute..");
 			final File evFolder = new File(DEFAULT_DIR_NAME);
 			if(!evFolder.exists()) evFolder.mkdir();
-			net.evmodder.EvLib.util.FileIO.moveDirectoryContents(new File(CUSTOM_DIR), evFolder);
+			FileIO.moveDirectoryContents(new File(CUSTOM_DIR), evFolder);
 		}
 	}
 	

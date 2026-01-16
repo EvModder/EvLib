@@ -454,11 +454,6 @@ public class WebUtils {
 		String[] targetHeads = new String[]{
 //				"BOAT", "CHEST_BOAT", "LEASH_KNOT", "ARMOR_STAND", "PAINTING", "ITEM_FRAME"
 //				"PIG|COLD", "PIG|TEMPERATE", "PIG|WARM"
-				"HAPPY_GHAST",
-				"COPPER_GOLEM",
-				"COPPER_GOLEM|EXPOSED",
-				"COPPER_GOLEM|WEATHERED",
-				"COPPER_GOLEM|OXIDIZED"
 		};
 		String[] headsData = FileIO.loadFile("configs/head-textures.txt"/*"extra-textures/colored-collar-head-textures.txt"*/, "").split("\n");
 		if(headsData.length < 2) System.err.println("Empty textures file?");
@@ -483,7 +478,7 @@ public class WebUtils {
 //		String token = authenticateMicrosoft/*authenticateMojang*/(email, passw);
 //		System.out.println("token = "+token);
 		//Paste in Inspector Console while logged into Minecraft.net: console.log(`; ${document.cookie}`.split('; bearer_token=').pop().split(';').shift())
-		String token = "eyJraWQiOiIwNDkxODEiLCJhbGciOiJSUzI1NiJ9.eyJ4dWlkIjoiMjUzNTQ2NjM1MzY2NjY2NiIsImFnZyI6IkFkdWx0Iiwic3ViIjoiMWUzYTgyNDYtNTNmMC00ODBmLWIwYjMtMTFiNGU5ZDVkNTY0IiwiYXV0aCI6IlhCT1giLCJucyI6ImRlZmF1bHQiLCJyb2xlcyI6W10sImlzcyI6ImF1dGhlbnRpY2F0aW9uIiwiZmxhZ3MiOlsib3JkZXJzXzIwMjIiLCJtaW5lY3JhZnRfbmV0IiwibXNhbWlncmF0aW9uX3N0YWdlNCIsIm11bHRpcGxheWVyIiwidHdvZmFjdG9yYXV0aCJdLCJwcm9maWxlcyI6eyJtYyI6IjBlMzE0YjYwLTI5YzctNGUzNS1iZWYzLTNjNjUyYzhmYjQ2NyJ9LCJwbGF0Zm9ybSI6IldFQiIsInBmZCI6W3sidHlwZSI6Im1jIiwiaWQiOiIwZTMxNGI2MC0yOWM3LTRlMzUtYmVmMy0zYzY1MmM4ZmI0NjciLCJuYW1lIjoiRXZNb2RkZXIifV0sIm5iZiI6MTc2MDk3NDA3OSwiZXhwIjoxNzYxMDYwNDc5LCJpYXQiOjE3NjA5NzQwNzksImFpZCI6IjdkNWM4NDNiLWZlMjYtNDVmNy05MDczLWI2ODNiMmFjN2VjMyJ9.sbe0GkCErdh6H-jaJ8_jzms-PW1o2a4T-IKr5jki0eFYDToEOatVDwVFcVx60dQDD90RKF8NAMRjgfI2RuJE5lle5y9sEjaHoD_0z9Py7bCFe0D0bXeNaT0odZZqVJUH0ydtuVSiY_XbaPPveGCyUhkdiubdyC0HNeeKl1rBhxdpmW4xu64aYsr596QI6EhApte7qkd4fKWxUpmucLs7Rz4Yb7PjZo8VcUQ1uFryyteUsGFGlrEhgQyKao_ARUWsANk8iXzu41wWYdQvEMDioL6t-rC8EBUK-aACF3r4HuIVZFwg6qLM4sRs7FhII6X75R_MOmkXHyzZf-J3V-k3qg";
+		String token = "eyJraWQiOiIwNDkxODEiLCJhbGciOiJSUzI1NiJ9...";
 
 		System.out.println(String.join("\n", headsToFlip));
 		System.out.println("Beginning conversion...");

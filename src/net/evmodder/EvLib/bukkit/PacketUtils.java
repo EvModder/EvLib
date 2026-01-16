@@ -70,6 +70,7 @@ public class PacketUtils{
 			field = ReflectionUtils.findField(ReflectionUtils.getClass("{nm}.server.network.ServerCommonPacketListenerImpl"), classNetworkManager);
 		}
 		fieldNetworkManager = field;
+		fieldNetworkManager.setAccessible(true);
 	}
 	private final static Field fieldChannel = ReflectionUtils.findField(classNetworkManager, Channel.class);
 

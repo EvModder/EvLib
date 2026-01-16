@@ -372,9 +372,13 @@ public class TellrawUtils{
 			}
 			return builder.reverse().toString();
 		}
-		public RawTextComponent(String text){this.text = stripNoOpColorAndFormatCodes(text);}
+		public RawTextComponent(String text){
+			assert text != null;
+			this.text = stripNoOpColorAndFormatCodes(text);
+		}
 		public RawTextComponent(String text, String insert, TextClickAction click, TextHoverAction hover, String color, Map<Format, Boolean> formats){
 			super(insert, click, hover, color, formats);
+			assert text != null;
 			this.text = stripNoOpColorAndFormatCodes(text);
 		}
 		public RawTextComponent(String text, TextClickAction click){
