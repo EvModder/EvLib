@@ -21,6 +21,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -31,6 +32,7 @@ import javax.imageio.ImageIO;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.plugin.Plugin;
+import com.google.common.collect.LinkedListMultimap;
 import com.mojang.authlib.properties.Property;
 import net.evmodder.EvLib.util.FileIO;
 
@@ -154,18 +156,9 @@ public class WebUtils {
 		return getStringBetween(output, authBeg, authEnd);
 	}
 
-	static String addDashesForUUID(String uuidStr){
-		return uuidStr.substring(0, 8)+"-"+uuidStr.substring(8, 12)+"-"+uuidStr.substring(12, 16)
-				+"-"+uuidStr.substring(16, 20)+"-"+uuidStr.substring(20);
-	}
-
-	//Names are [3,16] characters from [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]
-	static HashMap<String, YetAnotherProfile> playerExists = new HashMap<>();
-	public static YetAnotherProfile addProfileToCache(String nameOrUUID, YetAnotherProfile profile){
-		if(nameOrUUID.matches("^[a-f0-9]{32}$")) nameOrUUID = addDashesForUUID(nameOrUUID);
-		return playerExists.put(nameOrUUID.toLowerCase(), profile);
-	}
-	private static YetAnotherProfile getProfileWebRequest(String nameOrUUID/*formatted*/, boolean fetchSkin){
+	private static final HashMap<String, YetAnotherProfile> playerExists = new HashMap<>();
+	private static final HashSet<String> fetchedWithSkin = new HashSet<>();
+	private static final YetAnotherProfile getProfileWebRequest(final String nameOrUUID/*formatted*/, final boolean fetchSkin){
 		YetAnotherProfile profile = null;
 		try{//Lookup by UUID
 			final UUID uuid = UUID.fromString(nameOrUUID);
@@ -176,13 +169,16 @@ public class WebUtils {
 				final int nameEnd = data.indexOf("\"", nameStart+1);
 				if(nameStart == -1 || nameEnd <= nameStart) return null;  // No account found for this UUID
 				final String name = data.substring(nameStart, nameEnd);
-				profile = new YetAnotherProfile(uuid, name);
-				if(fetchSkin){
+				if(!fetchSkin) profile = new YetAnotherProfile(uuid, name);
+				else{
+					profile = new YetAnotherProfile(uuid, name, LinkedListMultimap.create());
 					final int codeStart = data.indexOf("{\"name\":\"textures\",\"value\":\"")+28;
 					final int codeEnd = data.indexOf("\"}", codeStart+1);
 					if(codeStart == -1 || codeEnd <= codeStart) System.err.println("Failed to parse skin texture from Mojang API response");
 					final String base64 = data.substring(codeStart, codeEnd);
 					profile.properties().put("textures", new Property("textures", base64));
+					fetchedWithSkin.add(nameOrUUID);
+					fetchedWithSkin.add(name.toLowerCase());
 				}
 				playerExists.put(name.toLowerCase(), profile);
 			}
@@ -210,20 +206,30 @@ public class WebUtils {
 		playerExists.put(nameOrUUID, profile);
 		return profile;
 	}
-	public static YetAnotherProfile getProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
-		if(nameOrUUID.matches("^[a-f0-9]{32}$")) nameOrUUID = addDashesForUUID(nameOrUUID);
-		nameOrUUID = nameOrUUID.toLowerCase();
-		if(playerExists.containsKey(nameOrUUID)){
-			final YetAnotherProfile profile = playerExists.get(nameOrUUID);
-			if(fetchSkin && profile!= null && !profile.properties().containsKey("textures")) nameOrUUID = profile.id().toString();
-			else return profile;
-		}
-		if(nullForSync == null) return getProfileWebRequest(nameOrUUID, fetchSkin);
-		else{
-			final String n = nameOrUUID;
-			nullForSync.getServer().getScheduler().runTaskAsynchronously(nullForSync, ()->getProfileWebRequest(n, fetchSkin));
-			return null;
-		}
+	private static final String addDashesForUUID(final String uuidStr){
+		return uuidStr.substring(0, 8)+"-"+uuidStr.substring(8, 12)+"-"+uuidStr.substring(12, 16)
+				+"-"+uuidStr.substring(16, 20)+"-"+uuidStr.substring(20);
+	}
+	//Names are [3,16] characters from [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]
+	private static final String standardizeNameOrUUID(final String nameOrUUID){
+		return (nameOrUUID.matches("^[a-f0-9]{32}$") ? addDashesForUUID(nameOrUUID) : nameOrUUID).toLowerCase();
+	}
+	public static final YetAnotherProfile getProfile(final String nameOrUUID, final boolean fetchSkin, final Plugin nullForSync){
+		final String key = standardizeNameOrUUID(nameOrUUID);
+		final YetAnotherProfile profile = playerExists.get(key);
+		if(profile != null && (!fetchSkin || fetchedWithSkin.contains(key))) return profile;
+
+		if(nullForSync == null) return getProfileWebRequest(key, fetchSkin);
+		nullForSync.getServer().getScheduler().runTaskAsynchronously(nullForSync, ()->getProfileWebRequest(key, fetchSkin));
+		return null;
+	}
+	public static final YetAnotherProfile addProfileToCache(final YetAnotherProfile profile, final boolean withSkin){
+		final String keyName = standardizeNameOrUUID(profile.name()), keyUUID = standardizeNameOrUUID(profile.id().toString());
+		final YetAnotherProfile prevCachedByName = playerExists.put(keyName, profile);
+		final YetAnotherProfile prevCachedByUUID = playerExists.put(keyUUID, profile);
+//		assert (prevCachedByName == null) == (prevCachedByUuid == null);
+		if(withSkin){fetchedWithSkin.add(keyName); fetchedWithSkin.add(keyUUID);}
+		return prevCachedByUUID != null ? prevCachedByUUID : prevCachedByName;
 	}
 
 	static HashMap<String, String> textureExists = new HashMap<>();
