@@ -17,26 +17,26 @@ import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import net.evmodder.EvLib.util.ReflectionUtils;
 
-public record YetAnotherProfile(UUID id, String name, Multimap<String, Property> properties){
+public final record YetAnotherProfile(UUID id, String name, Multimap<String, Property> properties){
 	public YetAnotherProfile(UUID id, String name){this(id, name, null);}
 
 	private static final Method method_GameProfile_id = ReflectionUtils.findMethodByName(GameProfile.class, "id", "getId");
 	private static final Method method_GameProfile_name = ReflectionUtils.findMethodByName(GameProfile.class, "name", "getName");
 	private static final Method method_GameProfile_properties = ReflectionUtils.findMethodByName(GameProfile.class, "properties", "getProperties");
-	private static final UUID getId(GameProfile profile){return (UUID)ReflectionUtils.call(method_GameProfile_id, profile);}
-	private static final String getName(GameProfile profile){return (String)ReflectionUtils.call(method_GameProfile_name, profile);}
-	public static final PropertyMap getProperties(GameProfile profile){return (PropertyMap)ReflectionUtils.call(method_GameProfile_properties, profile);}
-	private static Multimap<String, Property> convertMapType(PropertyMap pm){
+	private static final UUID getId(final GameProfile profile){return (UUID)ReflectionUtils.call(method_GameProfile_id, profile);}
+	private static final String getName(final GameProfile profile){return (String)ReflectionUtils.call(method_GameProfile_name, profile);}
+	public static final PropertyMap getProperties(final GameProfile profile){return (PropertyMap)ReflectionUtils.call(method_GameProfile_properties, profile);}
+	private static final Multimap<String, Property> convertMapType(final PropertyMap pm){
 		if(pm == null) return null;
-		Multimap<String, Property> properties = LinkedListMultimap.create();
+		final Multimap<String, Property> properties = LinkedListMultimap.create();
 		for(var e : pm.entries()) properties.put(e.getKey(), e.getValue());
 		return properties;
 	}
-	public static YetAnotherProfile fromGameProfile(GameProfile profile){
+	public static final YetAnotherProfile fromGameProfile(final GameProfile profile){
 		return new YetAnotherProfile(getId(profile), getName(profile), convertMapType(getProperties(profile)));
 	}
 
-	private static Class<?> class_CraftPlayerProfile;
+	private static final Class<?> class_CraftPlayerProfile;
 	private static Field field_CraftPlayerProfile_uniqueId, field_CraftPlayerProfile_name, field_CraftPlayerProfile_properties;
 	private static Field field_CraftPlayerProfile_profile;
 	static{
@@ -55,20 +55,20 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 			}
 		}
 	}
-	private static UUID getId(Object playerProfile){
+	private static final UUID getId(final Object playerProfile){
 		try{return (UUID)ReflectionUtils.get(field_CraftPlayerProfile_uniqueId, playerProfile);}
 		catch(RuntimeException e){e.printStackTrace(); return null;}
 	}
-	private static String getName(Object playerProfile){
+	private static final String getName(final Object playerProfile){
 		try{return (String)ReflectionUtils.get(field_CraftPlayerProfile_name, playerProfile);}
 		catch(RuntimeException e){e.printStackTrace(); return null;}
 	}
 	@SuppressWarnings("unchecked")
-	private static Multimap<String, Property> getProperties(Object playerProfile){
+	private static final Multimap<String, Property> getProperties(final Object playerProfile){
 		try{return (Multimap<String, Property>)ReflectionUtils.get(field_CraftPlayerProfile_properties, playerProfile);}
 		catch(RuntimeException e){e.printStackTrace(); return null;}
 	}
-	public static YetAnotherProfile fromPlayerProfile(Object playerProfile){
+	public static final YetAnotherProfile fromPlayerProfile(final Object playerProfile){
 		if(field_CraftPlayerProfile_profile != null){
 			return fromGameProfile((GameProfile)ReflectionUtils.get(field_CraftPlayerProfile_profile, playerProfile));
 		}
@@ -84,7 +84,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 //			e.printStackTrace();
 		}
 	}
-	public static YetAnotherProfile fromPlayer(Player player){
+	public static final YetAnotherProfile fromPlayer(final Player player){
 		try{
 			return fromPlayerProfile(method_OfflinePlayer_getPlayerProfile.invoke(player));
 		}
@@ -103,7 +103,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 		}
 		catch(RuntimeException e){}
 	}
-	public GameProfile asGameProfile(){
+	public final GameProfile asGameProfile(){
 		if(properties == null) return new GameProfile(id, name);
 		if(cnstr_GameProfile != null){
 			PropertyMap pm = (PropertyMap)ReflectionUtils.construct(cnstr_PropertyMap, properties);
@@ -118,7 +118,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 		try{method_Bukkit_createPlayerProfile = Bukkit.class.getMethod("createPlayerProfile", UUID.class, String.class);}
 		catch(ReflectiveOperationException e){/*e.printStackTrace();*/}
 	}
-	public Object asPlayerProfile(){
+	public final Object asPlayerProfile(){
 		try{
 			Object playerProfile = method_Bukkit_createPlayerProfile.invoke(null, id, name);
 			if(properties != null) getProperties(playerProfile).putAll(properties);
@@ -151,7 +151,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 			}
 		}
 	}
-	public Object asResolvableProfile(){
+	public final Object asResolvableProfile(){
 		try{
 			if(cnstr_ResolvableProfile != null) return cnstr_ResolvableProfile.newInstance(asGameProfile());
 			if(method_ResolvableProfile_fromGameProfile != null) return method_ResolvableProfile_fromGameProfile.invoke(null, asGameProfile());
@@ -202,7 +202,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 		}
 	}
 	@SuppressWarnings("unchecked")
-	private static YetAnotherProfile fromResolvableProfile(Object profile){
+	private static final YetAnotherProfile fromResolvableProfile(final Object profile){
 		if(profile == null) return null;
 
 		final Optional<String> nameOptional;
@@ -253,7 +253,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 		useGameProfileForCraftSkull = field_SkullMeta_profile.getType().equals(GameProfile.class);
 		Bukkit.getLogger().info("YetAnotherProfile: use GameProfile for Skull/SkullMeta: "+useGameProfileForCraftSkull);
 	}
-	public void set(SkullMeta skullMeta){
+	public final void set(final SkullMeta skullMeta){
 		try{
 			field_SkullMeta_profile.set(skullMeta, useGameProfileForCraftSkull ? asGameProfile() : asResolvableProfile());
 		}
@@ -261,7 +261,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 			e.printStackTrace();
 		}
 	}
-	public void set(Skull skull){
+	public final void set(final Skull skull){
 		try{
 			field_Skull_profile.set(skull, useGameProfileForCraftSkull ? asGameProfile() : asResolvableProfile());
 		}
@@ -269,7 +269,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 			e.printStackTrace();
 		}
 	}
-	public static YetAnotherProfile fromSkullMeta(SkullMeta skullMeta){
+	public final static YetAnotherProfile fromSkullMeta(final SkullMeta skullMeta){
 		try{
 			Object profile = field_SkullMeta_profile.get(skullMeta);
 			return useGameProfileForCraftSkull ? fromGameProfile((GameProfile)profile) : fromResolvableProfile(profile);
@@ -279,7 +279,7 @@ public record YetAnotherProfile(UUID id, String name, Multimap<String, Property>
 			return null;
 		}
 	}
-	public static YetAnotherProfile fromSkull(Skull skull){
+	public final static YetAnotherProfile fromSkull(final Skull skull){
 		try{
 			Object profile = field_Skull_profile.get(skull);
 			return useGameProfileForCraftSkull ? fromGameProfile((GameProfile)profile) : fromResolvableProfile(profile);
