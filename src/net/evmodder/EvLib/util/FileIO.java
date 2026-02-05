@@ -15,7 +15,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileLock;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 public final class FileIO{
@@ -103,30 +107,62 @@ public final class FileIO{
 		return file.length() == 0 ? "" : file.substring(1);
 	}
 	public static final byte[] loadFileBytes(String filename){
-		try{
-			final FileInputStream fis = new FileInputStream(FileIO.DIR+filename);
-			final byte[] data = fis.readAllBytes();
-			fis.close();
-			return data;
-		}
-		catch(FileNotFoundException e){return null;}
+//		final File file = new File(FileIO.DIR+filename);
+//		try{
+//			final FileInputStream fis = new FileInputStream(file);
+////			final FileLock lock = fis.getChannel().tryLock();
+////			if(lock == null) return null;
+//			final byte[] data = fis.readAllBytes();
+//			fis.close();
+////			lock.release();
+//			return data;
+//		}
+//		catch(FileNotFoundException e){return null;}
+//		catch(IOException e){e.printStackTrace(); return null;}
+		final Path path = Paths.get(FileIO.DIR+filename);
+		try{return Files.readAllBytes(path);}
 		catch(IOException e){e.printStackTrace(); return null;}
+		//B
+//		try(final FileChannel channel = FileChannel.open(path, StandardOpenOption.READ);
+//				final FileLock lock = channel.tryLock()) { // Acquire a shared lock
+//				final byte[] data = Files.readAllBytes(path);
+//				lock.release();
+//				return data;
+//		}
+//		catch(IOException e){e.printStackTrace(); return null;}
+//		catch (OutOfMemoryError e){e.printStackTrace(); return null;}
 	}
-	public static final boolean saveFileBytes(String filename, byte[] data){
-		File file = new File(FileIO.DIR+filename);
-		FileOutputStream fos;
+	public static final boolean saveFileBytes(String filename, byte[] data, int start, int end, boolean append){
+		assert start >= 0 && end <= data.length && start < end;
+		final File file = new File(FileIO.DIR+filename);
 		try{
-			try{fos = new FileOutputStream(file);}
+//			FileOutputStream fos;
+//			try{fos = new FileOutputStream(file, append);}
+//			catch(FileNotFoundException e){
+//				file.createNewFile();
+//				fos = new FileOutputStream(file, append);
+//			}
+//			fos.write(data);
+//			fos.close();
+			RandomAccessFile raf;
+			try{raf = new RandomAccessFile(file, "rw");}
 			catch(FileNotFoundException e){
 				file.createNewFile();
-				fos = new FileOutputStream(file);
+				raf = new RandomAccessFile(file, "rw");
 			}
-			fos.write(data);
-			fos.close();
+			final FileLock lock = raf.getChannel().tryLock();
+			if(lock == null){/*Log.error("FileIO: unable to acquire lock for "+filename)*/return false;}
+			if(append) raf.seek(raf.length());
+			raf.write(data, start, end);
+			if(!append) raf.setLength(end-start); // Truncate any un-overwritten data
+			lock.release();
 		}
 		catch(IOException e){e.printStackTrace(); return false;}
 		return true;
 	}
+	// Convenience overloads
+	public static final boolean saveFileBytes(String filename, byte[] data, boolean append){return saveFileBytes(filename, data, 0, data.length, append);}
+	public static final boolean saveFileBytes(String filename, byte[] data){return saveFileBytes(filename, data, 0, data.length, /*append=*/false);}
 
 	public static final boolean saveFile(String filename, String content, boolean append){
 		if(content == null || content.isEmpty()) return new File(DIR+filename).delete();
@@ -137,9 +173,7 @@ public final class FileIO{
 		}
 		catch(IOException e){return false;}
 	}
-	public static final boolean saveFile(String filename, String content){
-		return saveFile(filename, content, /*append=*/false);
-	}
+	public static final boolean saveFile(String filename, String content){return saveFile(filename, content, /*append=*/false);}
 
 	public static boolean deleteFile(String filename){
 		return new File(DIR+filename).delete();
