@@ -1,6 +1,8 @@
 package net.evmodder.EvLib.util;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public abstract class LoadingCache<K, V>{
@@ -18,6 +20,7 @@ public abstract class LoadingCache<K, V>{
 	public final V remove(final K k){return cache.remove(k);}
 	public final int size(){return cache.size();}
 	public final boolean contains(final K k){return cache.containsKey(k);}
+	public final Map<K, V> getCache(){return Collections.unmodifiableMap(cache);} // Only accessed by EpearlLookup
 
 	public final boolean putIfAbsent(final K k, final V v){
 		synchronized(cache){
