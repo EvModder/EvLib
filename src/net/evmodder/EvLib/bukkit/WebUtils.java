@@ -38,63 +38,7 @@ import net.evmodder.EvLib.util.FileIO;
 import net.evmodder.EvLib.util.WebHook;
 
 @SuppressWarnings("unused")
-public class WebUtils {
-	private final static String authserver = "https://authserver.mojang.com";
-
-	private static final String getStringBetween(String base, String begin, String end) {
-		int resbeg = 0, resend = base.length()-1;
-
-		Pattern patbeg = Pattern.compile(Pattern.quote(begin));
-		Matcher matbeg = patbeg.matcher(base);
-		if(matbeg.find()) resbeg = matbeg.end();
-
-		Pattern patend = Pattern.compile(Pattern.quote(end));
-		Matcher matend = patend.matcher(base.substring(resbeg));
-		if(matend.find()) resend = matend.start();
-
-		return base.substring(resbeg, resbeg+resend);
-	}
-
-	private static final String authenticateMojang(String username, String password){
-		String genClientToken = UUID.randomUUID().toString();
-
-		// Setting up json POST request
-		String payload = "{\"agent\": {\"name\": \"Minecraft\",\"version\": 1},\"username\": \"" + username
-				+ "\",\"password\": \"" + password + "\",\"clientToken\": \"" + genClientToken + "\"}";
-
-		String output = WebHook.postReadURL(payload, authserver + "/authenticate");
-
-		// Setting up patterns
-		String authBeg = "\"accessToken\":\"";
-		String authEnd = "\",\"";
-
-		return getStringBetween(output, authBeg, authEnd);
-	}
-	private static final String authenticateMicrosoft(String email, String password){
-		final String genClientToken = UUID.randomUUID().toString();
-		String encodedEmail = null, encodedPassw = null;
-		try{
-			encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8.toString());
-			encodedPassw = URLEncoder.encode(password, StandardCharsets.UTF_8.toString());
-		}
-		catch(UnsupportedEncodingException e){};
-
-		// Setting up json POST request
-		final String payload =
-				"{\"login\": \""+encodedEmail+"\",\"loginfmt\": \""+encodedEmail
-				+"\",\"type\": 11,\"LoginOptions\": 3,\"ps\": 2,\"passwd\": \""+encodedPassw+"\","
-				+"\"PPSX\": \"Pass\",\"PPFT\": \""+genClientToken+"\"}";
-
-		String output = WebHook.postReadURL(payload, "https://login.live.com");
-		System.out.println("auth server response:\n"+output);
-
-		// Setting up patterns
-		String authBeg = "\"accessToken\":\"";
-		String authEnd = "\",\"";
-
-		return getStringBetween(output, authBeg, authEnd);
-	}
-
+public class WebUtils{
 	private static final HashMap<String, YetAnotherProfile> playerExists = new HashMap<>();
 	private static final HashSet<String> fetchedWithSkin = new HashSet<>();
 	private static final YetAnotherProfile getProfileWebRequest(final String nameOrUUID/*formatted*/, final boolean fetchSkin){
@@ -199,6 +143,62 @@ public class WebUtils {
 			textureExists.put(texture, url);
 		}
 		return textureExists.get(texture);
+	}
+
+	/*private final static String authserver = "https://authserver.mojang.com";
+
+	private static final String getStringBetween(String base, String begin, String end) {
+		int resbeg = 0, resend = base.length()-1;
+
+		Pattern patbeg = Pattern.compile(Pattern.quote(begin));
+		Matcher matbeg = patbeg.matcher(base);
+		if(matbeg.find()) resbeg = matbeg.end();
+
+		Pattern patend = Pattern.compile(Pattern.quote(end));
+		Matcher matend = patend.matcher(base.substring(resbeg));
+		if(matend.find()) resend = matend.start();
+
+		return base.substring(resbeg, resbeg+resend);
+	}
+
+	private static final String authenticateMojang(String username, String password){
+		String genClientToken = UUID.randomUUID().toString();
+
+		// Setting up json POST request
+		String payload = "{\"agent\": {\"name\": \"Minecraft\",\"version\": 1},\"username\": \"" + username
+				+ "\",\"password\": \"" + password + "\",\"clientToken\": \"" + genClientToken + "\"}";
+
+		String output = WebHook.postReadURL(payload, authserver + "/authenticate");
+
+		// Setting up patterns
+		String authBeg = "\"accessToken\":\"";
+		String authEnd = "\",\"";
+
+		return getStringBetween(output, authBeg, authEnd);
+	}
+	private static final String authenticateMicrosoft(String email, String password){
+		final String genClientToken = UUID.randomUUID().toString();
+		String encodedEmail = null, encodedPassw = null;
+		try{
+			encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8.toString());
+			encodedPassw = URLEncoder.encode(password, StandardCharsets.UTF_8.toString());
+		}
+		catch(UnsupportedEncodingException e){};
+
+		// Setting up json POST request
+		final String payload =
+				"{\"login\": \""+encodedEmail+"\",\"loginfmt\": \""+encodedEmail
+				+"\",\"type\": 11,\"LoginOptions\": 3,\"ps\": 2,\"passwd\": \""+encodedPassw+"\","
+				+"\"PPSX\": \"Pass\",\"PPFT\": \""+genClientToken+"\"}";
+
+		String output = WebHook.postReadURL(payload, "https://login.live.com");
+		System.out.println("auth server response:\n"+output);
+
+		// Setting up patterns
+		String authBeg = "\"accessToken\":\"";
+		String authEnd = "\",\"";
+
+		return getStringBetween(output, authBeg, authEnd);
 	}
 
 	private static final BufferedImage upsideDownHead(BufferedImage img){
@@ -345,7 +345,7 @@ public class WebUtils {
 				String name = line.substring(0, idx).trim();
 				String val = line.substring(idx+1).trim();
 				if(name.endsWith("GRUMM") || val.isEmpty()) continue;
-				String url = getTextureURL(val, /*verify=*/false);
+				String url = getTextureURL(val, false);
 				//String textureId = url.substring(url.lastIndexOf('/')+1);
 				System.out.println("1. Got texture url from Base64 val");
 				String filename = outfolder+"/"+name+"|GRUMM.png";
@@ -399,7 +399,7 @@ public class WebUtils {
 //				"BOAT", "CHEST_BOAT", "LEASH_KNOT", "ARMOR_STAND", "PAINTING", "ITEM_FRAME"
 //				"PIG|COLD", "PIG|TEMPERATE", "PIG|WARM"
 		};
-		String[] headsData = FileIO.loadFile("configs/head-textures.txt"/*"extra-textures/colored-collar-head-textures.txt"*/, "").split("\n");
+		String[] headsData = FileIO.loadFile("configs/head-textures.txt", "").split("\n");
 		if(headsData.length < 2) System.err.println("Empty textures file?");
 		String[] headsToFlip = new String[targetHeads.length];
 		for(int i=0; i<targetHeads.length; ++i){
@@ -419,7 +419,7 @@ public class WebUtils {
 //		//System.out.print("Enter account uuid: "); String uuid = scanner.nextLine();//0e314b6029c74e35bef33c652c8fb467
 		String uuid = "0e314b6029c74e35bef33c652c8fb467"; // EvModder
 //		scanner.close();
-//		String token = authenticateMicrosoft/*authenticateMojang*/(email, passw);
+//		String token = authenticateMicrosoft(email, passw);
 //		System.out.println("token = "+token);
 		//Paste in Inspector Console while logged into Minecraft.net: console.log(`; ${document.cookie}`.split('; bearer_token=').pop().split(';').shift())
 		String token = "eyJ...";
@@ -616,7 +616,7 @@ public class WebUtils {
 			String name = headData.substring(0, i).trim();
 			String textureCode = headData.substring(i + 1).replace("xxx", "").trim();
 			if(textureCode.isEmpty() || textureCode.matches("^[A-Z_|]+$")) continue;
-			String url = getTextureURL(textureCode, /*verify=*/false);
+			String url = getTextureURL(textureCode, false);
 			//String textureId = url.substring(url.lastIndexOf('/')+1);
 //			try{Thread.sleep(2000);}catch(InterruptedException e1){e1.printStackTrace();}//2s
 			try{
@@ -637,7 +637,7 @@ public class WebUtils {
 //				ImageIO.write(image, "png", new File("tmp_textures/"+name+".png"));
 //				System.out.println("3. Saved image: "+url+" ("+name+")");
 			}
-			catch(IOException e){/*e.printStackTrace();*/}
+			catch(IOException e){e.printStackTrace();}
 		}
 		System.out.println("\n64x32 PRE_JAPPA skins: "+abnormalSkins.stream().filter(name -> name.contains("|PRE_JAPPA")).count());
 		abnormalSkins.removeIf(name -> name.contains("|PRE_JAPPA"));
@@ -698,7 +698,7 @@ public class WebUtils {
 		TreeSet<String> badNames = new TreeSet<>();
 		for(String line : nameAndStuff){
 			String name = line.split(",")[0];
-			YetAnotherProfile profile = getProfile(name, /*fetchSkin=*/false, /*nullForSync=*/null);
+			YetAnotherProfile profile = getProfile(name, false, null);
 			if(profile != null && profile.id() != null) System.out.println(profile.id()+","+line);
 			else badNames.add(name);
 		}
@@ -769,5 +769,5 @@ public class WebUtils {
 //		overlayImgs();
 //		uploadSkins();
 		runGrumm();
-	}
+	}*/
 }
