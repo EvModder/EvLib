@@ -18,6 +18,7 @@ import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -121,6 +122,7 @@ public final class FileIO{
 //		catch(IOException e){e.printStackTrace(); return null;}
 		final Path path = Paths.get(FileIO.DIR+filename);
 		try{return Files.readAllBytes(path);}
+		catch(NoSuchFileException e){return null;}
 		catch(IOException e){e.printStackTrace(); return null;}
 		//B
 //		try(final FileChannel channel = FileChannel.open(path, StandardOpenOption.READ);
