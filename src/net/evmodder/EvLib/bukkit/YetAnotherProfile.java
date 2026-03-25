@@ -233,7 +233,8 @@ public final record YetAnotherProfile(UUID id, String name, Multimap<String, Pro
 			return null;
 		}
 		final String name = nameOptional.orElse("");
-		final UUID uuid = uuidOptional.orElseThrow(() -> new NullPointerException("UUID missing in ResolvableProfile"));
+//		final UUID uuid = uuidOptional.orElseThrow(() -> new NullPointerException("UUID missing in ResolvableProfile"));
+		final UUID uuid = uuidOptional.orElse(null);
 //		GameProfile gp = new GameProfile(uuid, name);
 //		if(properties != null) getProperties(gp).putAll(properties);
 //		return new YetAnotherProfile(gp);

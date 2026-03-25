@@ -105,6 +105,7 @@ public abstract class LoadingCache<K, V>{
 			}
 		}
 		while(true){
+			// Did consider Thread.onSpinWait(), but I think Thread.yield() is actually slightly better here.
 			while(!contains(k)) Thread.yield(); // Wait for loader thread or for someone to call putIfAbsent()
 			synchronized(cache){
 				// Perhaps insanity, but just to be safe, double-check that the cache still contains this key
