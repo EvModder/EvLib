@@ -56,7 +56,7 @@ public class PacketUtils{
 
 	private final static Class<?> classCraftPlayer = ReflectionUtils.getClass("{cb}.entity.CraftPlayer");
 	private final static Method method_CraftPlayer_getHandle = ReflectionUtils.getMethod(classCraftPlayer, "getHandle");
-	private final static Class<?> classEntityPlayer = ReflectionUtils.getClass("{nms}.EntityPlayer", "{nm}.server.level.EntityPlayer");
+	private final static Class<?> classEntityPlayer = ReflectionUtils.getClass("{nms}.EntityPlayer", "{nm}.server.level.EntityPlayer", "{nm}.server.level.ServerPlayer");
 	private final static Class<?> classPlayerConnection = ReflectionUtils.getClass("{nms}.PlayerConnection", "{nm}.server.network.PlayerConnection");
 	private final static Field fieldPlayerConnection = ReflectionUtils.findField(classEntityPlayer, classPlayerConnection);
 	private final static Class<?> classNetworkManager = ReflectionUtils.getClass("{nms}.NetworkManager", "{nm}.network.NetworkManager");
