@@ -1,0 +1,13 @@
+/bin/
+/target/
+*.class
+*.un~
+.settings
+.classpath
+.project
+#.gitignore
+.DS_Store
+*/.DS_Store
+*/*/.DS_Store
+*/*/*/.DS_Store
+*/*/*/*/.DS_Store
