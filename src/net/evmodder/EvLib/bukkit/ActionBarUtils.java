@@ -10,8 +10,8 @@ import net.evmodder.EvLib.util.ReflectionUtils;
 
 public final class ActionBarUtils{
 	// Get playerConnection of EntityPlayer
-	private static final Class<?> classEntityPlayer = ReflectionUtils.getClass("{nms}.EntityPlayer", "{nm}.server.level.EntityPlayer");
-	private static final Class<?> classPlayerConnection = ReflectionUtils.getClass("{nms}.PlayerConnection", "{nm}.server.network.PlayerConnection");
+	private static final Class<?> classEntityPlayer = ReflectionUtils.getClass("{nms}.EntityPlayer", "{nm}.server.level.EntityPlayer", "{nm}.server.level.ServerPlayer");
+	private static final Class<?> classPlayerConnection = ReflectionUtils.getClass("{nms}.PlayerConnection", "{nm}.server.network.PlayerConnection", "{nm}.server.network.ServerGamePacketListenerImpl");
 	private static final Field fieldPlayerConnection = ReflectionUtils.findField(classEntityPlayer, classPlayerConnection);
 
 	// Get conn.sendPacket(Packet<?> p);
@@ -23,7 +23,7 @@ public final class ActionBarUtils{
 	private static final Method method_CraftPlayer_getHandle = ReflectionUtils.getMethod(classCraftPlayer, "getHandle");
 
 
-	private static final Class<?> classIChatBaseComponent = ReflectionUtils.getClass("{nms}.IChatBaseComponent", "{nm}.network.chat.IChatBaseComponent");
+	private static final Class<?> classIChatBaseComponent = ReflectionUtils.getClass("{nms}.IChatBaseComponent", "{nm}.network.chat.IChatBaseComponent", "{nm}.network.chat.Component");
 
 	// pre-1.19
 	private static Object chatMessageType = null;
@@ -56,7 +56,7 @@ public final class ActionBarUtils{
 		catch(RuntimeException | NoSuchMethodException e1){//class not found implies 1.19+
 			Class<?> classLiteralContents = ReflectionUtils.getClass("{nm}.network.chat.contents.LiteralContents");
 			Class<?> classComponentContents = ReflectionUtils.getClass("{nm}.network.chat.ComponentContents");
-			Class<?> classIChatMutableComponent = ReflectionUtils.getClass("{nm}.network.chat.IChatMutableComponent");
+			Class<?> classIChatMutableComponent = ReflectionUtils.getClass("{nm}.network.chat.IChatMutableComponent", "{nm}.network.chat.MutableComponent");
 			Class<?> classClientboundSystemChatPacket = ReflectionUtils.getClass("{nm}.network.protocol.game.ClientboundSystemChatPacket");
 			try{cnstr_LiteralContents = classLiteralContents.getConstructor(String.class);}
 			catch(RuntimeException | NoSuchMethodException e2){//class not found implies 1.21+

@@ -153,6 +153,14 @@ public class TellrawUtils{
 	private static boolean toPlainTextUseNMS(){
 		return nmsInitAttempted ? chatMessageGetString != null : (nmsInitAttempted=true) && initChatMessageRefMethod();
 	}
+	private static final Class<?> getClass(String... classNames) throws ClassNotFoundException{
+		ClassNotFoundException lastEx = null;
+		for(String className : classNames){
+			try{return Class.forName(className);}
+			catch(ClassNotFoundException ex){lastEx = ex;}
+		}
+		throw lastEx;
+	}
 	private static boolean initChatMessageRefMethod(){
 		boolean post_1_19 = false;
 		Class<?> clazz, keybindClazz;
@@ -187,9 +195,9 @@ public class TellrawUtils{
 			}
 			catch(NoSuchMethodException e){/*bad2=true*/}
 			if(post_1_19){
-				chatMessageGetString = Class.forName("net.minecraft.network.chat.IChatBaseComponent").getMethod("getString");
+				chatMessageGetString = getClass("net.minecraft.network.chat.IChatBaseComponent", "net.minecraft.network.chat.Component").getMethod("getString");
 				Class<?> clazzComponentContents = Class.forName("net.minecraft.network.chat.ComponentContents");
-				Class<?> clazzIChatMutableComponent = Class.forName("net.minecraft.network.chat.IChatMutableComponent");
+				Class<?> clazzIChatMutableComponent = getClass("net.minecraft.network.chat.IChatMutableComponent", "net.minecraft.network.chat.MutableComponent");
 				Class<?>[] params = new Class[]{clazzComponentContents};
 				for(Method m : clazzIChatMutableComponent.getDeclaredMethods()){//findMethod
 					if(!Modifier.isStatic(m.getModifiers())) continue;

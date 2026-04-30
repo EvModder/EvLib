@@ -15,7 +15,11 @@ public final class EntityUtils{
 	final static HashMap<Material, EntityType> eggToEntity = new HashMap<>();
 	final static HashMap<EntityType, Material> entityToEgg = new HashMap<>();
 	static{
-		try{version = Integer.parseInt(Bukkit.getBukkitVersion().split("-")[0].split("\\.")[1]);}
+		try{
+			// TODO: super legacy/hacky, need to replace/delete this.
+			String[] versionParts = Bukkit.getBukkitVersion().split("-")[0].split("\\.");
+			version = Integer.parseInt(versionParts[0].equals("1") ? versionParts[1] : versionParts[0]);
+		}
 		catch(IllegalArgumentException | ArrayIndexOutOfBoundsException e){System.err.println("EvLib failed to detect server version!");}
 		if(version < 13) Bukkit.getLogger().severe("This version of EvLib does not support servers below 1.13!");
 

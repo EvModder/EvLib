@@ -54,12 +54,15 @@ public class PacketUtils{
 		@EventHandler public void onQuit(PlayerQuitEvent evt){removePlayer(evt.getPlayer());}
 	}, pl);*/
 
+	private final static Field accessible(final Field field){field.setAccessible(true);return field;}
+
 	private final static Class<?> classCraftPlayer = ReflectionUtils.getClass("{cb}.entity.CraftPlayer");
 	private final static Method method_CraftPlayer_getHandle = ReflectionUtils.getMethod(classCraftPlayer, "getHandle");
 	private final static Class<?> classEntityPlayer = ReflectionUtils.getClass("{nms}.EntityPlayer", "{nm}.server.level.EntityPlayer", "{nm}.server.level.ServerPlayer");
-	private final static Class<?> classPlayerConnection = ReflectionUtils.getClass("{nms}.PlayerConnection", "{nm}.server.network.PlayerConnection");
-	private final static Field fieldPlayerConnection = ReflectionUtils.findField(classEntityPlayer, classPlayerConnection);
-	private final static Class<?> classNetworkManager = ReflectionUtils.getClass("{nms}.NetworkManager", "{nm}.network.NetworkManager");
+	private final static Class<?> classPlayerConnection = ReflectionUtils.getClass("{nms}.PlayerConnection", "{nm}.server.network.PlayerConnection", "{nm}.server.network.ServerGamePacketListenerImpl");
+	private final static Class<?> classNetworkManager = ReflectionUtils.getClass("{nms}.NetworkManager", "{nm}.network.NetworkManager", "{nm}.network.Connection");
+
+	private final static Field fieldPlayerConnection = accessible(ReflectionUtils.findField(classEntityPlayer, classPlayerConnection));
 	private final static Field fieldNetworkManager;
 	static{
 		Field field;
@@ -67,12 +70,12 @@ public class PacketUtils{
 			field = ReflectionUtils.findField(classPlayerConnection, classNetworkManager);
 		}
 		catch(RuntimeException ex){
-			field = ReflectionUtils.findField(ReflectionUtils.getClass("{nm}.server.network.ServerCommonPacketListenerImpl"), classNetworkManager);
+			Class<?> clazzServerCommonPacketListenerImpl = ReflectionUtils.getClass("{nm}.server.network.ServerCommonPacketListenerImpl");
+			field = ReflectionUtils.findField(clazzServerCommonPacketListenerImpl, classNetworkManager);
 		}
-		fieldNetworkManager = field;
-		fieldNetworkManager.setAccessible(true);
+		fieldNetworkManager = accessible(field);
 	}
-	private final static Field fieldChannel = ReflectionUtils.findField(classNetworkManager, Channel.class);
+	private final static Field fieldChannel = accessible(ReflectionUtils.findField(classNetworkManager, Channel.class));
 
 	public static Channel getPlayerChannel(Player player){
 		final Object playerEntity = ReflectionUtils.call(method_CraftPlayer_getHandle, player);
