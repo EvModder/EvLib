@@ -21,20 +21,21 @@ public final class ConfigUtils{// version = X1.1
 		return Stream.of(Bukkit.getServer().getPluginManager().getPlugins()).filter(EvPlugin.class::isInstance).map(Plugin::getName).toList();
 	}
 
-	private static final String DEFAULT_DIR_NAME = "./plugins/EvFolder/";
-	private static final int MERGE_EV_DIR_THRESHOLD = 4;
-	public static void updateConfigDirName(Plugin evPl){
-		final List<String> evPlugins = ConfigUtils.installedEvPlugins();
+	private static final String EV_DIR_NAME = "./plugins/EvFolder/";
+	private static final int EV_DIR_MERGE_THRESHOLD = 4;
+	public static final void updateConfigDirName(Plugin evPl){
 		final String CUSTOM_DIR = "./plugins/"+evPl.getName()+"/";
-		if(!new File(DEFAULT_DIR_NAME).exists() && (evPl.getName().equals("DropHeads") || evPlugins.size() < MERGE_EV_DIR_THRESHOLD)){
+		if(!new File(EV_DIR_NAME).exists() && (evPl.getName().equals("DropHeads") || ConfigUtils.installedEvPlugins().size() < EV_DIR_MERGE_THRESHOLD)){
 			FileIO.DIR = CUSTOM_DIR;
 		}
-		else if(new File(CUSTOM_DIR).exists()){//merge with EvFolder
-			//Bukkit.getLogger().info("EvPlugins installed: "+String.join(", ", evPlugins));
-			evPl.getLogger().warning("Relocating data in "+CUSTOM_DIR+", this might take a minute..");
-			final File evFolder = new File(DEFAULT_DIR_NAME);
-			if(!evFolder.exists()) evFolder.mkdir();
-			FileIO.moveDirectoryContents(new File(CUSTOM_DIR), evFolder);
+		else{
+			FileIO.DIR = EV_DIR_NAME;
+			if(new File(CUSTOM_DIR).exists()){ // Relocate files from CUSTOM_DIR -> EV_DIR
+				evPl.getLogger().warning("Relocating data in "+CUSTOM_DIR+", this may take a moment..");
+				final File evFolder = new File(EV_DIR_NAME);
+				if(!evFolder.exists()) evFolder.mkdir();
+				FileIO.moveDirectoryContents(new File(CUSTOM_DIR), evFolder);
+			}
 		}
 	}
 	
