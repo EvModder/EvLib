@@ -2,6 +2,7 @@ package net.evmodder.EvLib.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -25,6 +26,34 @@ public class WebHook{
 			return resp.isEmpty() ? null : resp.toString();
 		}
 		catch(IOException e){e.printStackTrace(); return null;}
+	}
+
+	public record ReadResponse(int statusCode, String body){}
+	private static final String readResponse(final InputStream stream) throws IOException{
+		if(stream == null) return null;
+		try(final BufferedReader reader = new BufferedReader(new InputStreamReader(stream))){
+			final StringBuilder response = new StringBuilder();
+			String line;
+			while((line=reader.readLine()) != null) response.append(line.replace(" ", ""));
+			return response.isEmpty() ? null : response.toString();
+		}
+	}
+	public static final ReadResponse getReadResponse(final String url, final int timeoutMillis) throws IOException{
+		final URLConnection connection = URI.create(url).toURL().openConnection();
+		connection.setConnectTimeout(timeoutMillis);
+		connection.setReadTimeout(timeoutMillis);
+		connection.setUseCaches(false);
+		connection.setDoInput(true);
+		if(!(connection instanceof HttpURLConnection)) return new ReadResponse(200, readResponse(connection.getInputStream()));
+
+		final HttpURLConnection http = (HttpURLConnection)connection;
+		http.setRequestMethod("GET");
+		try{
+			final int statusCode = http.getResponseCode();
+			final InputStream stream = statusCode >= 400 ? http.getErrorStream() : http.getInputStream();
+			return new ReadResponse(statusCode, readResponse(stream));
+		}
+		finally{http.disconnect();}
 	}
 
 	/*public static final String putReadURL(final String payload, final String url){
