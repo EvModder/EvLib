@@ -18,7 +18,6 @@ public abstract class LoadingCache<K, V>{
 	protected abstract V load(final K k);
 	protected V loadSyncOrNull(final K k){return null;}
 	public final V remove(final K k){synchronized(cache){return cache.remove(k);}}
-	public final boolean remove(final K k, final V v){synchronized(cache){return cache.remove(k, v);}}
 	public final int size(){synchronized(cache){return cache.size();}}
 	public final boolean contains(final K k){synchronized(cache){return cache.containsKey(k);}}
 	public final V getCached(final K k){synchronized(cache){return cache.get(k);}}
@@ -62,6 +61,7 @@ public abstract class LoadingCache<K, V>{
 			}
 		}
 	}
+	protected final void refresh(final K k){loadValue(k, /*callback=*/null);}
 	public final V get(final K k, final Consumer<V> callback){
 		{
 			final V v = loadSyncOrNull(k);
