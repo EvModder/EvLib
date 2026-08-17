@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
@@ -145,8 +146,8 @@ public class WebUtils{
 		return textureExists.get(texture);
 	}
 
-	/*private final static String authserver = "https://authserver.mojang.com";
-
+	/*
+	private final static String authserver = "https://authserver.mojang.com";
 	private static final String getStringBetween(String base, String begin, String end) {
 		int resbeg = 0, resend = base.length()-1;
 
@@ -398,6 +399,7 @@ public class WebUtils{
 		String[] targetHeads = new String[]{
 //				"BOAT", "CHEST_BOAT", "LEASH_KNOT", "ARMOR_STAND", "PAINTING", "ITEM_FRAME"
 //				"PIG|COLD", "PIG|TEMPERATE", "PIG|WARM"
+				"SULFUR_CUBE"
 		};
 		String[] headsData = FileIO.loadFile("configs/head-textures.txt", "").split("\n");
 		if(headsData.length < 2) System.err.println("Empty textures file?");
@@ -517,7 +519,7 @@ public class WebUtils{
 
 		for(EntityType type : EntityType.values()){
 			String name = type.name();
-			if(type == EntityType.PLAYER) continue;
+			if(type == EntityType.PLAYER || type.name().equals("MANNEQUIN")) continue;
 			if(!type.isAlive() && !nonLivingButExpectedTextures.contains(name)) continue;
 			expectedTxr.add(name); missingDrpC.add(name);
 		}
@@ -542,7 +544,7 @@ public class WebUtils{
 		System.out.println("Textures missing: "+expectedTxr);
 		System.out.println("Textures extra: "+extraTxr);
 		//System.out.println("Textures redirected: "+redirectTxr);
-		System.out.println("Textures duplicated: "+duplicateTxr);
+		if(!duplicateTxr.isEmpty()) System.out.println("Textures duplicated: "+duplicateTxr);
 		System.out.println("Textures xxx: "+xxxTxr);
 
 		missingDrpC.addAll(extraTxr); missingDrpC.add("PLAYER");
@@ -553,19 +555,24 @@ public class WebUtils{
 				if(!missingDrpC.remove(headKey) && !extraTxr.contains(headKey)) extraDrpC.add(headData.substring(0, i));
 			}
 		}
-		System.out.println("Missing drop rates for: "+missingDrpC);
-		System.out.println("Extra drop rates for: "+extraDrpC);
+		if(!missingDrpC.isEmpty()) System.out.println("Missing drop rates for: "+missingDrpC);
+		if(!extraDrpC.isEmpty()) System.out.println("Extra drop rates for: "+extraDrpC);
 
-		TreeSet<String> alrInConf = new TreeSet<>();
+		TreeSet<String> alrInConf = new TreeSet<>(), invalidInConf = new TreeSet<>();
 		for(String spawnMod : FileIO.loadFile("configs/spawn-cause-multipliers.txt", "").split("\n")){
 			final int i = spawnMod.indexOf(':');
-			if(i != -1) alrInConf.add(spawnMod.substring(0, i));
+			if(i != -1){
+				final String spawnReason = spawnMod.substring(0, i);
+				try{SpawnReason.valueOf(spawnReason); alrInConf.add(spawnReason);}
+				catch(IllegalArgumentException e){invalidInConf.add(spawnReason);}
+			}
 		}
 		TreeSet<String> missingFromConf = new TreeSet<>();
 		for(SpawnReason reason : SpawnReason.values()){
 			if(!alrInConf.contains(reason.name())) missingFromConf.add(reason.name());
 		}
-		System.out.println("Missing SpawnReason modifiers for: ["+String.join(", ", missingFromConf)+"]");
+		if(!missingFromConf.isEmpty()) System.out.println("Missing SpawnReason modifiers: ["+String.join(", ", missingFromConf)+"]");
+		if(!invalidInConf.isEmpty()) System.out.println("Invalid SpawnReason modifiers: ["+String.join(", ", invalidInConf)+"]");
 	}
 	private static final void checkMissingGrummTextures(){
 		TreeSet<String> regularTxtrs = new TreeSet<>();
@@ -586,8 +593,9 @@ public class WebUtils{
 				if(headName.equals("UNKNOWN")) continue;
 				if(headName.equals("LEASH_HITCH") || headName.equals("LEASH_KNOT")) continue;
 				if(headName.equals("PLAYER|ALEX") || headName.equals("PLAYER|STEVE")) continue;
-				if(headName.equals("BOAT") || headName.startsWith("CHEST_BOAT")) continue;
+				if(headName.equals("BOAT") || headName.contains("CHEST_BOAT")) continue;
 				if(headName.equals("ITEM_FRAME") || headName.equals("GLOW_ITEM_FRAME")) continue;
+				if(headName.equals("ARMOR_STAND")) continue;
 				if(headName.startsWith("PAINTING|")) continue;
 
 				if(j != -1 && headName.endsWith("|GRUMM")) grummTxtrs.add(headName.substring(0, headName.length()-6));
@@ -769,5 +777,5 @@ public class WebUtils{
 //		overlayImgs();
 //		uploadSkins();
 		runGrumm();
-	}*/
+	}//*/
 }
