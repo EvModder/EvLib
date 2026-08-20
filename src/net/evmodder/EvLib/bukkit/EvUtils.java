@@ -1,5 +1,6 @@
 package net.evmodder.EvLib.bukkit;
 
+import java.io.File;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -104,16 +105,7 @@ public final class EvUtils{// version = 1.2, 2=moved many function to HeadUtils,
 	}
 
 	public static String getRegionFolder(World world){
-		switch(world.getEnvironment()){
-			case NORMAL:
-				return "./"+world.getName()+"/region/";
-			case NETHER:
-				return "./"+world.getName()+"/DIM-1/region/";
-			case THE_END:
-				return "./"+world.getName()+"/DIM1/region/";
-			default:
-				return null;
-		}
+		return new File(world.getWorldFolder(), "region").getPath()+File.separator;
 	}
 
 	public static double crossDimensionalDistanceSquared(Location a, Location b){
