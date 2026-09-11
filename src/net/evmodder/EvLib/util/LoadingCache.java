@@ -21,7 +21,9 @@ public abstract class LoadingCache<K, V>{
 	public final int size(){synchronized(cache){return cache.size();}}
 	public final boolean contains(final K k){synchronized(cache){return cache.containsKey(k);}}
 	public final V getCached(final K k){synchronized(cache){return cache.get(k);}}
-	public final Map<K, V> getCache(){return Collections.unmodifiableMap(cache);} // Only accessed by EpearlLookup
+	public final Map<K, V> getCache(){
+		synchronized(cache){return Collections.unmodifiableMap(new HashMap<>(cache));}
+	}
 
 	public final V putIfAbsent(final K k, final V v){
 		final V oldV;

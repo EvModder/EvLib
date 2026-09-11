@@ -5,10 +5,9 @@ public enum Command{
 	REQUEST_CLIENT_KEY(true),
 
 	DB_PEARL_FETCH_BY_UUID(true),
-	DB_PEARL_FETCH_BY_XZ(true),
+	DB_PEARL_FETCH_BY_WYXZ(true), // dimension32 + anchorY16 + fixed-point X40/Z40
 	DB_PEARL_STORE_BY_UUID(true),
-	DB_PEARL_STORE_BY_XZ(true),
-	DB_PEARL_XZ_KEY_UPDATE(true), // Deprecated (unused)
+	DB_PEARL_STORE_BY_WYXZ(true),
 
 	DB_MAPART_STORE(true),
 

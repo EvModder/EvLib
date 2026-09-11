@@ -135,7 +135,7 @@ public final class FileIO{
 //		catch (OutOfMemoryError e){e.printStackTrace(); return null;}
 	}
 	public static final boolean saveFileBytes(String filename, byte[] data, int start, int end, boolean append){
-		assert start >= 0 && end <= data.length && start < end;
+		assert start >= 0 && end <= data.length && start <= end;
 		final File file = new File(FileIO.DIR+filename);
 		try{
 //			FileOutputStream fos;
@@ -146,18 +146,12 @@ public final class FileIO{
 //			}
 //			fos.write(data);
 //			fos.close();
-			RandomAccessFile raf;
-			try{raf = new RandomAccessFile(file, "rw");}
-			catch(FileNotFoundException e){
-				file.createNewFile();
-				raf = new RandomAccessFile(file, "rw");
+			try(RandomAccessFile raf = new RandomAccessFile(file, "rw"); FileLock lock = raf.getChannel().tryLock()){
+				if(lock == null) return false;
+				if(append) raf.seek(raf.length());
+				raf.write(data, start, end-start);
+				if(!append) raf.setLength(end-start); // Truncate any un-overwritten data
 			}
-			final FileLock lock = raf.getChannel().tryLock();
-			if(lock == null){/*Log.error("FileIO: unable to acquire lock for "+filename)*/return false;}
-			if(append) raf.seek(raf.length());
-			raf.write(data, start, end);
-			if(!append) raf.setLength(end-start); // Truncate any un-overwritten data
-			lock.release();
 		}
 		catch(IOException e){e.printStackTrace(); return false;}
 		return true;
